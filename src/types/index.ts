@@ -43,6 +43,13 @@ export interface User {
   role: UserRole;
   displayName: string;
   photoURL?: string;
+  phone?: string;
+  notificationPreferences?: {
+    email: boolean;
+    push: boolean;
+    marketing: boolean;
+  };
+  twoFactorEnabled?: boolean;
   createdAt: string;
   updatedAt: string;
 }

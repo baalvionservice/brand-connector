@@ -12,6 +12,15 @@
         "displayName": { "type": "string" },
         "photoURL": { "type": "string" },
         "phone": { "type": "string" },
+        "notificationPreferences": {
+          "type": "object",
+          "properties": {
+            "email": { "type": "boolean" },
+            "push": { "type": "boolean" },
+            "marketing": { "type": "boolean" }
+          }
+        },
+        "twoFactorEnabled": { "type": "boolean" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
