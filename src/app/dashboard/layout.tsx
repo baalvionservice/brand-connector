@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -25,26 +26,39 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
+import { useDoc } from '@/firebase';
+import { CreatorProfile, OnboardingStatus } from '@/types';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { currentUser, userProfile, loading, signOut } = useAuth();
+  
+  // Real-time hook for creator onboarding status
+  const { data: creatorProfile } = useDoc<CreatorProfile>(
+    userProfile?.role === 'CREATOR' ? `creators/creator_${userProfile.id}` : null
+  );
+
   const [role, setRole] = useState<'BRAND' | 'CREATOR'>('BRAND');
 
-  // Guard: Redirect if not logged in or not verified
   useEffect(() => {
     if (!loading) {
       if (!currentUser) {
         router.replace('/auth/login');
       } else if (!currentUser.emailVerified) {
-        // BLOCK: Redirect to verification if email is not confirmed
         router.replace('/auth/verify-email');
       } else if (userProfile) {
         setRole(userProfile.role as 'BRAND' | 'CREATOR');
+        
+        // REDIRECT TO ONBOARDING IF NOT COMPLETED
+        if (userProfile.role === 'CREATOR' && creatorProfile) {
+          if (creatorProfile.onboardingStatus !== OnboardingStatus.COMPLETED && !pathname.startsWith('/onboarding')) {
+            router.replace('/onboarding/creator');
+          }
+        }
       }
     }
-  }, [currentUser, userProfile, loading, router]);
+  }, [currentUser, userProfile, loading, router, creatorProfile, pathname]);
 
   const toggleRole = () => {
     const nextRole = role === 'BRAND' ? 'CREATOR' : 'BRAND';
@@ -57,7 +71,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/');
   };
 
-  // Prevent flash of dashboard content for unverified users
   if (loading || (currentUser && !currentUser.emailVerified)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -74,7 +87,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <DashboardSidebar mockRole={role} onToggleRole={toggleRole} />
       
       <div className="md:pl-64 flex flex-col flex-1">
-        {/* Top Header */}
         <header className="sticky top-0 z-20 h-16 bg-white/80 backdrop-blur-md border-b px-4 md:px-8 flex items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
             <div className="md:hidden">

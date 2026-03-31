@@ -31,6 +31,12 @@ export enum TransactionStatus {
   REFUNDED = 'REFUNDED'
 }
 
+export enum OnboardingStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED'
+}
+
 export interface User {
   id: string;
   email: string;
@@ -44,12 +50,23 @@ export interface User {
 export interface CreatorProfile {
   id: string;
   userId: string;
+  username: string;
   bio: string;
+  photoURL: string;
   niches: string[];
-  portfolioLinks: string[];
-  socialStats: Record<string, { followers: number; engagementRate: number }>;
-  location: string;
+  socialStats: Record<string, any>;
+  baseRates: Record<string, string>;
+  location?: string;
   rating: number;
+  onboardingStatus: OnboardingStatus;
+  onboardingStep: number;
+  payoutMethod?: {
+    type: 'UPI' | 'BANK';
+    details: Record<string, string>;
+  };
+  portfolioSamples?: string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface BrandProfile {
@@ -58,6 +75,8 @@ export interface BrandProfile {
   companyName: string;
   industry: string;
   website: string;
+  teamSize: string;
+  plan: 'STARTER' | 'GROWTH' | 'ENTERPRISE';
   brandGuidelines: string;
   logoUrl?: string;
 }

@@ -31,7 +31,11 @@
         "socialStats": { "type": "object" },
         "baseRates": { "type": "object" },
         "location": { "type": "string" },
-        "rating": { "type": "number" }
+        "rating": { "type": "number" },
+        "onboardingStatus": { "type": "string", "enum": ["PENDING", "IN_PROGRESS", "COMPLETED"] },
+        "onboardingStep": { "type": "number" },
+        "payoutMethod": { "type": "object" },
+        "portfolioSamples": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["id", "userId", "username"]
     },
