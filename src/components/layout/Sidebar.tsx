@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -34,7 +35,8 @@ import {
   Trophy,
   Activity,
   Fingerprint,
-  PieChart
+  PieChart,
+  Target
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -79,6 +81,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
 
   const adminLinks = [
     { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard },
+    { name: 'CRM Pipeline', href: '/admin/leads', icon: Target },
     { name: 'Platform Analytics', href: '/admin/analytics', icon: PieChart },
     { name: 'User Directory', href: '/admin/users', icon: Users },
     { name: 'Verification Queue', href: '/admin/creators/verify', icon: ShieldCheck },
