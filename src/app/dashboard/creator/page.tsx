@@ -28,6 +28,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { AIInsightsPanel } from '@/components/dashboard/creator/AIInsightsPanel';
+import { EarningsForecast } from '@/components/creator/EarningsForecast';
 import Link from 'next/link';
 
 const STATS = [
@@ -102,7 +103,7 @@ export default function CreatorDashboard() {
         <div className="flex flex-wrap items-center gap-3">
           <Link href="/dashboard/creator/campaigns">
             <Button className="rounded-xl font-bold shadow-lg shadow-primary/20 h-11 px-6">
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="mr-2 h-4 w-4" />
               Apply to Campaign
             </Button>
           </Link>
@@ -120,6 +121,11 @@ export default function CreatorDashboard() {
           </Link>
         </div>
       </div>
+
+      {/* NEW: Earnings Forecast Section */}
+      <section className="space-y-6">
+        <EarningsForecast />
+      </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column - Stats & Matches */}
@@ -250,7 +256,7 @@ export default function CreatorDashboard() {
         {/* Right Column - Sidebar Panels */}
         <div className="lg:col-span-4 space-y-8">
           
-          {/* NEW: AI Insights Panel */}
+          {/* AI Insights Panel */}
           <AIInsightsPanel />
 
           {/* Activity Feed */}
