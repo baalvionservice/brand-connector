@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Check, X, Zap, ArrowRight, Star, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,17 +8,9 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { collection } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { useFirestore, useCollection } from '@/firebase';
-import { collection } from 'firebase/firestore';
 
 const DEFAULT_PRICING = [
   {
@@ -89,8 +81,20 @@ const DEFAULT_PRICING = [
 
 export function Pricing() {
   const [isAnnual, setIsAnnual] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const db = useFirestore();
-  const { data: livePlans, loading } = useCollection<any>(collection(db, 'system_plans'));
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Hydration-safe query construction
+  const plansQuery = useMemo(() => {
+    if (!db || !isMounted) return null;
+    return collection(db, 'system_plans');
+  }, [db, isMounted]);
+
+  const { data: livePlans, loading } = useCollection<any>(plansQuery);
   const [plans, setPlans] = useState<any[]>(DEFAULT_PRICING);
 
   useEffect(() => {
@@ -105,7 +109,7 @@ export function Pricing() {
 
   return (
     <section id="pricing" className="py-24 bg-white overflow-hidden">
-      <div className="container px-4 md:px-6">
+      <div className="container px-4 md:px-6 mx-auto">
         <div className="flex flex-col items-center text-center mb-16">
           <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-5xl mb-4">
             Transparent Pricing for Every Stage
@@ -121,7 +125,7 @@ export function Pricing() {
             <Switch
               id="billing-toggle"
               checked={isAnnual}
-              onCheckedChange={setIsAnnual}
+              onValueChange={(v) => setIsAnnual(v)}
             />
             <Label htmlFor="billing-toggle" className={cn("text-sm font-bold transition-colors cursor-pointer mr-2 flex items-center gap-1.5", isAnnual ? "text-primary" : "text-muted-foreground")}>
               Annual
@@ -146,7 +150,7 @@ export function Pricing() {
                 plan.popular && "border-primary shadow-xl shadow-primary/10 ring-1 ring-primary"
               )}>
                 {plan.popular && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-lg">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 shadow-lg uppercase">
                     <Star className="h-3 w-3 fill-current" />
                     MOST POPULAR
                   </div>
