@@ -38,6 +38,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (!currentUser) {
         router.replace('/auth/login');
       } else if (!currentUser.emailVerified) {
+        // BLOCK: Redirect to verification if email is not confirmed
         router.replace('/auth/verify-email');
       } else if (userProfile) {
         setRole(userProfile.role as 'BRAND' | 'CREATOR');
@@ -56,6 +57,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/');
   };
 
+  // Prevent flash of dashboard content for unverified users
   if (loading || (currentUser && !currentUser.emailVerified)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">

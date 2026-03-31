@@ -20,7 +20,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from '@/hooks/use-toast';
 
 export default function VerifyEmailPage() {
-  const { currentUser, loading, refreshUser } = useAuth();
+  const { currentUser, loading, refreshUser, signOut: authSignOut } = useAuth();
   const [isSending, setIsSending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
@@ -33,12 +33,13 @@ export default function VerifyEmailPage() {
       if (!currentUser) {
         router.replace('/auth/login');
       } else if (currentUser.emailVerified) {
+        // Redirect to dashboard once verified
         router.replace('/dashboard');
       }
     }
   }, [currentUser, loading, router]);
 
-  // Polling to detect verification
+  // Polling to detect verification automatically
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (currentUser && !currentUser.emailVerified) {
@@ -48,12 +49,12 @@ export default function VerifyEmailPage() {
         } catch (e) {
           console.error("Verification poll failed", e);
         }
-      }, 3000);
+      }, 3000); // Check every 3 seconds
     }
     return () => clearInterval(interval);
   }, [currentUser, refreshUser]);
 
-  // Cooldown timer
+  // Cooldown timer effect
   useEffect(() => {
     if (cooldown > 0) {
       const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
@@ -84,7 +85,7 @@ export default function VerifyEmailPage() {
   };
 
   const handleLogout = async () => {
-    await signOut(currentUser?.auth!);
+    await authSignOut();
     router.push('/auth/login');
   };
 
@@ -112,7 +113,14 @@ export default function VerifyEmailPage() {
           <CardHeader className="text-center pb-2">
             <motion.div 
               initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              animate={{ 
+                scale: [1, 1.05, 1],
+                opacity: 1 
+              }}
+              transition={{ 
+                scale: { repeat: Infinity, duration: 2 },
+                opacity: { duration: 0.5 }
+              }}
               className="mx-auto h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mb-4"
             >
               <Mail className="h-10 w-10 text-primary" />

@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    // onIdTokenChanged is better for tracking verification status changes
+    // onIdTokenChanged is essential for tracking verification status updates
     const unsubscribe = onIdTokenChanged(auth, async (user) => {
       dispatch({ type: 'SET_USER', payload: user });
       if (user) {
@@ -84,6 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (auth.currentUser) {
       await auth.currentUser.reload();
       const updatedUser = auth.currentUser;
+      // Dispatching SET_USER will trigger any observers watching for verification changes
       dispatch({ type: 'SET_USER', payload: updatedUser });
     }
   };
