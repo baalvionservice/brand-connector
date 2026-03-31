@@ -9,6 +9,7 @@ import { ParticlesBackground } from '@/components/landing/ParticlesBackground';
 import { StatsBanner } from '@/components/landing/StatsBanner';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { MatchingDemo } from '@/components/landing/MatchingDemo';
+import { Pricing } from '@/components/landing/Pricing';
 
 export default function LandingPage() {
   const features = [
@@ -66,6 +67,9 @@ export default function LandingPage() {
           </Link>
           <Link className="text-sm font-medium hover:text-primary transition-colors" href="#how-it-works">
             How It Works
+          </Link>
+          <Link className="text-sm font-medium hover:text-primary transition-colors" href="#pricing">
+            Pricing
           </Link>
           <Link href="/auth/login">
             <Button variant="ghost" size="sm">Login</Button>
@@ -222,6 +226,9 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* Pricing Section */}
+        <Pricing />
 
         {/* CTA Section */}
         <section className="w-full py-24 bg-primary text-primary-foreground overflow-hidden relative">
