@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo } from 'react';
@@ -41,6 +40,7 @@ import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { CreatorRecommendations } from '@/components/ai/CreatorRecommendations';
 import { CampaignOptimizer } from '@/components/ai/CampaignOptimizer';
+import { DeadlineReminders } from '@/components/dashboard/DeadlineReminders';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDoc } from '@/firebase';
@@ -103,6 +103,11 @@ export default function BrandDashboard() {
           </Link>
         </div>
       </div>
+
+      {/* NEW: Operational Deadline Reminders */}
+      <section>
+        <DeadlineReminders />
+      </section>
 
       {/* KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

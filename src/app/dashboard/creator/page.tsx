@@ -29,6 +29,7 @@ import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
 import { AIInsightsPanel } from '@/components/dashboard/creator/AIInsightsPanel';
 import { EarningsForecast } from '@/components/creator/EarningsForecast';
+import { DeadlineReminders } from '@/components/dashboard/DeadlineReminders';
 import Link from 'next/link';
 
 const STATS = [
@@ -121,6 +122,11 @@ export default function CreatorDashboard() {
           </Link>
         </div>
       </div>
+
+      {/* NEW: Operational Deadline Reminders */}
+      <section>
+        <DeadlineReminders />
+      </section>
 
       {/* NEW: Earnings Forecast Section */}
       <section className="space-y-6">
