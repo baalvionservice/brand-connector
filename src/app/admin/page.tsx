@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   ShieldCheck, 
@@ -11,9 +10,7 @@ import {
   Briefcase, 
   IndianRupee, 
   AlertTriangle, 
-  UserCheck, 
   Zap, 
-  BarChart3, 
   Settings, 
   ArrowUpRight, 
   ArrowDownRight,
@@ -21,12 +18,13 @@ import {
   ChevronRight,
   Sparkles,
   Search,
-  Plus,
-  RefreshCcw,
-  LayoutDashboard,
+  Activity,
   ShieldAlert,
-  Download,
-  Loader2
+  Loader2,
+  PieChart,
+  Target,
+  FileBox,
+  History
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -36,8 +34,6 @@ import {
   CartesianGrid, 
   Tooltip, 
   ResponsiveContainer,
-  BarChart,
-  Bar,
   LineChart,
   Line
 } from 'recharts';
@@ -46,14 +42,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdminStore } from '@/store/useAdminStore';
 import { cn } from '@/lib/utils';
 import { PlatformHealthMonitor } from '@/components/admin/PlatformHealth';
 import { TopOpportunities } from '@/components/crm/TopOpportunities';
 
-// Mock Aggregated Data
 const REVENUE_TRENDS = [
   { name: 'Jan', revenue: 120000, gmv: 800000 },
   { name: 'Feb', revenue: 185000, gmv: 1230000 },
@@ -64,114 +58,88 @@ const REVENUE_TRENDS = [
   { name: 'Jul', revenue: 385000, gmv: 2560000 },
 ];
 
-const USER_GROWTH = [
-  { name: 'Jan', creators: 4200, brands: 450 },
-  { name: 'Feb', creators: 5100, brands: 580 },
-  { name: 'Mar', creators: 6400, brands: 720 },
-  { name: 'Apr', creators: 7200, brands: 890 },
-  { name: 'May', creators: 8500, brands: 1050 },
-  { name: 'Jun', creators: 9800, brands: 1180 },
-  { name: 'Jul', creators: 10200, brands: 1240 },
-];
-
-const RECENT_ACTIVITY = [
-  { id: 1, user: 'Nexus Brand', action: 'Requested Verification', type: 'VERIFY', time: '12m ago', icon: ShieldCheck, color: 'text-blue-500', bg: 'bg-blue-50' },
-  { id: 2, user: 'Sarah Chen', action: 'Filed Payout Dispute', type: 'DISPUTE', time: '45m ago', icon: AlertTriangle, color: 'text-red-500', bg: 'bg-red-50' },
-  { id: 3, user: 'Lumina Tech', action: 'Funded Campaign (₹5L)', type: 'FINANCE', time: '2h ago', icon: IndianRupee, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-  { id: 4, user: 'System', action: 'Server Load Peak (92%)', type: 'SYSTEM', time: '4h ago', icon: Zap, color: 'text-orange-500', bg: 'bg-orange-50' },
-];
-
 export default function AdminDashboardPage() {
-  const { userProfile, loading } = useAuth();
-  const router = useRouter();
+  const { userProfile, loading: authLoading } = useAuth();
+  const { stats, logs, fetchDashboard, loading: statsLoading } = useAdminStore();
 
   useEffect(() => {
-    if (!loading && userProfile?.role !== 'ADMIN') {
-      router.replace('/dashboard');
-    }
-  }, [userProfile, loading, router]);
+    fetchDashboard();
+  }, []);
 
-  const stats = [
-    { label: 'Total GMV (Lifetime)', value: '₹5.2 Cr', trend: '+18.4%', icon: IndianRupee, color: 'text-slate-900', bg: 'bg-slate-100' },
-    { label: 'Platform Revenue', value: '₹78.4 L', trend: '+12.5%', icon: TrendingUp, color: 'text-primary', bg: 'bg-primary/5' },
-    { label: 'Active Campaigns', value: '156', trend: '+12 this week', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Total Users', value: '11,440', trend: '+840 this mo', icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
+  const kpis = [
+    { label: 'Total GMV', value: '₹5.2 Cr', trend: stats?.growthRate ? `+${stats.growthRate}%` : '...', icon: IndianRupee, color: 'text-slate-900', bg: 'bg-slate-100' },
+    { label: 'Platform Revenue', value: stats ? `₹${(stats.totalRevenue / 100000).toFixed(1)} L` : '...', trend: '+12.5%', icon: TrendingUp, color: 'text-primary', bg: 'bg-primary/5' },
+    { label: 'Active Campaigns', value: stats?.totalCampaigns || '...', trend: '+12 this week', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Total Users', value: stats?.totalUsers.toLocaleString() || '...', trend: '+840 this mo', icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
   ];
 
-  if (loading || (userProfile && userProfile?.role !== 'ADMIN')) {
+  if (authLoading || statsLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-[60vh] flex items-center justify-center">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 space-y-8 pb-20">
+    <div className="space-y-8 pb-20">
       {/* Header */}
-      <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
           <div className="flex items-center gap-3 mb-1">
             <div className="bg-slate-900 p-2 rounded-xl">
               <ShieldCheck className="h-6 w-6 text-white" />
             </div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Admin <span className="text-primary">Control Center</span></h1>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Super Admin <span className="text-primary">Command</span></h1>
           </div>
-          <p className="text-slate-500 font-medium">Baalvion Connect Global Marketplace Oversight.</p>
+          <p className="text-slate-500 font-medium">Global marketplace oversight and recursive performance monitoring.</p>
         </div>
 
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-xl font-bold bg-white h-11 border-slate-200">
-            <Settings className="h-4 w-4 mr-2" /> System Status
+          <Button variant="outline" className="rounded-xl font-bold bg-white h-11 border-slate-200 shadow-sm">
+            <Settings className="h-4 w-4 mr-2" /> Global Config
           </Button>
-          <Button className="rounded-xl font-bold shadow-xl shadow-primary/20 h-11 px-6">
-            <Sparkles className="h-4 w-4 mr-2" /> AI Platform Health
+          <Button className="rounded-xl font-black shadow-xl shadow-primary/20 h-11 px-6">
+            <Sparkles className="h-4 w-4 mr-2" /> AI Platform Audit
           </Button>
         </div>
       </div>
 
-      {/* NEW: Platform Health Score Monitor */}
-      <div className="max-w-[1600px] mx-auto">
-        <PlatformHealthMonitor />
-      </div>
+      {/* Health Component */}
+      <PlatformHealthMonitor />
 
       {/* KPI Grid */}
-      <div className="max-w-[1600px] mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {kpis.map((stat, i) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
           >
-            <Card className="border-none shadow-sm shadow-slate-200/50 rounded-2xl p-6 bg-white group hover:shadow-md transition-shadow">
-              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-4", stat.bg, stat.color)}>
+            <Card className="border-none shadow-sm rounded-2xl p-6 bg-white group hover:shadow-md transition-shadow">
+              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-4 transition-colors", stat.bg, stat.color)}>
                 <stat.icon className="h-6 w-6" />
               </div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
               <h3 className="text-2xl font-black mt-1 text-slate-900">{stat.value}</h3>
-              <div className={cn(
-                "flex items-center gap-1 text-xs font-bold mt-2",
-                stat.trend.startsWith('+') ? "text-emerald-600" : "text-slate-500"
-              )}>
-                {stat.trend.startsWith('+') ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                {stat.trend}
+              <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 mt-2 uppercase">
+                <ArrowUpRight className="h-3 w-3" /> {stat.trend}
               </div>
             </Card>
           </motion.div>
         ))}
       </div>
 
-      <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* Growth Charts */}
+        {/* Charts Column */}
         <div className="lg:col-span-8 space-y-8">
-          
-          <Card className="border-none shadow-sm shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
+          <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
             <CardHeader className="p-8 border-b bg-slate-50/50 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-xl">Platform Revenue & GMV Velocity</CardTitle>
-                <CardDescription>Monthly platform cut (15%) against total market volume.</CardDescription>
+                <CardTitle className="text-xl">Market Volume & Revenue</CardTitle>
+                <CardDescription>Consolidated platform fee collection vs gross market volume.</CardDescription>
               </div>
               <div className="flex gap-4">
                 <div className="flex items-center gap-1.5 text-[10px] font-black text-primary uppercase">
@@ -193,92 +161,50 @@ export default function AdminDashboardPage() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 600}}
-                      dy={10}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 600}}
-                      tickFormatter={(val) => `₹${val >= 1000000 ? `${(val / 1000000).toFixed(1)}M` : `${(val / 1000).toFixed(0)}k`}`}
-                    />
-                    <Tooltip 
-                      contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px'}}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="revenue" 
-                      stroke="#6C3AE8" 
-                      strokeWidth={4} 
-                      fillOpacity={1} 
-                      fill="url(#colorRevenue)" 
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="gmv" 
-                      stroke="#e2e8f0" 
-                      strokeWidth={2} 
-                      strokeDasharray="5 5"
-                      fillOpacity={0}
-                    />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
+                    <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
+                    <Area type="monotone" dataKey="revenue" stroke="#6C3AE8" strokeWidth={4} fillOpacity={1} fill="url(#colorRevenue)" />
+                    <Area type="monotone" dataKey="gmv" stroke="#e2e8f0" strokeWidth={2} strokeDasharray="5 5" fillOpacity={0} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-sm shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
-            <CardHeader className="p-8 border-b bg-slate-50/50 flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-xl">Network Expansion</CardTitle>
-                <CardDescription>Brand vs. Creator growth across the ecosystem.</CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="p-8">
-              <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={USER_GROWTH}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                    <Tooltip contentStyle={{borderRadius: '12px', border: 'none'}} />
-                    <Line type="monotone" dataKey="creators" stroke="#6C3AE8" strokeWidth={3} dot={{r: 4}} activeDot={{r: 6}} />
-                    <Line type="monotone" dataKey="brands" stroke="#F97316" strokeWidth={3} dot={{r: 4}} activeDot={{r: 6}} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          <TopOpportunities />
         </div>
 
-        {/* Sidebar Ops */}
+        {/* Audit / Logs Sidebar */}
         <aside className="lg:col-span-4 space-y-8">
-          
-          {/* Top Opportunities Widget */}
-          <TopOpportunities />
-
-          {/* Recent Global Activity */}
-          <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="p-6 border-b bg-slate-50/50">
-              <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-400">Global Activity Feed</CardTitle>
+          <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+            <CardHeader className="p-6 border-b bg-slate-50/50 flex flex-row items-center justify-between">
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                <History className="h-4 w-4 text-primary" />
+                Live System Logs
+              </CardTitle>
+              <Badge variant="outline" className="text-[8px] font-black uppercase">Real-time</Badge>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-slate-50">
-                {RECENT_ACTIVITY.map((act) => (
-                  <div key={act.id} className="p-5 flex items-start gap-4 hover:bg-slate-50/50 transition-colors">
-                    <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shrink-0", act.bg, act.color)}>
-                      <act.icon className="h-5 w-5" />
+                {logs.map((log) => (
+                  <div key={log.id} className="p-5 flex items-start gap-4 hover:bg-slate-50/50 transition-colors group">
+                    <div className={cn(
+                      "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
+                      log.event === 'system_alert' ? "bg-red-50 text-red-600" : "bg-primary/5 text-primary"
+                    )}>
+                      <Activity className="h-4 w-4" />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex justify-between items-center mb-0.5">
-                        <p className="text-xs font-black text-slate-900 uppercase">{act.user}</p>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase">{act.time}</span>
+                        <p className="text-xs font-black text-slate-900 uppercase truncate pr-2">{log.event.replace('_', ' ')}</p>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
+                          {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                       </div>
-                      <p className="text-[11px] text-slate-500 font-medium">{act.action}</p>
+                      <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                        {log.message}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -286,24 +212,30 @@ export default function AdminDashboardPage() {
             </CardContent>
             <CardFooter className="p-4 bg-slate-50/30 border-t flex justify-center">
               <Button variant="ghost" className="w-full text-[10px] font-black uppercase text-slate-400 hover:text-primary">
-                View Full Audit Log <ChevronRight className="ml-1 h-3 w-3" />
+                Full Audit Trail <ChevronRight className="ml-1 h-3 w-3" />
               </Button>
             </CardFooter>
           </Card>
 
-          {/* Quick Admin Actions */}
-          <div className="space-y-4">
-            <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] px-2">Rapid Response</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <Button className="h-20 rounded-[1.5rem] flex flex-col gap-2 font-black text-[10px] uppercase tracking-tighter shadow-lg shadow-primary/10">
-                <ShieldCheck className="h-5 w-5" /> Verify Brands
-              </Button>
-              <Button variant="outline" className="h-20 rounded-[1.5rem] flex flex-col gap-2 font-black text-[10px] uppercase tracking-tighter bg-white border-slate-200">
-                <AlertTriangle className="h-5 w-5 text-orange-500" /> Resolve Disputes
-              </Button>
+          <Card className="border-none shadow-xl shadow-primary/10 rounded-3xl overflow-hidden bg-slate-900 text-white relative">
+            <div className="absolute top-0 right-0 p-6 opacity-10">
+              <ShieldCheck className="h-16 w-16" />
             </div>
-          </div>
-
+            <CardContent className="p-8 space-y-6">
+              <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10 backdrop-blur-md">
+                <Zap className="h-6 w-6 text-primary fill-primary" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-black">Admin Protocol</h3>
+                <p className="text-slate-400 text-xs leading-relaxed font-medium">
+                  You are in **Root Access Mode**. All actions taken here are permanently recorded in the immutable compliance ledger.
+                </p>
+              </div>
+              <Button className="w-full bg-white text-slate-900 hover:bg-slate-100 font-black rounded-xl h-12 text-[10px] uppercase tracking-widest shadow-lg">
+                Download Monthly Audit
+              </Button>
+            </CardContent>
+          </Card>
         </aside>
       </div>
     </div>
