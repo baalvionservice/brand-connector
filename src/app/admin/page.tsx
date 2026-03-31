@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect } from 'react';
@@ -50,6 +51,7 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { PlatformHealthMonitor } from '@/components/admin/PlatformHealth';
+import { TopOpportunities } from '@/components/crm/TopOpportunities';
 
 // Mock Aggregated Data
 const REVENUE_TRENDS = [
@@ -131,38 +133,6 @@ export default function AdminDashboardPage() {
       {/* NEW: Platform Health Score Monitor */}
       <div className="max-w-[1600px] mx-auto">
         <PlatformHealthMonitor />
-      </div>
-
-      {/* Critical Alerts Row */}
-      <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="p-6 rounded-[2rem] bg-red-50 border border-red-100 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center">
-              <ShieldAlert className="h-6 w-6 text-red-600" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black uppercase text-red-400 tracking-widest leading-none">Active Disputes</p>
-              <p className="text-xl font-black text-red-900 mt-1">3 Cases Pending Resolution</p>
-            </div>
-          </div>
-          <Button size="sm" variant="ghost" className="text-red-600 font-black text-[10px] uppercase group">
-            Open Mediation <ChevronRight className="ml-1 h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </div>
-        <div className="p-6 rounded-[2rem] bg-blue-50 border border-blue-100 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center">
-              <UserCheck className="h-6 w-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-[10px] font-black uppercase text-blue-400 tracking-widest leading-none">Brand Verification</p>
-              <p className="text-xl font-black text-blue-900 mt-1">24 Applications Review Needed</p>
-            </div>
-          </div>
-          <Button size="sm" variant="ghost" className="text-blue-600 font-black text-[10px] uppercase group">
-            Start Auditing <ChevronRight className="ml-1 h-3.5 w-3.5 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </div>
       </div>
 
       {/* KPI Grid */}
@@ -288,6 +258,9 @@ export default function AdminDashboardPage() {
         {/* Sidebar Ops */}
         <aside className="lg:col-span-4 space-y-8">
           
+          {/* Top Opportunities Widget */}
+          <TopOpportunities />
+
           {/* Recent Global Activity */}
           <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden bg-white">
             <CardHeader className="p-6 border-b bg-slate-50/50">
@@ -328,44 +301,8 @@ export default function AdminDashboardPage() {
               <Button variant="outline" className="h-20 rounded-[1.5rem] flex flex-col gap-2 font-black text-[10px] uppercase tracking-tighter bg-white border-slate-200">
                 <AlertTriangle className="h-5 w-5 text-orange-500" /> Resolve Disputes
               </Button>
-              <Button variant="outline" className="h-20 rounded-[1.5rem] flex flex-col gap-2 font-black text-[10px] uppercase tracking-tighter bg-white border-slate-200">
-                <Download className="h-5 w-5 text-primary" /> Tax Statements
-              </Button>
-              <Button variant="outline" className="h-20 rounded-[1.5rem] flex flex-col gap-2 font-black text-[10px] uppercase tracking-tighter bg-white border-slate-200">
-                <Plus className="h-5 w-5 text-emerald-500" /> Payout Bulk
-              </Button>
             </div>
           </div>
-
-          {/* Infrastructure Health */}
-          <Card className="border-none shadow-xl shadow-primary/10 rounded-3xl overflow-hidden bg-slate-900 text-white relative">
-            <div className="absolute top-0 right-0 p-6 opacity-10">
-              <RefreshCcw className="h-16 w-16" />
-            </div>
-            <CardContent className="p-8 space-y-6">
-              <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10 backdrop-blur-md">
-                <Zap className="h-6 w-6 text-yellow-300 fill-yellow-300" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black">Platform Uptime</h3>
-                <p className="text-slate-400 text-xs leading-relaxed font-medium">
-                  All systems operational. AI Matcher is processing <span className="text-white font-bold">142 queries/sec</span>.
-                </p>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-500">
-                  <span>Server Load</span>
-                  <span>42%</span>
-                </div>
-                <Progress value={42} className="h-1 bg-white/5" />
-              </div>
-
-              <Button className="w-full bg-white text-slate-900 hover:bg-slate-100 font-black rounded-xl h-12 text-[10px] uppercase tracking-widest shadow-lg">
-                View Infrastructure Details
-              </Button>
-            </CardContent>
-          </Card>
 
         </aside>
       </div>

@@ -15,10 +15,11 @@ import {
   User,
   Instagram,
   Mail,
-  MoreHorizontal
+  MoreHorizontal,
+  ChevronDown
 } from 'lucide-react';
 import { useLeadStore } from '@/store/useLeadStore';
-import { Lead, LeadStatus } from '@/types/crm';
+import { Lead, LeadStatus, LeadPriority } from '@/types/crm';
 import { cn } from '@/lib/utils';
 
 import {
@@ -33,13 +34,6 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
-} from '@/components/ui/dropdown-menu';
 
 export function LeadsTable() {
   const { leads, loading, selectLead, totalPages, currentPage, setFilters } = useLeadStore();
@@ -56,9 +50,17 @@ export function LeadsTable() {
     }
   };
 
+  const getPriorityBadge = (priority: LeadPriority) => {
+    switch (priority) {
+      case 'high': return <Badge className="bg-red-500 text-white border-none text-[8px] h-4">HIGH</Badge>;
+      case 'medium': return <Badge className="bg-yellow-400 text-white border-none text-[8px] h-4">MED</Badge>;
+      case 'low': return <Badge className="bg-slate-300 text-white border-none text-[8px] h-4">LOW</Badge>;
+    }
+  };
+
   const getScoreColor = (score: number) => {
-    if (score >= 85) return 'text-emerald-600 bg-emerald-50 border-emerald-100';
-    if (score >= 70) return 'text-primary bg-primary/5 border-primary/10';
+    if (score >= 75) return 'text-emerald-600 bg-emerald-50 border-emerald-100';
+    if (score >= 40) return 'text-primary bg-primary/5 border-primary/10';
     return 'text-slate-500 bg-slate-50 border-slate-100';
   };
 
@@ -70,10 +72,10 @@ export function LeadsTable() {
             <TableRow className="hover:bg-transparent border-slate-100 h-16 bg-slate-50/30">
               <TableHead className="pl-8 font-black text-[10px] uppercase tracking-widest text-slate-400">Brand Context</TableHead>
               <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400">Niche</TableHead>
-              <TableHead className="font-black text-[10px] uppercase tracking-widest text-center">Propensity Score</TableHead>
-              <TableHead className="font-black text-[10px] uppercase tracking-widest text-center">Lifecycle Status</TableHead>
+              <TableHead className="font-black text-[10px] uppercase tracking-widest text-center">Score</TableHead>
+              <TableHead className="font-black text-[10px] uppercase tracking-widest text-center">Priority</TableHead>
+              <TableHead className="font-black text-[10px] uppercase tracking-widest text-center">Status</TableHead>
               <TableHead className="font-black text-[10px] uppercase tracking-widest text-center">Owner</TableHead>
-              <TableHead className="font-black text-[10px] uppercase tracking-widest">Added On</TableHead>
               <TableHead className="pr-8 text-right font-black text-[10px] uppercase tracking-widest text-slate-400">Action</TableHead>
             </TableRow>
           </TableHeader>
@@ -105,11 +107,7 @@ export function LeadsTable() {
                       </div>
                       <div className="min-w-0">
                         <p className="font-black text-slate-900 leading-none truncate max-w-[200px]">{lead.companyName}</p>
-                        <div className="flex items-center gap-2 mt-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Instagram className="h-3 w-3 text-slate-300" />
-                          <Mail className="h-3 w-3 text-slate-300" />
-                          <span className="text-[10px] font-bold text-slate-400 truncate uppercase">#{lead.id.substring(5)}</span>
-                        </div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase mt-1.5">{lead.email}</p>
                       </div>
                     </div>
                   </TableCell>
@@ -125,6 +123,9 @@ export function LeadsTable() {
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
+                    {getPriorityBadge(lead.priority)}
+                  </TableCell>
+                  <TableCell className="text-center">
                     <Badge className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase border-none shadow-sm", status.color)}>
                       <status.icon className="h-3 w-3 mr-1.5" />
                       {status.label}
@@ -138,12 +139,6 @@ export function LeadsTable() {
                       <span className="text-xs font-bold text-slate-600">{lead.assignedTo || 'Unassigned'}</span>
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-slate-600">{new Date(lead.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}</span>
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Added to funnel</span>
-                    </div>
-                  </TableCell>
                   <TableCell className="pr-8 text-right">
                     <Button variant="ghost" size="icon" className="rounded-full text-slate-300 group-hover:text-primary transition-all">
                       <MoreHorizontal className="h-5 w-5" />
@@ -154,17 +149,6 @@ export function LeadsTable() {
             })}
           </TableBody>
         </Table>
-
-        {/* Empty State */}
-        {!loading && leads.length === 0 && (
-          <div className="py-32 flex flex-col items-center justify-center text-center">
-            <div className="h-20 w-20 rounded-full bg-slate-50 flex items-center justify-center mb-6">
-              <User className="h-10 w-10 text-slate-200" />
-            </div>
-            <h3 className="text-2xl font-black text-slate-900">No leads found</h3>
-            <p className="text-slate-500 mt-2 max-w-sm mx-auto font-medium">Try adjusting your filters or importing a new CSV list.</p>
-          </div>
-        )}
       </div>
 
       {/* Pagination */}

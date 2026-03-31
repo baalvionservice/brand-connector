@@ -18,7 +18,9 @@ import {
   TrendingUp,
   History,
   CheckCircle2,
-  Loader2
+  Loader2,
+  Sparkles,
+  Info
 } from 'lucide-react';
 import { useLeadStore } from '@/store/useLeadStore';
 import { LeadStatus } from '@/types/crm';
@@ -29,6 +31,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import { 
   Select, 
   SelectContent, 
@@ -129,7 +132,7 @@ export function LeadDrawer() {
                 <Badge variant="secondary" className="bg-slate-100 text-slate-500 font-bold text-[9px] uppercase">{selectedLead.niche}</Badge>
                 <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
                   <TrendingUp className="h-3 w-3 text-emerald-500" />
-                  Lead Score: <span className="font-black text-slate-900">{selectedLead.score}</span>
+                  Score: <span className="font-black text-slate-900">{selectedLead.score}</span>
                 </div>
               </div>
             </div>
@@ -160,6 +163,31 @@ export function LeadDrawer() {
         {/* Content */}
         <ScrollArea className="flex-1">
           <div className="p-8 space-y-10">
+            {/* Score Breakdown */}
+            {selectedLead.scoreBreakdown && (
+              <section className="space-y-4">
+                <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2">
+                  <Sparkles className="h-3 w-3 text-primary" /> AI Score Breakdown
+                </h3>
+                <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-6">
+                  {[
+                    { label: 'Engagement', val: selectedLead.scoreBreakdown.engagement, max: 30 },
+                    { label: 'Completeness', val: selectedLead.scoreBreakdown.completeness, max: 20 },
+                    { label: 'Niche Value', val: selectedLead.scoreBreakdown.nicheValue, max: 30 },
+                    { label: 'Activity', val: selectedLead.scoreBreakdown.activity, max: 20 }
+                  ].map(item => (
+                    <div key={item.label} className="space-y-2">
+                      <div className="flex justify-between items-center text-[10px] font-bold">
+                        <span className="text-slate-500 uppercase">{item.label}</span>
+                        <span className="text-slate-900">{item.val} / {item.max}</span>
+                      </div>
+                      <Progress value={(item.val / item.max) * 100} className="h-1" />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Info Section */}
             <section className="space-y-4">
               <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Contact & Reach</h3>
@@ -169,30 +197,9 @@ export function LeadDrawer() {
                   <span className="text-sm font-bold text-slate-700">{selectedLead.email || 'No email provided'}</span>
                 </div>
                 <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                  <Instagram className="h-4 w-4 text-slate-400" />
-                  <span className="text-sm font-bold text-slate-700">{selectedLead.instagramHandle || 'No Instagram'}</span>
-                </div>
-                <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
                   <Globe className="h-4 w-4 text-slate-400" />
-                  <a href={selectedLead.website} target="_blank" className="text-sm font-bold text-primary hover:underline truncate">{selectedLead.website}</a>
+                  <a href={selectedLead.website} target="_blank" className="text-sm font-bold text-primary hover:underline truncate">{selectedLead.website || 'No website'}</a>
                 </div>
-              </div>
-            </section>
-
-            {/* Assignment Section */}
-            <section className="space-y-4">
-              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Ownership</h3>
-              <div className="flex items-center justify-between p-4 rounded-2xl bg-white border-2 border-slate-50">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-primary/10 text-primary font-black text-[10px]">{selectedLead.assignedTo?.charAt(0) || 'U'}</AvatarFallback>
-                  </Avatar>
-                  <div className="space-y-0.5">
-                    <p className="text-sm font-bold text-slate-900">{selectedLead.assignedTo || 'Unassigned'}</p>
-                    <p className="text-[10px] text-slate-400 font-medium">Assigned Agent</p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="sm" className="text-[10px] font-black uppercase text-primary">Reassign</Button>
               </div>
             </section>
 
@@ -208,7 +215,7 @@ export function LeadDrawer() {
               {/* Add Note Form */}
               <form onSubmit={handleAddNote} className="relative">
                 <Textarea 
-                  placeholder="Log an interaction or update..." 
+                  placeholder="Log an interaction..." 
                   className="rounded-2xl min-h-[100px] bg-slate-50 border-none focus-visible:ring-primary p-5 pb-12 resize-none text-sm"
                   value={noteText}
                   onChange={(e) => setNoteText(e.target.value)}
@@ -216,7 +223,7 @@ export function LeadDrawer() {
                 <div className="absolute bottom-3 right-3">
                   <Button size="sm" type="submit" disabled={isSubmittingNote || !noteText.trim()} className="rounded-lg font-bold px-4 h-8">
                     {isSubmittingNote ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3 mr-1.5" />}
-                    Add Entry
+                    Log
                   </Button>
                 </div>
               </form>
@@ -227,28 +234,18 @@ export function LeadDrawer() {
                   <div key={note.id} className="relative pl-6 last:after:hidden after:absolute after:left-0 after:top-2 after:bottom-0 after:w-px after:bg-slate-100">
                     <div className="absolute left-[-4px] top-1.5 h-2 w-2 rounded-full bg-primary/20 ring-4 ring-white" />
                     <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
-                          {new Date(note.createdAt).toLocaleDateString()} at {new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                        <div className="h-1 w-1 rounded-full bg-slate-200" />
-                      </div>
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+                        {new Date(note.createdAt).toLocaleDateString()}
+                      </span>
                       <p className="text-sm font-medium text-slate-600 leading-relaxed">{note.text}</p>
                     </div>
                   </div>
                 ))}
-                {selectedLeadNotes.length === 0 && !detailsLoading && (
-                  <div className="p-8 text-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-                    <MessageSquare className="h-6 w-6 text-slate-200 mx-auto mb-2" />
-                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">No activity recorded</p>
-                  </div>
-                )}
               </div>
             </section>
           </div>
         </ScrollArea>
 
-        {/* Footer info */}
         <footer className="p-6 border-t bg-slate-50/50 flex items-center justify-center gap-2">
           <Clock className="h-3 w-3 text-slate-300" />
           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
