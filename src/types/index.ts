@@ -179,6 +179,8 @@ export interface PortfolioItem {
   createdAt: string;
 }
 
+export type SubscriptionStatus = 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'TRIALING' | 'INCOMPLETE';
+
 export interface BrandProfile {
   id: string;
   userId: string;
@@ -187,6 +189,9 @@ export interface BrandProfile {
   website: string;
   teamSize: string;
   plan: 'STARTER' | 'GROWTH' | 'ENTERPRISE';
+  subscriptionStatus?: SubscriptionStatus;
+  currentPeriodEnd?: string;
+  cancelAtPeriodEnd?: boolean;
   brandGuidelines: string;
   logoUrl?: string;
   onboardingStatus: OnboardingStatus;

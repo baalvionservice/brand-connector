@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -26,11 +25,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirestore, useDoc } from '@/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
 import { BrandProfile } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { subscribeToPlan, cancelSubscription, PlanType, PLAN_LIMITS } from '@/lib/subscriptions';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,9 +50,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
@@ -102,28 +97,34 @@ export default function BrandBillingPage() {
     }, 1500);
   };
 
-  const handlePlanChange = async (newPlan: 'STARTER' | 'GROWTH' | 'ENTERPRISE') => {
+  const handlePlanChange = async (newPlan: PlanType) => {
     if (!brandId) return;
     setIsProcessing(true);
 
-    const updateData = {
-      plan: newPlan,
-      updatedAt: new Date().toISOString()
-    };
+    try {
+      await subscribeToPlan(db, brandId, newPlan);
+      toast({ title: `Switched to ${newPlan}`, description: "Your billing will be adjusted from the next cycle." });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
-    updateDoc(doc(db, 'brands', brandId), updateData)
-      .then(() => {
-        toast({ title: `Switched to ${newPlan}`, description: "Your billing will be adjusted from the next cycle." });
-        setIsProcessing(false);
-      })
-      .catch(async (err) => {
-        errorEmitter.emitPermissionError(new FirestorePermissionError({
-          path: `/brands/${brandId}`,
-          operation: 'update',
-          requestResourceData: updateData
-        }));
-        setIsProcessing(false);
-      });
+  const handleCancel = async () => {
+    if (!brandId) return;
+    setIsProcessing(true);
+
+    try {
+      await cancelSubscription(db, brandId);
+      setIsCancelOpen(false);
+      setShowRetention(false);
+      toast({ title: "Subscription scheduled for cancellation", description: "You will have access until the end of the period." });
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (loading) {
@@ -134,6 +135,8 @@ export default function BrandBillingPage() {
     );
   }
 
+  const currentPlanLimits = PLAN_LIMITS[brand?.plan || 'STARTER'];
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20">
       {/* Header */}
@@ -143,8 +146,11 @@ export default function BrandBillingPage() {
           <p className="text-slate-500 font-medium">Manage your corporate plan, payment methods, and invoice history.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge className="bg-emerald-100 text-emerald-600 border-none font-black text-[10px] tracking-widest px-4 py-2 rounded-xl">
-            ACCOUNT ACTIVE
+          <Badge className={cn(
+            "px-4 py-2 rounded-xl border-none font-black text-[10px] tracking-widest uppercase shadow-sm",
+            brand?.subscriptionStatus === 'ACTIVE' ? "bg-emerald-100 text-emerald-600" : "bg-red-50 text-red-600"
+          )}>
+            {brand?.subscriptionStatus || 'ACCOUNT ACTIVE'}
           </Badge>
         </div>
       </div>
@@ -155,7 +161,7 @@ export default function BrandBillingPage() {
         <div className="lg:col-span-8 space-y-8">
           
           {/* Current Plan Card */}
-          <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
+          <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white ring-1 ring-slate-100">
             <CardHeader className="p-8 border-b bg-slate-50/50 flex flex-row items-center justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -164,7 +170,11 @@ export default function BrandBillingPage() {
                     {brand?.plan || 'GROWTH'} PLAN
                   </Badge>
                 </div>
-                <CardDescription>Your plan renews on Aug 01, 2024 for ₹9,999/mo.</CardDescription>
+                <CardDescription>
+                  {brand?.cancelAtPeriodEnd 
+                    ? `Expiring on ${new Date(brand.currentPeriodEnd!).toLocaleDateString()}` 
+                    : `Renews on ${new Date(brand?.currentPeriodEnd || Date.now() + 864000000).toLocaleDateString()} for ₹${currentPlanLimits.monthlyPrice.toLocaleString()}/mo.`}
+                </CardDescription>
               </div>
               <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
                 <Zap className="h-6 w-6 text-primary fill-primary/20" />
@@ -188,16 +198,16 @@ export default function BrandBillingPage() {
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs font-bold uppercase tracking-tighter text-slate-500">
                         <span>Active Campaigns</span>
-                        <span>{usage.campaigns.used} / {usage.campaigns.limit}</span>
+                        <span>{usage.campaigns.used} / {currentPlanLimits.maxCampaigns}</span>
                       </div>
-                      <Progress value={(usage.campaigns.used / usage.campaigns.limit) * 100} className="h-1.5" />
+                      <Progress value={(usage.campaigns.used / currentPlanLimits.maxCampaigns) * 100} className="h-1.5" />
                     </div>
                     <div className="space-y-2">
                       <div className="flex justify-between text-xs font-bold uppercase tracking-tighter text-slate-500">
-                        <span>Creators Hired</span>
-                        <span>{usage.creators.used} / {usage.creators.limit}</span>
+                        <span>Team Access</span>
+                        <span>1 / {currentPlanLimits.maxTeamMembers} Seats</span>
                       </div>
-                      <Progress value={(usage.creators.used / usage.creators.limit) * 100} className="h-1.5" />
+                      <Progress value={(1 / currentPlanLimits.maxTeamMembers) * 100} className="h-1.5" />
                     </div>
                   </div>
                 </div>
@@ -205,18 +215,38 @@ export default function BrandBillingPage() {
             </CardContent>
             <CardFooter className="p-8 bg-slate-50/30 border-t flex flex-wrap gap-4">
               {brand?.plan !== 'ENTERPRISE' && (
-                <Button onClick={() => handlePlanChange('ENTERPRISE')} className="rounded-xl font-bold h-11 px-8 shadow-lg shadow-primary/20">
+                <Button 
+                  onClick={() => handlePlanChange('ENTERPRISE')} 
+                  disabled={isProcessing}
+                  className="rounded-xl font-bold h-11 px-8 shadow-lg shadow-primary/20"
+                >
                   Upgrade to Enterprise
                 </Button>
               )}
+              {brand?.plan === 'STARTER' && (
+                <Button 
+                  onClick={() => handlePlanChange('GROWTH')} 
+                  disabled={isProcessing}
+                  className="rounded-xl font-bold h-11 px-8 shadow-lg shadow-primary/20"
+                >
+                  Switch to Growth
+                </Button>
+              )}
               {brand?.plan !== 'STARTER' && (
-                <Button variant="outline" onClick={() => handlePlanChange('STARTER')} className="rounded-xl font-bold h-11 px-8 bg-white border-slate-200">
+                <Button 
+                  variant="outline" 
+                  onClick={() => handlePlanChange('STARTER')} 
+                  disabled={isProcessing}
+                  className="rounded-xl font-bold h-11 px-8 bg-white border-slate-200"
+                >
                   Switch to Starter
                 </Button>
               )}
-              <Button variant="ghost" className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl font-bold ml-auto" onClick={() => setIsCancelOpen(true)}>
-                Cancel Subscription
-              </Button>
+              {!brand?.cancelAtPeriodEnd && brand?.plan !== 'STARTER' && (
+                <Button variant="ghost" className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl font-bold ml-auto" onClick={() => setIsCancelOpen(true)}>
+                  Cancel Subscription
+                </Button>
+              )}
             </CardFooter>
           </Card>
 
@@ -423,8 +453,12 @@ export default function BrandBillingPage() {
                 </div>
 
                 <div className="text-center">
-                  <button className="text-xs font-bold text-slate-400 hover:text-red-500 uppercase tracking-widest underline underline-offset-4">
-                    No thanks, continue with cancellation
+                  <button 
+                    onClick={handleCancel}
+                    disabled={isProcessing}
+                    className="text-xs font-bold text-slate-400 hover:text-red-500 uppercase tracking-widest underline underline-offset-4"
+                  >
+                    {isProcessing ? 'Processing...' : 'No thanks, continue with cancellation'}
                   </button>
                 </div>
               </motion.div>
