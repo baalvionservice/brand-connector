@@ -12,8 +12,8 @@ import {
   signInWithPopup, 
   GoogleAuthProvider 
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { Rocket, Loader2, Mail, Lock, AlertCircle } from 'lucide-react';
+import { useAuth, useFirestore } from '@/firebase';
+import { Rocket, Loader2, Mail, Lock, AlertCircle, ShieldCheck, Building2, UserCircle2, Zap } from 'lucide-react';
 import { loginSchema } from '@/lib/validations';
 
 import { Button } from '@/components/ui/button';
@@ -38,6 +38,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { motion } from 'framer-motion';
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
@@ -46,6 +47,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -78,6 +80,12 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   }
+
+  const quickLogin = (email: string) => {
+    form.setValue('email', email);
+    form.setValue('password', 'password123');
+    form.handleSubmit(onSubmit)();
+  };
 
   async function handleGoogleLogin() {
     setIsLoading(true);
@@ -114,16 +122,16 @@ export default function LoginPage() {
           <p className="text-slate-500 mt-2">Log in to your account to manage your campaigns</p>
         </div>
 
-        <Card className="border-slate-200 shadow-xl shadow-slate-200/50 rounded-2xl overflow-hidden">
-          <CardHeader className="space-y-1 pb-4">
+        <Card className="border-slate-200 shadow-xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
+          <CardHeader className="space-y-1 pb-4 bg-slate-50/50 border-b">
             <CardTitle className="text-xl font-bold">Login</CardTitle>
             <CardDescription>
               Enter your credentials to access your dashboard
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6 pt-8">
             {error && (
-              <Alert variant="destructive" className="bg-destructive/5 text-destructive border-destructive/20 py-3">
+              <Alert variant="destructive" className="bg-red-50 text-red-600 border-red-100 py-3 rounded-xl">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="text-xs font-medium">{error}</AlertDescription>
               </Alert>
@@ -205,9 +213,9 @@ export default function LoginPage() {
               <div className="absolute inset-0 flex items-center">
                 <Separator className="w-full" />
               </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-3 text-slate-400 font-bold tracking-wider">
-                  Or continue with
+              <div className="relative flex justify-center text-[10px] uppercase">
+                <span className="bg-white px-3 text-slate-400 font-black tracking-[0.2em]">
+                  Or social login
                 </span>
               </div>
             </div>
@@ -239,8 +247,45 @@ export default function LoginPage() {
               </svg>
               Google Account
             </Button>
+
+            {/* QUICK DEMO ACCESS */}
+            <div className="mt-8 pt-6 border-t border-slate-100 space-y-4">
+              <div className="flex items-center gap-2 justify-center">
+                <Zap className="h-3 w-3 text-primary fill-primary" />
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Demo Access</p>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="rounded-lg h-9 px-0 text-[10px] font-black uppercase flex flex-col items-center justify-center gap-0.5 border-slate-100 hover:border-primary/30 hover:bg-primary/5 transition-all"
+                  onClick={() => quickLogin('admin@baalvion.com')}
+                >
+                  <ShieldCheck className="h-3 w-3 text-slate-400" />
+                  Admin
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="rounded-lg h-9 px-0 text-[10px] font-black uppercase flex flex-col items-center justify-center gap-0.5 border-slate-100 hover:border-primary/30 hover:bg-primary/5 transition-all"
+                  onClick={() => quickLogin('brand_1@mock.com')}
+                >
+                  <Building2 className="h-3 w-3 text-slate-400" />
+                  Brand
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="rounded-lg h-9 px-0 text-[10px] font-black uppercase flex flex-col items-center justify-center gap-0.5 border-slate-100 hover:border-primary/30 hover:bg-primary/5 transition-all"
+                  onClick={() => quickLogin('sarah_tech@mock.com')}
+                >
+                  <UserCircle2 className="h-3 w-3 text-slate-400" />
+                  Creator
+                </Button>
+              </div>
+            </div>
           </CardContent>
-          <CardFooter className="flex flex-col items-center pb-8">
+          <CardFooter className="flex flex-col items-center pb-8 pt-4">
             <p className="text-sm text-slate-500 font-medium">
               Don&apos;t have an account?{' '}
               <Link 
@@ -253,7 +298,7 @@ export default function LoginPage() {
           </CardFooter>
         </Card>
 
-        <div className="flex justify-center gap-6 text-xs text-slate-400 font-medium uppercase tracking-widest">
+        <div className="flex justify-center gap-6 text-[10px] text-slate-400 font-black uppercase tracking-widest">
           <Link href="#" className="hover:text-primary transition-colors">Privacy</Link>
           <Link href="#" className="hover:text-primary transition-colors">Terms</Link>
           <Link href="#" className="hover:text-primary transition-colors">Security</Link>
