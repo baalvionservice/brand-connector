@@ -21,7 +21,9 @@ import {
   AlertCircle,
   Target,
   FileText,
-  ShieldAlert
+  ShieldAlert,
+  CheckCircle2,
+  Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,16 +40,18 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNotifications } from '@/hooks/use-realtime-data';
+import { useNotificationStore } from '@/store/useNotificationStore';
 import { cn } from '@/lib/utils';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { userProfile, signOut } = useAuth();
-  
-  const { data: notifications } = useNotifications(userProfile?.id);
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const { notifications, fetchNotifications, unreadCount, markRead } = useNotificationStore();
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   const [role, setRole] = useState<'BRAND' | 'CREATOR' | 'ADMIN'>('ADMIN');
 
@@ -69,14 +73,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'NEW_MATCH': return <Target className="h-4 w-4 text-primary" />;
-      case 'APPLICATION_UPDATE': return <FileText className="h-4 w-4 text-blue-500" />;
-      case 'PAYMENT_RECEIVED': return <Wallet className="h-4 w-4 text-emerald-500" />;
-      case 'NEW_MESSAGE': return <MessageSquare className="h-4 w-4 text-indigo-500" />;
-      case 'DISPUTE_UPDATE': return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case 'DEADLINE_REMINDER': return <Clock className="h-4 w-4 text-orange-500" />;
-      case 'SYSTEM': return <ShieldAlert className="h-4 w-4 text-slate-500" />;
-      default: return <Bell className="h-4 w-4 text-slate-400" />;
+      case 'success': return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+      case 'warning': return <AlertCircle className="h-4 w-4 text-red-500" />;
+      default: return <Info className="h-4 w-4 text-blue-500" />;
     }
   };
 
@@ -117,20 +116,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
-            {role === 'ADMIN' && (
-              <Badge className="bg-slate-900 text-white border-none font-black text-[9px] uppercase tracking-widest px-3 py-1">
-                Super Admin Access
-              </Badge>
-            )}
-
             <Popover>
               <PopoverTrigger asChild>
                 <div className="relative">
                   <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100">
                     <Bell className="h-5 w-5 text-slate-600" />
-                    {unreadCount > 0 && (
+                    {unreadCount() > 0 && (
                       <span className="absolute top-2 right-2 h-4 w-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white font-bold">
-                        {unreadCount}
+                        {unreadCount()}
                       </span>
                     )}
                   </Button>
@@ -138,7 +131,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </PopoverTrigger>
               <PopoverContent align="end" className="w-80 p-0 rounded-2xl overflow-hidden shadow-2xl border-none">
                 <div className="p-4 border-b bg-slate-50/50 flex items-center justify-between">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900">Notifications</h3>
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900">Recent Notifications</h3>
                   <Link href="/dashboard/notifications" className="text-[10px] font-bold text-primary hover:underline">View All</Link>
                 </div>
                 <ScrollArea className="max-h-[400px]">
@@ -147,6 +140,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       {notifications.map((n) => (
                         <button
                           key={n.id}
+                          onClick={() => markRead(n.id)}
                           className={cn(
                             "w-full p-4 flex gap-3 text-left hover:bg-slate-50 transition-colors",
                             !n.read && "bg-primary/5"

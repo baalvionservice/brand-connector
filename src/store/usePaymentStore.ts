@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { Payment, PaymentMethod } from '@/types/payment';
 import { paymentsApi } from '@/lib/api/payments';
+import { useNotificationStore } from './useNotificationStore';
 
 interface PaymentState {
   payments: Payment[];
@@ -53,6 +54,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
           const escrowRes = await paymentsApi.moveToEscrow(id);
           if (escrowRes.success) {
             set(state => ({ payments: state.payments.map(p => p.id === id ? escrowRes.data : p) }));
+            useNotificationStore.getState().triggerEvent('payment.completed', escrowRes.data);
           }
         }, 2000);
       }
@@ -65,6 +67,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
     const res = await paymentsApi.releasePayment(id);
     if (res.success) {
       set(state => ({ payments: state.payments.map(p => p.id === id ? res.data : p) }));
+      useNotificationStore.getState().triggerEvent('escrow.released', res.data);
     }
   },
 

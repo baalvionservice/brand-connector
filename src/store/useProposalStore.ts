@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { Proposal, Deliverable } from '@/types/proposal';
 import { proposalsApi } from '@/lib/api/proposals';
+import { useNotificationStore } from './useNotificationStore';
 
 interface ProposalState {
   proposals: Proposal[];
@@ -50,6 +51,7 @@ export const useProposalStore = create<ProposalState>((set, get) => ({
       const res = await proposalsApi.createProposal(dealId);
       if (res.success) {
         set(state => ({ proposals: [res.data, ...state.proposals] }));
+        useNotificationStore.getState().triggerEvent('proposal.created', res.data);
         return res.data.id;
       }
       return null;
@@ -75,6 +77,7 @@ export const useProposalStore = create<ProposalState>((set, get) => ({
         proposals: state.proposals.map(p => p.id === id ? res.data : p),
         selectedProposal: state.selectedProposal?.id === id ? res.data : state.selectedProposal
       }));
+      useNotificationStore.getState().triggerEvent('proposal.sent', res.data);
     }
   },
 
@@ -85,6 +88,7 @@ export const useProposalStore = create<ProposalState>((set, get) => ({
         proposals: state.proposals.map(p => p.id === id ? res.data : p),
         selectedProposal: state.selectedProposal?.id === id ? res.data : state.selectedProposal
       }));
+      useNotificationStore.getState().triggerEvent('proposal.approved', res.data);
     }
   },
 

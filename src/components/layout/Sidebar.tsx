@@ -86,6 +86,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'CRM Pipeline', href: '/admin/leads', icon: Target },
     { name: 'Sales Pipeline', href: '/admin/deals', icon: TrendingUp },
     { name: 'Proposals', href: '/admin/proposals', icon: FileBox },
+    { name: 'Workflow Logic', href: '/admin/automation', icon: Zap },
     { name: 'Brand Acquisition', href: '/admin/acquisition', icon: Search },
     { name: 'Outreach Manager', href: '/admin/outreach', icon: Megaphone },
     { name: 'Platform Analytics', href: '/admin/analytics', icon: PieChart },

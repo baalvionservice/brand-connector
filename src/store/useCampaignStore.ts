@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { CampaignExecution } from '@/types/campaign';
 import { campaignsApi } from '@/lib/api/campaigns';
+import { useNotificationStore } from './useNotificationStore';
 
 interface CampaignState {
   campaigns: CampaignExecution[];
@@ -47,6 +48,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
     const res = await campaignsApi.createCampaign(proposalId);
     if (res.success) {
       set(state => ({ campaigns: [res.data, ...state.campaigns] }));
+      useNotificationStore.getState().triggerEvent('campaign.started', res.data);
       return res.data.id;
     }
     return null;
@@ -69,6 +71,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
         campaigns: state.campaigns.map(c => c.id === id ? res.data : c),
         selectedCampaign: state.selectedCampaign?.id === id ? res.data : state.selectedCampaign
       }));
+      useNotificationStore.getState().triggerEvent('deliverable.submitted', res.data);
     }
   },
 
@@ -79,6 +82,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
         campaigns: state.campaigns.map(c => c.id === id ? res.data : c),
         selectedCampaign: state.selectedCampaign?.id === id ? res.data : state.selectedCampaign
       }));
+      useNotificationStore.getState().triggerEvent('deliverable.approved', res.data);
     }
   },
 
@@ -89,6 +93,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => ({
         campaigns: state.campaigns.map(c => c.id === id ? res.data : c),
         selectedCampaign: state.selectedCampaign?.id === id ? res.data : state.selectedCampaign
       }));
+      useNotificationStore.getState().triggerEvent('campaign.completed', res.data);
     }
   }
 }));
