@@ -105,6 +105,22 @@
         "appliedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "campaignId", "creatorId", "status"]
+    },
+    "Deliverable": {
+      "title": "Deliverable",
+      "description": "An asset submitted by a creator for a campaign.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "applicationId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["PENDING", "SUBMITTED", "REVISION_REQUESTED", "APPROVED"] },
+        "submissionUrl": { "type": "string" },
+        "feedback": { "type": "string" },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "applicationId", "title", "status"]
     }
   },
   "auth": {
@@ -130,6 +146,10 @@
     "/applications/{applicationId}": {
       "schema": "Application",
       "description": "Proposals submitted by creators."
+    },
+    "/deliverables/{deliverableId}": {
+      "schema": "Deliverable",
+      "description": "Submission assets for campaigns."
     }
   }
 }
