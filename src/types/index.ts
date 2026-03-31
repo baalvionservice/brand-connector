@@ -145,7 +145,7 @@ export interface Transaction {
   id: string;
   walletId: string;
   amount: number;
-  type: 'DEPOSIT' | 'WITHDRAWAL' | 'PAYMENT' | 'PAYOUT';
+  type: 'DEPOSIT' | 'WITHDRAWAL' | 'PAYMENT' | 'PAYOUT' | 'CREDIT' | 'DEBIT';
   status: TransactionStatus;
   description: string;
   createdAt: string;
@@ -157,7 +157,7 @@ export interface Notification {
   title: string;
   message: string;
   read: boolean;
-  type: 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR';
+  type: 'CAMPAIGN' | 'PAYMENT' | 'MESSAGE' | 'SYSTEM';
   link?: string;
   createdAt: string;
 }

@@ -180,6 +180,22 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "walletId", "amount", "type", "status"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "An in-app alert for a user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["CAMPAIGN", "PAYMENT", "MESSAGE", "SYSTEM"] },
+        "read": { "type": "boolean" },
+        "link": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "type", "read"]
     }
   },
   "auth": {
@@ -225,6 +241,10 @@
     "/transactions/{transactionId}": {
       "schema": "Transaction",
       "description": "Ledger of all financial transactions."
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "In-app user alerts."
     }
   }
 }

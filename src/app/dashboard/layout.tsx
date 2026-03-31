@@ -1,9 +1,10 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { DashboardSidebar } from '@/components/layout/Sidebar';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { 
   Bell, 
   Search, 
@@ -12,7 +13,13 @@ import {
   LogOut,
   User,
   Settings,
-  Loader2
+  Loader2,
+  Zap,
+  Briefcase,
+  Wallet,
+  MessageSquare,
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,14 +32,20 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { useDoc } from '@/firebase';
-import { CreatorProfile, BrandProfile, OnboardingStatus } from '@/types';
+import { useDoc, useCollection, useFirestore } from '@/firebase';
+import { CreatorProfile, BrandProfile, OnboardingStatus, Notification } from '@/types';
+import { collection, query, where, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { currentUser, userProfile, loading, signOut } = useAuth();
+  const db = useFirestore();
   
   // Real-time hook for creator onboarding status
   const { data: creatorProfile } = useDoc<CreatorProfile>(
@@ -43,6 +56,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { data: brandProfile } = useDoc<BrandProfile>(
     userProfile?.role === 'BRAND' ? `brands/brand_${userProfile.id}` : null
   );
+
+  // Real-time notifications for the bell
+  const notificationsQuery = useMemo(() => {
+    if (!userProfile?.id) return null;
+    return query(
+      collection(db, 'notifications'),
+      where('userId', '==', userProfile.id),
+      orderBy('createdAt', 'desc'),
+      limit(10)
+    );
+  }, [db, userProfile?.id]);
+
+  const { data: notifications } = useCollection<Notification>(notificationsQuery);
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const [role, setRole] = useState<'BRAND' | 'CREATOR'>('BRAND');
 
@@ -55,7 +82,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       } else if (userProfile) {
         setRole(userProfile.role as 'BRAND' | 'CREATOR');
         
-        // REDIRECT TO ONBOARDING IF NOT COMPLETED
         if (userProfile.role === 'CREATOR' && creatorProfile) {
           if (creatorProfile.onboardingStatus !== OnboardingStatus.COMPLETED && !pathname.startsWith('/onboarding')) {
             router.replace('/onboarding/creator');
@@ -80,6 +106,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const handleLogout = async () => {
     await signOut();
     router.push('/');
+  };
+
+  const markAsRead = async (id: string) => {
+    try {
+      await updateDoc(doc(db, 'notifications', id), { read: true });
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'CAMPAIGN': return <Zap className="h-4 w-4 text-primary" />;
+      case 'PAYMENT': return <Wallet className="h-4 w-4 text-emerald-500" />;
+      case 'MESSAGE': return <MessageSquare className="h-4 w-4 text-blue-500" />;
+      default: return <AlertCircle className="h-4 w-4 text-slate-400" />;
+    }
   };
 
   if (loading || (currentUser && !currentUser.emailVerified)) {
@@ -123,12 +166,63 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
-            <div className="relative">
-              <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100">
-                <Bell className="h-5 w-5 text-slate-600" />
-                <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-white" />
-              </Button>
-            </div>
+            {/* Notification Bell Dropdown */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <div className="relative">
+                  <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100">
+                    <Bell className="h-5 w-5 text-slate-600" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-2 right-2 h-4 w-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white font-bold">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </Button>
+                </div>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-80 p-0 rounded-2xl overflow-hidden shadow-2xl border-none">
+                <div className="p-4 border-b bg-slate-50/50 flex items-center justify-between">
+                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-900">Notifications</h3>
+                  <Link href="/dashboard/notifications" className="text-[10px] font-bold text-primary hover:underline">View All</Link>
+                </div>
+                <ScrollArea className="max-h-[400px]">
+                  {notifications.length > 0 ? (
+                    <div className="divide-y divide-slate-50">
+                      {notifications.map((n) => (
+                        <button
+                          key={n.id}
+                          onClick={() => {
+                            markAsRead(n.id);
+                            if (n.link) router.push(n.link);
+                          }}
+                          className={cn(
+                            "w-full p-4 flex gap-3 text-left hover:bg-slate-50 transition-colors",
+                            !n.read && "bg-primary/5"
+                          )}
+                        >
+                          <div className="h-8 w-8 rounded-lg bg-white border shadow-sm flex items-center justify-center shrink-0">
+                            {getNotificationIcon(n.type)}
+                          </div>
+                          <div className="space-y-0.5 min-w-0">
+                            <p className="text-xs font-bold text-slate-900 truncate">{n.title}</p>
+                            <p className="text-[10px] text-slate-500 line-clamp-2">{n.message}</p>
+                            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mt-1">
+                              {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                          {!n.read && <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-12 text-center">
+                      <Bell className="h-8 w-8 text-slate-200 mx-auto mb-3" />
+                      <p className="text-xs font-bold text-slate-400">All caught up!</p>
+                    </div>
+                  )}
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -153,7 +247,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <DropdownMenuItem className="rounded-lg py-2">
                   <User className="mr-2 h-4 w-4" /> Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem className="rounded-lg py-2">
+                <DropdownMenuItem className="rounded-lg py-2" onClick={() => router.push('/dashboard/settings')}>
                   <Settings className="mr-2 h-4 w-4" /> Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
