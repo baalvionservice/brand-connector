@@ -11,49 +11,60 @@ import {
   Wallet, 
   MessageSquare, 
   Settings, 
-  Bell, 
   FileText,
-  UserCircle
+  UserCircle,
+  Zap,
+  ArrowLeftRight
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
 
-export function DashboardSidebar() {
+interface SidebarProps {
+  mockRole?: 'BRAND' | 'CREATOR';
+  onToggleRole?: () => void;
+}
+
+export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
   const pathname = usePathname();
   const { userProfile } = useAuth();
 
+  // Use either the real auth role or the provided mock role for prototyping
+  const currentRole = userProfile?.role || mockRole || 'BRAND';
+
   const creatorLinks = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Dashboard', href: '/dashboard/creator', icon: LayoutDashboard },
     { name: 'Find Campaigns', href: '/dashboard/discover', icon: Search },
     { name: 'My Applications', href: '/dashboard/applications', icon: Briefcase },
-    { name: 'My Deliverables', href: '/dashboard/deliverables', icon: FileText },
+    { name: 'Deliverables', href: '/dashboard/deliverables', icon: FileText },
     { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },
     { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
     { name: 'Profile', href: '/dashboard/profile', icon: UserCircle },
   ];
 
   const brandLinks = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Dashboard', href: '/dashboard/brand', icon: LayoutDashboard },
     { name: 'My Campaigns', href: '/dashboard/campaigns', icon: Briefcase },
-    { name: 'Find Creators', href: '/dashboard/matchmaking', icon: Search },
+    { name: 'Matchmaking', href: '/dashboard/matchmaking', icon: Zap },
     { name: 'Deliverables', href: '/dashboard/deliverables', icon: FileText },
     { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },
     { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
   ];
 
-  const links = userProfile?.role === 'BRAND' ? brandLinks : creatorLinks;
+  const links = currentRole === 'BRAND' ? brandLinks : creatorLinks;
 
   return (
     <div className="hidden border-r bg-card md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 shadow-sm z-30">
       <div className="flex flex-col flex-1 min-h-0">
-        <div className="flex items-center h-16 flex-shrink-0 px-6 border-b">
-          <Link href="/dashboard" className="flex items-center">
+        <div className="flex items-center h-16 flex-shrink-0 px-6 border-b justify-between">
+          <Link href="/" className="flex items-center">
             <div className="bg-primary p-1 rounded-md mr-2">
-              <LayoutDashboard className="h-5 w-5 text-white" />
+              <Zap className="h-5 w-5 text-white fill-current" />
             </div>
             <span className="font-headline font-bold text-lg">Baalvion</span>
           </Link>
         </div>
+        
         <div className="flex-1 flex flex-col overflow-y-auto">
           <nav className="flex-1 px-4 py-6 space-y-1">
             {links.map((item) => (
@@ -79,16 +90,35 @@ export function DashboardSidebar() {
             ))}
           </nav>
         </div>
-        <div className="flex-shrink-0 p-4 border-t">
+
+        <div className="flex-shrink-0 p-4 space-y-2 border-t">
+          {onToggleRole && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full text-[10px] h-8 font-bold border-dashed"
+              onClick={onToggleRole}
+            >
+              <ArrowLeftRight className="h-3 w-3 mr-2" />
+              SWITCH TO {currentRole === 'BRAND' ? 'CREATOR' : 'BRAND'} VIEW
+            </Button>
+          )}
+          
           <div className="bg-muted/50 rounded-xl p-4">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Account</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              {currentRole === 'BRAND' ? 'Brand Account' : 'Creator Account'}
+            </p>
             <div className="flex items-center">
-              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
-                {userProfile?.displayName?.charAt(0) || 'U'}
+              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs uppercase">
+                {currentRole === 'BRAND' ? 'L' : 'S'}
               </div>
               <div className="ml-3 overflow-hidden">
-                <p className="text-sm font-medium truncate">{userProfile?.displayName}</p>
-                <p className="text-xs text-muted-foreground truncate">{userProfile?.role}</p>
+                <p className="text-sm font-medium truncate">
+                  {currentRole === 'BRAND' ? 'Lumina Tech' : 'Sarah Chen'}
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate uppercase font-bold tracking-tighter">
+                  {currentRole === 'BRAND' ? 'Enterprise Plan' : 'Verified Pro'}
+                </p>
               </div>
             </div>
           </div>
