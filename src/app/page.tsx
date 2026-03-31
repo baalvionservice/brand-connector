@@ -10,6 +10,7 @@ import { StatsBanner } from '@/components/landing/StatsBanner';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 import { MatchingDemo } from '@/components/landing/MatchingDemo';
 import { Pricing } from '@/components/landing/Pricing';
+import { Testimonials } from '@/components/landing/Testimonials';
 
 export default function LandingPage() {
   const features = [
@@ -67,6 +68,9 @@ export default function LandingPage() {
           </Link>
           <Link className="text-sm font-medium hover:text-primary transition-colors" href="#how-it-works">
             How It Works
+          </Link>
+          <Link className="text-sm font-medium hover:text-primary transition-colors" href="#testimonials">
+            Testimonials
           </Link>
           <Link className="text-sm font-medium hover:text-primary transition-colors" href="#pricing">
             Pricing
@@ -226,6 +230,9 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* Testimonials Section */}
+        <Testimonials />
 
         {/* Pricing Section */}
         <Pricing />
