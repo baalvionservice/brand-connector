@@ -196,6 +196,23 @@
       },
       "required": ["id", "brandId", "title", "status"]
     },
+    "Invite": {
+      "title": "Invite",
+      "description": "A direct invitation from a brand to a creator.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "campaignId": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "brandId": { "type": "string" },
+        "message": { "type": "string" },
+        "budgetOffer": { "type": "number" },
+        "status": { "type": "string", "enum": ["SENT", "OPENED", "ACCEPTED", "DECLINED"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "campaignId", "creatorId", "brandId", "status", "createdAt"]
+    },
     "Application": {
       "title": "Application",
       "description": "A proposal submitted by a creator for a campaign.",
@@ -332,6 +349,10 @@
     "/campaigns/{campaignId}": {
       "schema": "Campaign",
       "description": "Brand campaigns."
+    },
+    "/invites/{inviteId}": {
+      "schema": "Invite",
+      "description": "Direct campaign invitations."
     },
     "/applications/{applicationId}": {
       "schema": "Application",

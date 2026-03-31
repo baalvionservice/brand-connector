@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -26,7 +27,8 @@ import {
   Scale,
   Loader2,
   ExternalLink,
-  ShieldCheck
+  ShieldCheck,
+  Send
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -57,6 +59,7 @@ import { Separator } from '@/components/ui/separator';
 import { CREATOR_NICHES, SOCIAL_PLATFORMS, COUNTRIES } from '@/constants';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { InviteCreatorDialog } from '@/components/dashboard/brand/InviteCreatorDialog';
 
 // Robust Mock Data for Discovery
 const MOCK_CREATORS = [
@@ -81,6 +84,9 @@ export default function CreatorSearchPage() {
   const [shortlist, setShortlist] = useState<string[]>([]);
   const [compareList, setCompareList] = useState<string[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
+
+  // Invite Flow State
+  const [inviteTarget, setInviteTarget] = useState<any>(null);
 
   const filteredCreators = useMemo(() => {
     return MOCK_CREATORS.filter(c => {
@@ -287,6 +293,7 @@ export default function CreatorSearchPage() {
                   isComparing={compareList.includes(creator.id)}
                   onShortlist={() => toggleShortlist(creator.id)}
                   onCompare={() => toggleCompare(creator.id)}
+                  onInvite={() => setInviteTarget(creator)}
                 />
               ))}
             </motion.div>
@@ -366,7 +373,7 @@ export default function CreatorSearchPage() {
                       </div>
                     </CardContent>
                     <CardFooter className="p-6 pt-0">
-                      <Button className="w-full rounded-xl font-bold">Send Campaign Invite</Button>
+                      <Button className="w-full rounded-xl font-bold" onClick={() => { setIsCompareOpen(false); setInviteTarget(c); }}>Send Campaign Invite</Button>
                     </CardFooter>
                   </Card>
                 );
@@ -375,17 +382,27 @@ export default function CreatorSearchPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Invite Flow Modal */}
+      {inviteTarget && (
+        <InviteCreatorDialog 
+          creator={inviteTarget}
+          open={!!inviteTarget}
+          onOpenChange={(open) => !open && setInviteTarget(null)}
+        />
+      )}
     </div>
   );
 }
 
-function CreatorResultCard({ creator, index, isShortlisted, isComparing, onShortlist, onCompare }: { 
+function CreatorResultCard({ creator, index, isShortlisted, isComparing, onShortlist, onCompare, onInvite }: { 
   creator: any, 
   index: number,
   isShortlisted: boolean,
   isComparing: boolean,
   onShortlist: () => void,
-  onCompare: () => void
+  onCompare: () => void,
+  onInvite: () => void
 }) {
   const getPlatformIcon = (p: string) => {
     switch (p) {
@@ -484,11 +501,16 @@ function CreatorResultCard({ creator, index, isShortlisted, isComparing, onShort
             <p className="text-[9px] font-black text-slate-400 uppercase leading-none mb-1">Starting Rate</p>
             <p className="text-md font-black text-slate-900">₹{creator.price.toLocaleString()}</p>
           </div>
-          <Link href={`/creator/${creator.handle}`}>
-            <Button size="sm" className="rounded-xl font-bold h-9 px-6 shadow-lg shadow-primary/20">
-              View Analytics
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" className="rounded-xl font-bold h-9 px-4 border-slate-200" onClick={onInvite}>
+              <Send className="h-3.5 w-3.5 mr-1.5" /> Invite
             </Button>
-          </Link>
+            <Link href={`/creator/${creator.handle}`}>
+              <Button size="sm" className="rounded-xl font-bold h-9 px-4 shadow-lg shadow-primary/20">
+                Analytics
+              </Button>
+            </Link>
+          </div>
         </CardFooter>
       </Card>
     </motion.div>

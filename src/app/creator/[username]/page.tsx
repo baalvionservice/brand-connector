@@ -1,7 +1,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -22,7 +22,8 @@ import {
   Clock,
   ArrowRight,
   ShieldCheck,
-  Loader2
+  Loader2,
+  Send
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -37,11 +38,14 @@ import { CreatorReviews } from '@/components/profile/CreatorReviews';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where, limit } from 'firebase/firestore';
 import { CreatorProfile } from '@/types';
+import { InviteCreatorDialog } from '@/components/dashboard/brand/InviteCreatorDialog';
 
 export default function CreatorPublicProfile() {
   const params = useParams();
   const username = params.username as string;
   const db = useFirestore();
+
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   // Fetch creator profile by username
   const creatorQuery = React.useMemo(() => {
@@ -127,7 +131,7 @@ export default function CreatorPublicProfile() {
             </div>
 
             <div className="flex gap-3 mb-2">
-              <Button size="lg" className="rounded-xl font-bold shadow-xl shadow-primary/20 px-8">
+              <Button size="lg" className="rounded-xl font-bold shadow-xl shadow-primary/20 px-8" onClick={() => setIsInviteOpen(true)}>
                 Work with {data.username} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <Button size="lg" variant="outline" className="rounded-xl bg-white/10 backdrop-blur-md text-white border-white/30 hover:bg-white hover:text-primary transition-all">
@@ -193,7 +197,7 @@ export default function CreatorPublicProfile() {
             })}
           </div>
 
-          {/* Reviews Section - THE NEW COMPONENT */}
+          {/* Reviews Section */}
           <CreatorReviews creatorId={data.userId} />
 
           {/* Portfolio Grid */}
@@ -268,8 +272,8 @@ export default function CreatorPublicProfile() {
                 <Clock className="h-5 w-5 text-slate-400 shrink-0 mt-0.5" />
                 <p className="text-xs text-slate-500 font-medium">Rates are negotiable based on campaign volume and usage rights.</p>
               </div>
-              <Button size="lg" className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20">
-                Send Campaign Invite
+              <Button size="lg" className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20" onClick={() => setIsInviteOpen(true)}>
+                <Send className="mr-2 h-5 w-5" /> Send Campaign Invite
               </Button>
             </CardFooter>
           </Card>
@@ -289,6 +293,18 @@ export default function CreatorPublicProfile() {
 
         </div>
       </div>
+
+      {/* Invite Modal */}
+      <InviteCreatorDialog 
+        creator={{
+          id: data.userId,
+          name: data.username,
+          handle: data.username,
+          image: data.photoURL
+        }}
+        open={isInviteOpen}
+        onOpenChange={setIsInviteOpen}
+      />
     </div>
   );
 }

@@ -17,6 +17,13 @@ export enum ApplicationStatus {
   WITHDRAWN = 'WITHDRAWN'
 }
 
+export enum InviteStatus {
+  SENT = 'SENT',
+  OPENED = 'OPENED',
+  ACCEPTED = 'ACCEPTED',
+  DECLINED = 'DECLINED'
+}
+
 export enum DeliverableStatus {
   PENDING = 'PENDING',
   SUBMITTED = 'SUBMITTED',
@@ -196,6 +203,20 @@ export interface Campaign {
   audienceGender?: string;
   minPosts?: number;
   isExclusive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Invite {
+  id: string;
+  campaignId: string;
+  creatorId: string;
+  brandId: string;
+  message: string;
+  budgetOffer: number;
+  status: InviteStatus;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Application {
