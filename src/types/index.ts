@@ -171,6 +171,17 @@ export interface Campaign {
   status: CampaignStatus;
   requirements: string[];
   deliverablesCount: number;
+  creatorTier?: 'NANO' | 'MICRO' | 'MID' | 'MACRO';
+  minFollowers?: number;
+  maxFollowers?: number;
+  minEngagementRate?: number;
+  targetLocations?: string[];
+  languages?: string[];
+  audienceAgeMin?: number;
+  audienceAgeMax?: number;
+  audienceGender?: string;
+  minPosts?: number;
+  isExclusive?: boolean;
 }
 
 export interface Application {

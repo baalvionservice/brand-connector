@@ -169,7 +169,18 @@
         "endDate": { "type": "string", "format": "date-time" },
         "status": { "type": "string", "enum": ["DRAFT", "ACTIVE", "PAUSED", "COMPLETED", "CANCELLED"] },
         "requirements": { "type": "array", "items": { "type": "string" } },
-        "deliverablesCount": { "type": "number" }
+        "deliverablesCount": { "type": "number" },
+        "creatorTier": { "type": "string", "enum": ["NANO", "MICRO", "MID", "MACRO"] },
+        "minFollowers": { "type": "number" },
+        "maxFollowers": { "type": "number" },
+        "minEngagementRate": { "type": "number" },
+        "targetLocations": { "type": "array", "items": { "type": "string" } },
+        "languages": { "type": "array", "items": { "type": "string" } },
+        "audienceAgeMin": { "type": "number" },
+        "audienceAgeMax": { "type": "number" },
+        "audienceGender": { "type": "string" },
+        "minPosts": { "type": "number" },
+        "isExclusive": { "type": "boolean" }
       },
       "required": ["id", "brandId", "title", "status"]
     },
