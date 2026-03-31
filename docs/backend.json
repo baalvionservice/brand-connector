@@ -24,14 +24,16 @@
       "properties": {
         "id": { "type": "string" },
         "userId": { "type": "string" },
+        "username": { "type": "string" },
         "bio": { "type": "string" },
+        "photoURL": { "type": "string" },
         "niches": { "type": "array", "items": { "type": "string" } },
-        "portfolioLinks": { "type": "array", "items": { "type": "string" } },
         "socialStats": { "type": "object" },
+        "baseRates": { "type": "object" },
         "location": { "type": "string" },
         "rating": { "type": "number" }
       },
-      "required": ["id", "userId"]
+      "required": ["id", "userId", "username"]
     },
     "BrandProfile": {
       "title": "Brand Profile",
