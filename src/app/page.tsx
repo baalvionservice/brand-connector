@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { ParticlesBackground } from '@/components/landing/ParticlesBackground';
 import { StatsBanner } from '@/components/landing/StatsBanner';
 import { HowItWorks } from '@/components/landing/HowItWorks';
+import { MatchingDemo } from '@/components/landing/MatchingDemo';
 
 export default function LandingPage() {
   const features = [
@@ -175,6 +176,9 @@ export default function LandingPage() {
 
         {/* How It Works Section */}
         <HowItWorks />
+
+        {/* AI Matching Demo Section */}
+        <MatchingDemo />
 
         {/* Features Section */}
         <section id="features" className="w-full py-24 md:py-32 bg-slate-50 overflow-hidden">
