@@ -18,7 +18,8 @@ import {
   BarChart3,
   ImageIcon,
   IndianRupee,
-  Users
+  Users,
+  LineChart
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
 
   const brandLinks = [
     { name: 'Dashboard', href: '/dashboard/brand', icon: LayoutDashboard },
+    { name: 'Performance', href: '/dashboard/brand/analytics', icon: LineChart },
     { name: 'My Campaigns', href: '/dashboard/brand/campaigns', icon: Briefcase },
     { name: 'Find Creators', href: '/dashboard/brand/creators', icon: Users },
     { name: 'Matchmaking', href: '/dashboard/matchmaking', icon: Zap },
