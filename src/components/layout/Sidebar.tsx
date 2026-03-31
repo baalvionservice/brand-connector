@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -73,9 +72,9 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'User Directory', href: '/admin/users', icon: Users },
     { name: 'Verification Queue', href: '/admin/creators/verify', icon: ShieldCheck },
     { name: 'Moderation Flow', href: '/admin/campaigns', icon: ShieldAlert },
+    { name: 'Financial Control', href: '/admin/finance', icon: IndianRupee },
     { name: 'Mediation Hub', href: '/admin/disputes', icon: Scale },
-    { name: 'Audit Logs', href: '/admin/logs', icon: History },
-    { name: 'System Config', href: '/admin/settings', icon: Settings },
+    { name: 'System Settings', href: '/admin/settings', icon: Settings },
   ];
 
   const links = currentRole === 'ADMIN' ? adminLinks : currentRole === 'BRAND' ? brandLinks : creatorLinks;
