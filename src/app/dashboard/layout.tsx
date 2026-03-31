@@ -47,6 +47,7 @@ import { requestPermission, getFcmToken, onMessageListener } from '@/lib/fcm';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { OnboardingTour } from '@/components/dashboard/OnboardingTour';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -292,7 +293,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         <main className="flex-1 p-4 md:p-8 max-w-[1600px] mx-auto w-full">
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
 

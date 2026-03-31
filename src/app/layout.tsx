@@ -1,4 +1,3 @@
-
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
@@ -6,6 +5,7 @@ import { Toaster as HotToaster } from 'react-hot-toast';
 import { generateMetadata } from '@/lib/seo';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { FirebaseClientProvider } from '@/firebase';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export const metadata: Metadata = generateMetadata();
 
@@ -62,13 +62,15 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased bg-background text-foreground min-h-screen">
-        <FirebaseClientProvider>
-          <AuthProvider>
-            {children}
-            <ShadcnToaster />
-            <HotToaster position="top-right" reverseOrder={false} />
-          </AuthProvider>
-        </FirebaseClientProvider>
+        <ErrorBoundary>
+          <FirebaseClientProvider>
+            <AuthProvider>
+              {children}
+              <ShadcnToaster />
+              <HotToaster position="top-right" reverseOrder={false} />
+            </AuthProvider>
+          </FirebaseClientProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
