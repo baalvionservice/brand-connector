@@ -22,3 +22,4 @@ export * from './tooltip';
 export * from './cards';
 export * from './Modal';
 export * from './DataTable';
+export * from './badges';
