@@ -21,7 +21,8 @@ import {
   Plus,
   Send,
   Building2,
-  Users
+  Users,
+  BarChart3
 } from 'lucide-react';
 import { useCampaignStore } from '@/store/useCampaignStore';
 import { usePaymentStore } from '@/store/usePaymentStore';
@@ -36,6 +37,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 export default function CampaignExecutionDetail() {
   const params = useParams();
@@ -109,6 +111,13 @@ export default function CampaignExecutionDetail() {
           <p className="text-slate-500 font-medium mt-1">Executing for {selectedCampaign.companyName}</p>
         </div>
         <div className="flex gap-3">
+          {selectedCampaign.status === 'completed' && (
+            <Link href={`/admin/campaigns/${params.id}/analytics`}>
+              <Button variant="outline" className="rounded-xl font-bold h-11 border-slate-200 bg-white">
+                <BarChart3 className="mr-2 h-4 w-4 text-primary" /> View ROI Analytics
+              </Button>
+            </Link>
+          )}
           {selectedCampaign.status === 'not_started' && (
             <Button onClick={handleStart} className="rounded-xl font-bold px-8 shadow-xl shadow-primary/20">
               <Zap className="mr-2 h-4 w-4" /> Start Execution
