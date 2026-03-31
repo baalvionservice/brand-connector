@@ -42,6 +42,8 @@ import { useDoc, useFirestore } from '@/firebase';
 import { CreatorProfile, BrandProfile, OnboardingStatus, Notification, NotificationType } from '@/types';
 import { markNotificationAsRead } from '@/lib/notifications';
 import { useNotifications } from '@/hooks/use-realtime-data';
+import { requestPermission, getFcmToken, onMessageListener } from '@/lib/fcm';
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -64,6 +66,34 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const [role, setRole] = useState<'BRAND' | 'CREATOR'>('BRAND');
+
+  // FCM Integration
+  useEffect(() => {
+    if (userProfile?.id && typeof window !== 'undefined') {
+      const setupNotifications = async () => {
+        const hasPermission = await requestPermission();
+        if (hasPermission) {
+          const token = await getFcmToken();
+          if (token) {
+            // Save token to user profile for push targeting
+            await updateDoc(doc(db, 'users', userProfile.id), {
+              fcmTokens: arrayUnion(token),
+              updatedAt: new Date().toISOString()
+            });
+          }
+        }
+      };
+
+      setupNotifications();
+      
+      // Start foreground listener
+      onMessageListener().then((payload) => {
+        if (payload) {
+          // You could trigger a toast here if needed
+        }
+      });
+    }
+  }, [userProfile?.id, db]);
 
   useEffect(() => {
     if (!loading) {

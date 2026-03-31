@@ -4,12 +4,14 @@ import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
+import { getMessaging, Messaging, isSupported } from 'firebase/messaging';
 import { firebaseConfig } from './config';
 
 let app: FirebaseApp;
 let auth: Auth;
 let db: Firestore;
 let storage: FirebaseStorage;
+let messaging: Messaging | undefined;
 
 export function initializeFirebase() {
   if (typeof window !== 'undefined') {
@@ -21,8 +23,15 @@ export function initializeFirebase() {
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
+    
+    // Messaging initialization is async-checked
+    isSupported().then((supported) => {
+      if (supported) {
+        messaging = getMessaging(app);
+      }
+    });
   }
-  return { app, auth, db, storage };
+  return { app, auth, db, storage, messaging };
 }
 
 export { FirebaseProvider, useFirebase, useFirebaseApp, useFirestore, useAuth } from './provider';

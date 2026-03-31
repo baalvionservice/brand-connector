@@ -76,6 +76,7 @@ export interface User {
     system: boolean;
   };
   twoFactorEnabled?: boolean;
+  fcmTokens?: string[];
   createdAt: string;
   updatedAt: string;
 }
