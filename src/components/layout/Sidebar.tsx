@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -26,7 +27,8 @@ import {
   History,
   Scale,
   Megaphone,
-  Cpu
+  Cpu,
+  LifeBuoy
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -81,6 +83,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Plan & Tiers', href: '/admin/plans', icon: CreditCard },
     { name: 'Mediation Hub', href: '/admin/disputes', icon: Scale },
     { name: 'Broadcast Center', href: '/admin/notifications', icon: Megaphone },
+    { name: 'Support Center', href: '/admin/support', icon: LifeBuoy },
     { name: 'System Settings', href: '/admin/settings', icon: Settings },
   ];
 

@@ -56,6 +56,10 @@ export enum OnboardingStatus {
   COMPLETED = 'COMPLETED'
 }
 
+export type SupportCategory = 'TECHNICAL' | 'BILLING' | 'CAMPAIGN' | 'OTHER';
+export type SupportPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type SupportStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+
 export interface User {
   id: string;
   email: string;
@@ -296,6 +300,29 @@ export interface Dispute {
   adminNotes?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface SupportTicket {
+  id: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  subject: string;
+  message: string;
+  category: SupportCategory;
+  priority: SupportPriority;
+  status: SupportStatus;
+  assignedTo?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TicketMessage {
+  id: string;
+  senderId: string;
+  senderName: string;
+  text: string;
+  createdAt: string;
 }
 
 export interface Wallet {

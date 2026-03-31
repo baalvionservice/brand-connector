@@ -115,6 +115,26 @@
           }
         }
       }
+    },
+    "SupportTicket": {
+      "title": "Support Ticket",
+      "description": "A user-submitted request for help or information.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "category": { "type": "string", "enum": ["TECHNICAL", "BILLING", "CAMPAIGN", "OTHER"] },
+        "priority": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"] },
+        "status": { "type": "string", "enum": ["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] },
+        "assignedTo": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "subject", "message"]
     }
   },
   "auth": {
@@ -140,6 +160,10 @@
     "/broadcasts/{broadcastId}": {
       "schema": "Broadcast",
       "description": "Mass announcement history."
+    },
+    "/support_tickets/{ticketId}": {
+      "schema": "SupportTicket",
+      "description": "Customer support requests."
     }
   }
 }

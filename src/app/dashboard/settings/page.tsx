@@ -3,8 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFirestore, useDoc } from '@/firebase';
-import { doc, updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { useFirestore, useDoc, useCollection } from '@/firebase';
+import { doc, updateDoc, collection, addDoc, query, where, orderBy, limit } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { 
@@ -32,7 +32,11 @@ import {
   MoreVertical,
   Plus,
   CreditCard,
-  Smartphone as UpiIcon
+  Smartphone as UpiIcon,
+  LifeBuoy,
+  Send,
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -67,7 +71,7 @@ import {
 } from '@/components/ui/select';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { CreatorProfile, BrandProfile } from '@/types';
+import { CreatorProfile, BrandProfile, SupportTicket } from '@/types';
 import { cn } from '@/lib/utils';
 
 export default function SettingsPage() {
@@ -81,6 +85,19 @@ export default function SettingsPage() {
   const { data: creatorData } = useDoc<CreatorProfile>(creatorId ? `creators/${creatorId}` : null);
   const { data: brandData } = useDoc<BrandProfile>(brandId ? `brands/${brandId}` : null);
 
+  // Fetch user's support tickets
+  const ticketsQuery = React.useMemo(() => {
+    if (!userProfile?.id) return null;
+    return query(
+      collection(db, 'support_tickets'),
+      where('userId', '==', userProfile.id),
+      orderBy('createdAt', 'desc'),
+      limit(10)
+    );
+  }, [db, userProfile?.id]);
+
+  const { data: userTickets } = useCollection<SupportTicket>(ticketsQuery);
+
   const [isSaving, setIsSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
 
@@ -89,6 +106,12 @@ export default function SettingsPage() {
   const [bio, setBio] = useState('');
   const [phone, setPhone] = useState('');
   const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE'>('PUBLIC');
+
+  // Support Form State
+  const [supportSubject, setSupportSubject] = useState('');
+  const [supportCategory, setSupportCategory] = useState<any>('TECHNICAL');
+  const [supportMessage, setSupportMessage] = useState('');
+  const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
 
   useEffect(() => {
     if (userProfile) {
@@ -133,6 +156,52 @@ export default function SettingsPage() {
       }));
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSubmitTicket = async () => {
+    if (!supportSubject || !supportMessage || !userProfile) return;
+    setIsSubmittingTicket(true);
+
+    const ticketData = {
+      userId: userProfile.id,
+      userName: userProfile.displayName || 'Unnamed User',
+      userEmail: userProfile.email,
+      subject: supportSubject,
+      message: supportMessage,
+      category: supportCategory,
+      priority: 'MEDIUM',
+      status: 'OPEN',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    try {
+      const docRef = await addDoc(collection(db, 'support_tickets'), ticketData);
+      
+      // Initial message in subcollection for chat history
+      await addDoc(collection(db, 'support_tickets', docRef.id, 'messages'), {
+        senderId: userProfile.id,
+        senderName: userProfile.displayName || 'User',
+        text: supportMessage,
+        createdAt: new Date().toISOString()
+      });
+
+      toast({ 
+        title: "Ticket Submitted", 
+        description: "An administrator will review your request and get back to you shortly." 
+      });
+      
+      setSupportSubject('');
+      setSupportMessage('');
+    } catch (err: any) {
+      errorEmitter.emitPermissionError(new FirestorePermissionError({
+        path: '/support_tickets',
+        operation: 'create',
+        requestResourceData: ticketData
+      }));
+    } finally {
+      setIsSubmittingTicket(false);
     }
   };
 
@@ -217,6 +286,9 @@ export default function SettingsPage() {
           </TabsTrigger>
           <TabsTrigger value="security" className="rounded-xl py-2.5 px-6 font-bold flex gap-2">
             <ShieldCheck className="h-4 w-4" /> Security
+          </TabsTrigger>
+          <TabsTrigger value="support" className="rounded-xl py-2.5 px-6 font-bold flex gap-2">
+            <LifeBuoy className="h-4 w-4" /> Help & Support
           </TabsTrigger>
         </TabsList>
 
@@ -586,6 +658,107 @@ export default function SettingsPage() {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* HELP & SUPPORT SECTION */}
+            <TabsContent value="support" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-6">
+                  <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+                    <CardHeader className="p-8 border-b bg-slate-50/50">
+                      <CardTitle className="text-xl">Create Support Ticket</CardTitle>
+                      <CardDescription>Experiencing an issue? Our team is here to help.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-8 space-y-6">
+                      <div className="space-y-2">
+                        <Label className="font-bold">Subject</Label>
+                        <Input 
+                          placeholder="Brief summary of the issue" 
+                          value={supportSubject}
+                          onChange={(e) => setSupportSubject(e.target.value)}
+                          className="rounded-xl h-12 bg-slate-50/50 border-slate-100"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-bold">Category</Label>
+                        <Select value={supportCategory} onValueChange={setSupportCategory}>
+                          <SelectTrigger className="rounded-xl h-12 bg-slate-50/50 border-slate-100 font-medium">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="TECHNICAL">Technical Issue</SelectItem>
+                            <SelectItem value="BILLING">Billing & Payments</SelectItem>
+                            <SelectItem value="CAMPAIGN">Campaign & Creator Dispute</SelectItem>
+                            <SelectItem value="OTHER">General Query</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-bold">Message</Label>
+                        <Textarea 
+                          placeholder="Describe your issue in detail..." 
+                          className="rounded-2xl min-h-[150px] bg-slate-50/50 border-slate-100 p-6 resize-none"
+                          value={supportMessage}
+                          onChange={(e) => setSupportMessage(e.target.value)}
+                        />
+                      </div>
+                    </CardContent>
+                    <CardFooter className="bg-slate-50/50 p-8 border-t flex justify-end">
+                      <Button 
+                        onClick={handleSubmitTicket}
+                        disabled={!supportSubject || !supportMessage || isSubmittingTicket}
+                        className="rounded-xl font-bold px-10 h-12 shadow-lg shadow-primary/20"
+                      >
+                        {isSubmittingTicket ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                        Submit Ticket
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                </div>
+
+                <div className="space-y-6">
+                  <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+                    <CardHeader className="bg-slate-50/50 border-b p-6">
+                      <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">My Recent Tickets</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <div className="divide-y divide-slate-50">
+                        {userTickets?.map((ticket) => (
+                          <div key={ticket.id} className="p-5 space-y-2 hover:bg-slate-50 transition-colors">
+                            <div className="flex justify-between items-start">
+                              <Badge className={cn(
+                                "text-[8px] font-black uppercase border-none px-2 h-4",
+                                ticket.status === 'OPEN' ? "bg-red-50 text-red-600" :
+                                ticket.status === 'RESOLVED' ? "bg-emerald-50 text-emerald-600" :
+                                "bg-blue-50 text-blue-600"
+                              )}>
+                                {ticket.status}
+                              </Badge>
+                              <span className="text-[9px] font-bold text-slate-400">{new Date(ticket.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-xs font-bold text-slate-900 truncate">{ticket.subject}</p>
+                          </div>
+                        ))}
+                        {!userTickets?.length && (
+                          <div className="p-10 text-center text-[10px] font-bold text-slate-300 uppercase tracking-widest leading-relaxed">
+                            No support history
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10 flex items-start gap-4">
+                    <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
+                      <Clock className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-900">Average Response Time</p>
+                      <p className="text-[10px] text-slate-500 font-medium mt-1">Our support specialists typically respond within <strong>4-6 hours</strong> during business days.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </TabsContent>
           </motion.div>
         </AnimatePresence>
