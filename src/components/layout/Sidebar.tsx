@@ -26,7 +26,8 @@ import {
   ShieldAlert,
   History,
   Scale,
-  Megaphone
+  Megaphone,
+  Cpu
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -76,6 +77,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Content Review', href: '/admin/content', icon: ShieldAlert },
     { name: 'Verification Queue', href: '/admin/creators/verify', icon: ShieldCheck },
     { name: 'Moderation Flow', href: '/admin/campaigns', icon: ShieldAlert },
+    { name: 'AI Monitoring', href: '/admin/ai', icon: Cpu },
     { name: 'Financial Control', href: '/admin/finance', icon: IndianRupee },
     { name: 'Mediation Hub', href: '/admin/disputes', icon: Scale },
     { name: 'Broadcast Center', href: '/admin/notifications', icon: Megaphone },
