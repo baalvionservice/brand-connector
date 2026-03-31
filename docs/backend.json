@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -94,6 +95,27 @@
         "portfolioSamples": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["id", "userId", "username"]
+    },
+    "PortfolioItem": {
+      "title": "Portfolio Item",
+      "description": "A single piece of work in a creator's portfolio.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "mediaUrl": { "type": "string" },
+        "mediaType": { "type": "string", "enum": ["IMAGE", "VIDEO"] },
+        "platform": { "type": "string" },
+        "campaignType": { "type": "string" },
+        "results": { "type": "string" },
+        "isPublic": { "type": "boolean" },
+        "isFeatured": { "type": "boolean" },
+        "order": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "mediaUrl", "mediaType"]
     },
     "BrandProfile": {
       "title": "Brand Profile",
@@ -239,6 +261,10 @@
     "/creators/{creatorId}": {
       "schema": "CreatorProfile",
       "description": "Creator specific details."
+    },
+    "/portfolioItems/{itemId}": {
+      "schema": "PortfolioItem",
+      "description": "Structured samples of a creator's work."
     },
     "/brands/{brandId}": {
       "schema": "BrandProfile",

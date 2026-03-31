@@ -15,7 +15,8 @@ import {
   UserCircle,
   Zap,
   ArrowLeftRight,
-  BarChart3
+  BarChart3,
+  ImageIcon
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -35,12 +36,12 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
   const creatorLinks = [
     { name: 'Dashboard', href: '/dashboard/creator', icon: LayoutDashboard },
     { name: 'Analytics', href: '/dashboard/creator/analytics', icon: BarChart3 },
+    { name: 'Portfolio', href: '/dashboard/creator/portfolio', icon: ImageIcon },
     { name: 'Find Campaigns', href: '/dashboard/creator/campaigns', icon: Search },
     { name: 'My Applications', href: '/dashboard/applications', icon: Briefcase },
-    { name: 'Deliverables', href: '/dashboard/deliverables', icon: FileText },
     { name: 'Wallet', href: '/dashboard/creator/wallet', icon: Wallet },
     { name: 'Messages', href: '/dashboard/creator/messages', icon: MessageSquare },
-    { name: 'Profile', href: '/dashboard/profile', icon: UserCircle },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
   ];
 
   const brandLinks = [

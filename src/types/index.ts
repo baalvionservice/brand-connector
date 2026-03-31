@@ -90,6 +90,22 @@ export interface CreatorProfile {
   updatedAt: string;
 }
 
+export interface PortfolioItem {
+  id: string;
+  userId: string;
+  title: string;
+  description: string;
+  mediaUrl: string;
+  mediaType: 'IMAGE' | 'VIDEO';
+  platform: string;
+  campaignType: string;
+  results: string;
+  isPublic: boolean;
+  isFeatured: boolean;
+  order: number;
+  createdAt: string;
+}
+
 export interface BrandProfile {
   id: string;
   userId: string;
