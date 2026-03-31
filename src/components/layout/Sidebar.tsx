@@ -30,7 +30,11 @@ import {
   LifeBuoy,
   FileBarChart,
   FileBadge,
-  LogOut
+  LogOut,
+  Trophy,
+  Activity,
+  Fingerprint,
+  PieChart
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -53,7 +57,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Rate Card', href: '/dashboard/creator/rates', icon: IndianRupee, id: 'sidebar-rates' },
     { name: 'Find Campaigns', href: '/dashboard/creator/campaigns', icon: Search, id: 'sidebar-campaigns' },
     { name: 'My Applications', href: '/dashboard/applications', icon: Briefcase, id: 'sidebar-apps' },
-    { name: 'Tax & Compliance', href: '/dashboard/creator/tax', icon: FileBadge, id: 'sidebar-tax' },
+    { name: 'Leaderboard', href: '/leaderboard', icon: Trophy, id: 'sidebar-leaderboard' },
     { name: 'Wallet', href: '/dashboard/creator/wallet', icon: Wallet, id: 'sidebar-wallet' },
     { name: 'Messages', href: '/dashboard/creator/messages', icon: MessageSquare, id: 'sidebar-messages' },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings, id: 'sidebar-settings' },
@@ -64,7 +68,6 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Performance', href: '/dashboard/brand/analytics', icon: LineChart, id: 'sidebar-analytics' },
     { name: 'My Campaigns', href: '/dashboard/brand/campaigns', icon: Briefcase, id: 'sidebar-campaigns' },
     { name: 'Find Creators', href: '/dashboard/brand/creators', icon: Users, id: 'sidebar-creators' },
-    { name: 'Matchmaking', href: '/dashboard/matchmaking', icon: Zap, id: 'sidebar-matching' },
     { name: 'Deliverables', href: '/dashboard/brand/deliverables', icon: FileText, id: 'sidebar-deliverables' },
     { name: 'Team Hub', href: '/dashboard/brand/team', icon: UserPlus, id: 'sidebar-team' },
     { name: 'Tax & Compliance', href: '/dashboard/brand/tax', icon: FileBadge, id: 'sidebar-tax' },
@@ -76,21 +79,21 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
 
   const adminLinks = [
     { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Platform Analytics', href: '/admin/analytics', icon: BarChart3 },
-    { name: 'Reports & Export', href: '/admin/reports', icon: FileBarChart },
+    { name: 'Platform Analytics', href: '/admin/analytics', icon: PieChart },
     { name: 'User Directory', href: '/admin/users', icon: Users },
-    { name: 'Content Review', href: '/admin/content', icon: ShieldAlert },
     { name: 'Verification Queue', href: '/admin/creators/verify', icon: ShieldCheck },
-    { name: 'Moderation Flow', href: '/admin/campaigns', icon: ShieldAlert },
-    { name: 'Fraud & Safety', href: '/admin/fraud', icon: ShieldAlert },
-    { name: 'AI Monitoring', href: '/admin/ai', icon: Cpu },
+    { name: 'Campaign Moderation', href: '/admin/campaigns', icon: ShieldAlert },
+    { name: 'Content Safety', href: '/admin/content', icon: ShieldAlert },
+    { name: 'Fraud Shield', href: '/admin/fraud', icon: Fingerprint },
     { name: 'Financial Control', href: '/admin/finance', icon: IndianRupee },
-    { name: 'Plan & Tiers', href: '/admin/plans', icon: CreditCard },
+    { name: 'Economics & Tiers', href: '/admin/plans', icon: CreditCard },
+    { name: 'AI Monitoring', href: '/admin/ai', icon: Cpu },
     { name: 'Mediation Hub', href: '/admin/disputes', icon: Scale },
-    { name: 'Audit Log', href: '/admin/audit', icon: History },
     { name: 'Broadcast Center', href: '/admin/notifications', icon: Megaphone },
+    { name: 'Reports & Export', href: '/admin/reports', icon: FileBarChart },
+    { name: 'Audit Ledger', href: '/admin/audit', icon: History },
     { name: 'Support Center', href: '/admin/support', icon: LifeBuoy },
-    { name: 'System Settings', href: '/admin/settings', icon: Settings },
+    { name: 'Global Settings', href: '/admin/settings', icon: Settings },
   ];
 
   const links = currentRole === 'ADMIN' ? adminLinks : currentRole === 'BRAND' ? brandLinks : creatorLinks;
@@ -173,7 +176,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
                 className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
                 aria-label="Log out of session"
               >
-                <LogOut className="h-4 w-4" aria-hidden="true" />
+                <LogOut className="h-4 w-4 aria-hidden="true" />
               </button>
             </div>
           </div>

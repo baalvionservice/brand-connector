@@ -5,6 +5,7 @@
  * 
  * Provides high-fidelity data generation for 30 brands, 100 creators, 
  * 50 campaigns, 200 transactions, and 20 disputes.
+ * Includes a Root Admin account for platform oversight.
  */
 
 import { 
@@ -25,6 +26,19 @@ const COUNTRIES = ['India', 'United States', 'United Kingdom', 'United Arab Emir
 // Helper to get random item from array
 const rand = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 const randRange = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1) + min);
+
+/**
+ * Root Admin Configuration
+ */
+const ROOT_ADMIN = {
+  id: 'admin_root',
+  email: 'admin@baalvion.com',
+  role: 'ADMIN' as UserRole,
+  displayName: 'Root Administrator',
+  status: 'ACTIVE',
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString()
+};
 
 /**
  * Generates 30 realistic Brands
@@ -136,47 +150,36 @@ export const MOCK_TRANSACTIONS = Array.from({ length: 200 }).map((_, i) => {
 });
 
 /**
- * Generates 20 Disputes
- */
-export const MOCK_DISPUTES = Array.from({ length: 20 }).map((_, i) => {
-  const camp = rand(MOCK_CAMPAIGNS);
-  const creator = rand(MOCK_CREATORS);
-  
-  return {
-    id: `disp_${i + 1}`,
-    campaignId: camp.id,
-    creatorId: creator.userId,
-    brandId: camp.brandId,
-    category: rand(['UNFAIR_REJECTION', 'PAYMENT_ISSUE', 'SCOPE_CREEP']),
-    reason: "Disagreement over the visual style of the second deliverable. Brand claims it doesn't match guidelines.",
-    status: i < 5 ? DisputeStatus.RESOLVED : DisputeStatus.FILED,
-    createdAt: new Date(Date.now() - randRange(1, 10) * 86400000).toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-});
-
-/**
  * Master seeding function to populate Firestore
  */
 export async function seedFirestore() {
   console.log('🚀 Starting Seeding Process...');
   
   try {
-    const batchSize = 400; // Firestore limit is 500
+    const batch = writeBatch(db);
     
+    // Seed Root Admin (Explicitly using a fixed ID for easy testing)
+    console.log('Setting up Root Admin...');
+    const adminRef = doc(db, 'users', 'admin_user_baalvion');
+    batch.set(adminRef, {
+      ...ROOT_ADMIN,
+      id: 'admin_user_baalvion' // Fixed ID for predictable testing
+    });
+
     // Seed Brands
     console.log('Seeding Brands...');
     for (const brand of MOCK_BRANDS) {
       const bRef = doc(db, 'brands', brand.id);
       const uRef = doc(db, 'users', brand.userId);
-      await writeBatch(db).set(bRef, brand).set(uRef, {
+      batch.set(bRef, brand);
+      batch.set(uRef, {
         id: brand.userId,
         email: `${brand.id}@mock.com`,
         role: 'BRAND',
         displayName: brand.companyName,
         createdAt: brand.createdAt,
         updatedAt: brand.updatedAt
-      }).commit();
+      });
     }
 
     // Seed Creators
@@ -184,7 +187,8 @@ export async function seedFirestore() {
     for (const creator of MOCK_CREATORS) {
       const cRef = doc(db, 'creators', creator.id);
       const uRef = doc(db, 'users', creator.userId);
-      await writeBatch(db).set(cRef, creator).set(uRef, {
+      batch.set(cRef, creator);
+      batch.set(uRef, {
         id: creator.userId,
         email: `${creator.username}@mock.com`,
         role: 'CREATOR',
@@ -192,26 +196,31 @@ export async function seedFirestore() {
         photoURL: creator.photoURL,
         createdAt: creator.createdAt,
         updatedAt: creator.updatedAt
-      }).commit();
+      });
     }
 
-    // Seed Campaigns
+    // Commit primary users/profiles first to avoid batch size limits
+    await batch.commit();
+    console.log('User profiles seeded.');
+
+    // Seed Campaigns, Transactions, Disputes in separate batches
+    const itemBatch = writeBatch(db);
     console.log('Seeding Campaigns...');
     for (const camp of MOCK_CAMPAIGNS) {
-      await writeBatch(db).set(doc(db, 'campaigns', camp.id), camp).commit();
+      itemBatch.set(doc(db, 'campaigns', camp.id), camp);
     }
 
-    // Seed Transactions
     console.log('Seeding Transactions...');
-    for (const tx of MOCK_TRANSACTIONS) {
-      await writeBatch(db).set(doc(db, 'transactions', tx.id), tx).commit();
+    for (const tx of MOCK_TRANSACTIONS.slice(0, 100)) { // Subset for batch limit
+      itemBatch.set(doc(db, 'transactions', tx.id), tx);
     }
 
-    // Seed Disputes
     console.log('Seeding Disputes...');
     for (const disp of MOCK_DISPUTES) {
-      await writeBatch(db).set(doc(db, 'disputes', disp.id), disp).commit();
+      itemBatch.set(doc(db, 'disputes', disp.id), disp);
     }
+
+    await itemBatch.commit();
 
     console.log('✅ Seeding Complete! Baalvion is now alive with data.');
     return { success: true };
