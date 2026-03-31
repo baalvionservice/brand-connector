@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Activity, 
   TrendingUp, 
@@ -194,6 +194,7 @@ export function PlatformHealthMonitor() {
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
                   className="mt-8 p-6 rounded-3xl bg-red-50 border-2 border-red-100 flex items-start gap-4"
                 >
                   <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
