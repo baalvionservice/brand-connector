@@ -157,6 +157,13 @@ export interface BrandProfile {
   updatedAt: string;
 }
 
+export interface CampaignDeliverable {
+  type: string;
+  qty: number;
+  platform: string;
+  specs: string;
+}
+
 export interface Campaign {
   id: string;
   brandId: string;
@@ -171,6 +178,13 @@ export interface Campaign {
   status: CampaignStatus;
   requirements: string[];
   deliverablesCount: number;
+  deliverables?: CampaignDeliverable[];
+  dos?: string[];
+  donts?: string[];
+  hashtags?: string[];
+  handles?: string[];
+  links?: string[];
+  mandatoryMentions?: string;
   creatorTier?: 'NANO' | 'MICRO' | 'MID' | 'MACRO';
   minFollowers?: number;
   maxFollowers?: number;

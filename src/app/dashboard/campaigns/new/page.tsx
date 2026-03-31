@@ -27,12 +27,21 @@ import {
   Building2,
   TrendingUp,
   Clock,
-  Rocket
+  Rocket,
+  FileText,
+  ListPlus,
+  X,
+  PlusCircle,
+  Eye,
+  ShieldCheck,
+  Instagram,
+  Youtube,
+  Music2
 } from 'lucide-react';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { CampaignStatus } from '@/types';
+import { CampaignStatus, CampaignDeliverable } from '@/types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
@@ -61,8 +70,9 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { CREATOR_NICHES } from '@/constants';
+import { CREATOR_NICHES, SOCIAL_PLATFORMS } from '@/constants';
 import { format } from "date-fns";
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 // Step 1 Schema
 const campaignBasicsSchema = z.object({
@@ -101,15 +111,33 @@ const budgetTimelineSchema = z.object({
   postLiveDate: z.date({ required_error: "Post live date is required" }),
 });
 
+// Step 4 Schema
+const guidelinesSchema = z.object({
+  deliverables: z.array(z.object({
+    type: z.string(),
+    qty: z.number(),
+    platform: z.string(),
+    specs: z.string()
+  })).min(1, "Add at least one deliverable"),
+  dos: z.array(z.string()),
+  donts: z.array(z.string()),
+  hashtags: z.array(z.string()),
+  handles: z.array(z.string()),
+  links: z.array(z.string()),
+  mandatoryMentions: z.string()
+});
+
 type CampaignBasicsValues = z.infer<typeof campaignBasicsSchema>;
 type CreatorRequirementsValues = z.infer<typeof creatorRequirementsSchema>;
 type BudgetTimelineValues = z.infer<typeof budgetTimelineSchema>;
+type GuidelinesValues = z.infer<typeof guidelinesSchema>;
 
 const STEPS = [
   { id: 1, title: 'Basics', icon: LayoutGrid },
   { id: 2, title: 'Audience', icon: Target },
   { id: 3, title: 'Budget', icon: Sparkles },
-  { id: 4, title: 'Review', icon: CheckCircle2 },
+  { id: 4, title: 'Guidelines', icon: FileText },
+  { id: 5, title: 'Review', icon: CheckCircle2 },
 ];
 
 const OBJECTIVES = [
@@ -180,6 +208,23 @@ export default function NewCampaignPage() {
     },
   });
 
+  const guidelinesForm = useForm<GuidelinesValues>({
+    resolver: zodResolver(guidelinesSchema),
+    defaultValues: {
+      deliverables: [],
+      dos: [],
+      donts: [],
+      hashtags: [],
+      handles: [],
+      links: [],
+      mandatoryMentions: ''
+    },
+  });
+
+  // Dynamic Item States for Step 4
+  const [newDel, setNewDel] = useState<CampaignDeliverable>({ type: 'REEL', qty: 1, platform: 'Instagram', specs: '' });
+  const [tempItem, setTempItem] = useState('');
+
   const onBasicsSubmit = (values: CampaignBasicsValues) => {
     if (!userProfile) return;
     setIsSaving(true);
@@ -198,7 +243,7 @@ export default function NewCampaignPage() {
     if (campaignId) {
       updateDoc(doc(db, 'campaigns', campaignId), campaignData)
         .then(() => {
-          toast({ title: "Basics Saved", description: "Configuring creator requirements..." });
+          toast({ title: "Basics Saved" });
           setCurrentStep(2);
           setIsSaving(false);
         })
@@ -214,7 +259,7 @@ export default function NewCampaignPage() {
       addDoc(collection(db, 'campaigns'), campaignData)
         .then((docRef) => {
           setCampaignId(docRef.id);
-          toast({ title: "Basics Saved", description: "Configuring creator requirements..." });
+          toast({ title: "Basics Saved" });
           setCurrentStep(2);
           setIsSaving(false);
         })
@@ -241,7 +286,7 @@ export default function NewCampaignPage() {
 
     updateDoc(doc(db, 'campaigns', campaignId), updateData)
       .then(() => {
-        toast({ title: "Requirements Saved", description: "Next: Set your campaign budget." });
+        toast({ title: "Requirements Saved" });
         setCurrentStep(3);
         setIsSaving(false);
       })
@@ -274,7 +319,7 @@ export default function NewCampaignPage() {
 
     updateDoc(doc(db, 'campaigns', campaignId), updateData)
       .then(() => {
-        toast({ title: "Budget & Schedule Saved", description: "Almost done! Review your campaign details." });
+        toast({ title: "Budget Saved" });
         setCurrentStep(4);
         setIsSaving(false);
       })
@@ -288,20 +333,58 @@ export default function NewCampaignPage() {
       });
   };
 
+  const onGuidelinesSubmit = (values: GuidelinesValues) => {
+    if (!campaignId) return;
+    setIsSaving(true);
+
+    const updateData = {
+      ...values,
+      updatedAt: new Date().toISOString(),
+      step: 4
+    };
+
+    updateDoc(doc(db, 'campaigns', campaignId), updateData)
+      .then(() => {
+        toast({ title: "Guidelines Saved" });
+        setCurrentStep(5);
+        setIsSaving(false);
+      })
+      .catch(async (err) => {
+        errorEmitter.emitPermissionError(new FirestorePermissionError({
+          path: `/campaigns/${campaignId}`,
+          operation: 'update',
+          requestResourceData: updateData
+        } satisfies SecurityRuleContext));
+        setIsSaving(false);
+      });
+  };
+
+  // Helper to add items to arrays in guidelines form
+  const addArrayItem = (field: keyof GuidelinesValues, value: string) => {
+    if (!value.trim()) return;
+    const current = guidelinesForm.getValues(field) as string[];
+    guidelinesForm.setValue(field, [...current, value] as any);
+    setTempItem('');
+  };
+
+  const removeArrayItem = (field: keyof GuidelinesValues, index: number) => {
+    const current = guidelinesForm.getValues(field) as string[];
+    guidelinesForm.setValue(field, current.filter((_, i) => i !== index) as any);
+  };
+
   // AI Reach Calculator Logic
   const estimatedReach = useMemo(() => {
     const budget = budgetForm.watch('totalBudget') || 0;
     const tier = requirementsForm.watch('creatorTier');
     
-    // Multiplier based on tier efficiency (Nano/Micro usually have higher relative engagement)
-    let reachMultiplier = 12.5; // Default for Micro
+    let reachMultiplier = 12.5;
     if (tier === 'NANO') reachMultiplier = 15;
     if (tier === 'MID') reachMultiplier = 10;
     if (tier === 'MACRO') reachMultiplier = 8;
 
     return {
       reach: Math.round(budget * reachMultiplier),
-      engagement: Math.round(budget * reachMultiplier * 0.04) // ~4% average ER
+      engagement: Math.round(budget * reachMultiplier * 0.04)
     };
   }, [budgetForm.watch('totalBudget'), requirementsForm.watch('creatorTier')]);
 
@@ -322,7 +405,7 @@ export default function NewCampaignPage() {
         </div>
         <div className="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border shadow-sm">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs font-black uppercase text-slate-400 tracking-widest">Auto-save Active</span>
+          <span className="text-xs font-black uppercase text-slate-400 tracking-widest">Draft Saved</span>
         </div>
       </div>
 
@@ -353,13 +436,8 @@ export default function NewCampaignPage() {
         <div className="lg:col-span-8">
           <AnimatePresence mode="wait">
             {currentStep === 1 && (
-              <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-              >
-                <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
+              <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
                   <CardHeader className="p-8 border-b bg-slate-50/30">
                     <CardTitle className="text-xl">Step 1: Campaign Basics</CardTitle>
                     <CardDescription>Define the core identity and goals of your collaboration.</CardDescription>
@@ -368,33 +446,20 @@ export default function NewCampaignPage() {
                     <form id="basics-form" onSubmit={basicsForm.handleSubmit(onBasicsSubmit)} className="space-y-8">
                       <div className="space-y-3">
                         <Label className="font-bold text-slate-700">Campaign Name</Label>
-                        <Input 
-                          placeholder="e.g. Summer AI Tech Launch 2024" 
-                          className="h-12 rounded-xl bg-slate-50 border-none font-bold text-lg"
-                          {...basicsForm.register('title')}
-                        />
+                        <Input placeholder="e.g. Summer AI Tech Launch 2024" className="h-12 rounded-xl bg-slate-50 border-none font-bold text-lg" {...basicsForm.register('title')} />
                       </div>
-
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-3">
                           <Label className="font-bold text-slate-700">Primary Objective</Label>
                           <Select onValueChange={(v) => basicsForm.setValue('objective', v)} defaultValue="AWARENESS">
-                            <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none font-bold">
-                              <SelectValue placeholder="Select objective" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {OBJECTIVES.map((obj) => (
-                                <SelectItem key={obj.id} value={obj.id}>{obj.label}</SelectItem>
-                              ))}
-                            </SelectContent>
+                            <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none font-bold"><SelectValue /></SelectTrigger>
+                            <SelectContent>{OBJECTIVES.map((obj) => <SelectItem key={obj.id} value={obj.id}>{obj.label}</SelectItem>)}</SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-3">
                           <Label className="font-bold text-slate-700">Content Type</Label>
                           <Select onValueChange={(v) => basicsForm.setValue('contentType', v)} defaultValue="REEL">
-                            <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none font-bold">
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
+                            <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none font-bold"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="REEL">Reel / Short</SelectItem>
                               <SelectItem value="VIDEO">Full Video</SelectItem>
@@ -403,21 +468,16 @@ export default function NewCampaignPage() {
                           </Select>
                         </div>
                       </div>
-
                       <div className="space-y-3">
                         <Label className="font-bold text-slate-700">Campaign Brief</Label>
-                        <RichTextEditor 
-                          value={basicsForm.watch('description')}
-                          onChange={(v) => basicsForm.setValue('description', v)}
-                          placeholder="What should creators do? Be specific about hooks and visuals."
-                        />
+                        <RichTextEditor value={basicsForm.watch('description')} onChange={(v) => basicsForm.setValue('description', v)} placeholder="What should creators do?" />
                       </div>
                     </form>
                   </CardContent>
                   <CardFooter className="p-8 border-t bg-slate-50/50 flex justify-end">
                     <Button form="basics-form" disabled={isSaving} className="rounded-xl font-black px-10 h-12">
                       {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Next: Requirements <ArrowRight className="ml-2 h-4 w-4" />
+                      Next Step <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
                 </Card>
@@ -425,13 +485,8 @@ export default function NewCampaignPage() {
             )}
 
             {currentStep === 2 && (
-              <motion.div
-                key="step2"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-              >
-                <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
+              <motion.div key="step2" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
                   <CardHeader className="p-8 border-b bg-slate-50/30">
                     <CardTitle className="text-xl">Step 2: Creator Requirements</CardTitle>
                     <CardDescription>Specify who you want to work with. AI will use these to find matches.</CardDescription>
@@ -440,11 +495,7 @@ export default function NewCampaignPage() {
                     <form id="requirements-form" onSubmit={requirementsForm.handleSubmit(onRequirementsSubmit)} className="space-y-10">
                       <div className="space-y-4">
                         <Label className="font-bold text-slate-700">Creator Tier</Label>
-                        <RadioGroup 
-                          defaultValue={requirementsForm.getValues('creatorTier')} 
-                          onValueChange={(v: any) => requirementsForm.setValue('creatorTier', v)}
-                          className="grid grid-cols-1 sm:grid-cols-2 gap-4"
-                        >
+                        <RadioGroup defaultValue={requirementsForm.getValues('creatorTier')} onValueChange={(v: any) => requirementsForm.setValue('creatorTier', v)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {TIERS.map((tier) => (
                             <div key={tier.id}>
                               <RadioGroupItem value={tier.id} id={tier.id} className="peer sr-only" />
@@ -459,31 +510,19 @@ export default function NewCampaignPage() {
                           ))}
                         </RadioGroup>
                       </div>
-
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                           <Label className="font-bold text-slate-700">Min. Engagement Rate (%)</Label>
                           <div className="flex items-center gap-4">
-                            <Slider 
-                              defaultValue={[requirementsForm.getValues('minEngagementRate')]} 
-                              max={15} 
-                              step={0.5} 
-                              onValueChange={(v) => requirementsForm.setValue('minEngagementRate', v[0])}
-                              className="flex-1"
-                            />
+                            <Slider defaultValue={[requirementsForm.getValues('minEngagementRate')]} max={15} step={0.5} onValueChange={(v) => requirementsForm.setValue('minEngagementRate', v[0])} className="flex-1" />
                             <span className="w-12 text-center font-black text-primary bg-primary/5 rounded-lg py-1">{requirementsForm.watch('minEngagementRate')}%</span>
                           </div>
                         </div>
                         <div className="space-y-4">
                           <Label className="font-bold text-slate-700">Follower Scale (Min)</Label>
-                          <Input 
-                            type="number" 
-                            {...requirementsForm.register('minFollowers', { valueAsNumber: true })}
-                            className="h-11 rounded-xl bg-slate-50 border-none font-bold"
-                          />
+                          <Input type="number" {...requirementsForm.register('minFollowers', { valueAsNumber: true })} className="h-11 rounded-xl bg-slate-50 border-none font-bold" />
                         </div>
                       </div>
-
                       <div className="space-y-4">
                         <Label className="font-bold text-slate-700">Target Niches (Select up to 5)</Label>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -495,10 +534,7 @@ export default function NewCampaignPage() {
                                 const next = current.includes(niche) ? current.filter(n => n !== niche) : [...current, niche];
                                 if (next.length <= 5) requirementsForm.setValue('niches', next);
                               }}
-                              className={cn(
-                                "flex items-center gap-2 p-3 rounded-xl border transition-all cursor-pointer",
-                                requirementsForm.watch('niches').includes(niche) ? "bg-primary/5 border-primary text-primary" : "bg-white border-slate-100 text-slate-500 hover:border-slate-200"
-                              )}
+                              className={cn("flex items-center gap-2 p-3 rounded-xl border transition-all cursor-pointer", requirementsForm.watch('niches').includes(niche) ? "bg-primary/5 border-primary text-primary" : "bg-white border-slate-100 text-slate-500 hover:border-slate-200")}
                             >
                               <div className={cn("h-4 w-4 rounded border flex items-center justify-center", requirementsForm.watch('niches').includes(niche) ? "bg-primary border-primary" : "border-slate-300")}>
                                 {requirementsForm.watch('niches').includes(niche) && <Check className="h-3 w-3 text-white" />}
@@ -508,31 +544,12 @@ export default function NewCampaignPage() {
                           ))}
                         </div>
                       </div>
-
-                      <div className="flex flex-col sm:flex-row items-center gap-6 p-6 rounded-3xl bg-slate-50 border border-slate-100">
-                        <div className="flex items-center gap-4 flex-1">
-                          <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center">
-                            <Save className="h-6 w-6 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-bold text-slate-900">Creator Exclusivity</p>
-                            <p className="text-xs text-slate-400 font-medium">Prevent creators from working with competitors.</p>
-                          </div>
-                        </div>
-                        <Switch 
-                          checked={requirementsForm.watch('isExclusive')} 
-                          onCheckedChange={(v) => requirementsForm.setValue('isExclusive', v)}
-                        />
-                      </div>
                     </form>
                   </CardContent>
                   <CardFooter className="p-8 border-t bg-slate-50/50 flex justify-between">
-                    <Button variant="ghost" onClick={() => setCurrentStep(1)} className="rounded-xl font-bold h-12">
-                      <ArrowLeft className="mr-2 h-4 w-4" /> Back to Basics
-                    </Button>
+                    <Button variant="ghost" onClick={() => setCurrentStep(1)} className="rounded-xl font-bold h-12">Back</Button>
                     <Button form="requirements-form" disabled={isSaving} className="rounded-xl font-black px-10 h-12">
-                      {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Next: Budget <ArrowRight className="ml-2 h-4 w-4" />
+                      Next Step <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
                 </Card>
@@ -540,44 +557,26 @@ export default function NewCampaignPage() {
             )}
 
             {currentStep === 3 && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-              >
-                <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
+              <motion.div key="step3" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
                   <CardHeader className="p-8 border-b bg-slate-50/30">
                     <CardTitle className="text-xl">Step 3: Budget & Timeline</CardTitle>
-                    <CardDescription>Allocate your investment and define key project milestones.</CardDescription>
+                    <CardDescription>Allocate your investment and define key milestones.</CardDescription>
                   </CardHeader>
                   <CardContent className="p-8 space-y-10">
                     <form id="budget-form" onSubmit={budgetForm.handleSubmit(onBudgetSubmit)} className="space-y-10">
-                      
-                      {/* Budget Allocation */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                           <Label className="font-bold text-slate-700">Total Campaign Budget (₹)</Label>
                           <div className="relative">
                             <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                            <Input 
-                              type="number"
-                              className="pl-12 h-14 rounded-2xl bg-slate-50 border-none text-2xl font-black text-primary"
-                              {...budgetForm.register('totalBudget', { valueAsNumber: true })}
-                            />
+                            <Input type="number" className="pl-12 h-14 rounded-2xl bg-slate-50 border-none text-2xl font-black text-primary" {...budgetForm.register('totalBudget', { valueAsNumber: true })} />
                           </div>
-                          <p className="text-xs text-slate-400 font-medium">Baalvion AI Suggestion: ₹45,000 for this niche.</p>
                         </div>
                         <div className="space-y-4">
                           <Label className="font-bold text-slate-700">Budget Per Creator Range</Label>
                           <div className="pt-4">
-                            <Slider 
-                              defaultValue={budgetForm.getValues('budgetPerCreator')}
-                              max={50000}
-                              step={500}
-                              onValueChange={(v) => budgetForm.setValue('budgetPerCreator', v)}
-                              className="mb-4"
-                            />
+                            <Slider defaultValue={budgetForm.getValues('budgetPerCreator')} max={50000} step={500} onValueChange={(v) => budgetForm.setValue('budgetPerCreator', v)} className="mb-4" />
                             <div className="flex justify-between items-center text-sm font-black text-slate-900">
                               <span>₹{budgetForm.watch('budgetPerCreator')[0].toLocaleString()}</span>
                               <span>₹{budgetForm.watch('budgetPerCreator')[1].toLocaleString()}</span>
@@ -585,83 +584,35 @@ export default function NewCampaignPage() {
                           </div>
                         </div>
                       </div>
-
-                      {/* Payment Method Selection */}
-                      <div className="space-y-4">
-                        <Label className="font-bold text-slate-700">Escrow Payout Infrastructure</Label>
-                        <RadioGroup 
-                          defaultValue={budgetForm.getValues('paymentMethod')}
-                          onValueChange={(v: any) => budgetForm.setValue('paymentMethod', v)}
-                          className="grid grid-cols-1 sm:grid-cols-3 gap-4"
-                        >
-                          {[
-                            { id: 'UPI', label: 'UPI VPA', icon: Zap },
-                            { id: 'CARD', label: 'Credit Card', icon: CreditCard },
-                            { id: 'BANK', label: 'Bank Transfer', icon: Building2 },
-                          ].map((m) => (
-                            <div key={m.id}>
-                              <RadioGroupItem value={m.id} id={m.id} className="peer sr-only" />
-                              <Label htmlFor={m.id} className="flex items-center gap-3 p-4 rounded-xl border-2 border-slate-100 cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5">
-                                <m.icon className="h-4 w-4 text-primary" />
-                                <span className="font-bold text-sm">{m.label}</span>
-                              </Label>
-                            </div>
-                          ))}
-                        </RadioGroup>
-                      </div>
-
-                      <Separator className="opacity-50" />
-
-                      {/* Milestones Scheduling */}
-                      <div className="space-y-6">
-                        <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-primary" /> Project Milestones
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {[
-                            { id: 'startDate', label: 'Campaign Window Starts', icon: Zap },
-                            { id: 'endDate', label: 'Campaign Window Ends', icon: Clock },
-                            { id: 'applicationDeadline', label: 'Creator Hiring Closes', icon: Users },
-                            { id: 'submissionDeadline', label: 'Work Submission Due', icon: Save },
-                            { id: 'postLiveDate', label: 'Final Content Live', icon: Globe },
-                          ].map((field) => (
-                            <div key={field.id} className="space-y-2">
-                              <Label className="font-bold text-slate-700 text-xs">{field.label}</Label>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant={"outline"}
-                                    className={cn(
-                                      "w-full h-12 justify-start text-left font-bold rounded-xl bg-slate-50 border-none",
-                                      !budgetForm.watch(field.id as any) && "text-muted-foreground"
-                                    )}
-                                  >
-                                    <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-                                    {budgetForm.watch(field.id as any) ? format(budgetForm.watch(field.id as any), "PPP") : <span>Pick a date</span>}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0 rounded-2xl overflow-hidden border-none shadow-2xl" align="start">
-                                  <Calendar
-                                    mode="single"
-                                    selected={budgetForm.watch(field.id as any)}
-                                    onSelect={(date) => budgetForm.setValue(field.id as any, date as any)}
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            </div>
-                          ))}
-                        </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {[
+                          { id: 'startDate', label: 'Campaign Window Starts' },
+                          { id: 'endDate', label: 'Campaign Window Ends' },
+                          { id: 'applicationDeadline', label: 'Hiring Closes' },
+                          { id: 'submissionDeadline', label: 'Content Due' },
+                        ].map((field) => (
+                          <div key={field.id} className="space-y-2">
+                            <Label className="font-bold text-slate-700 text-xs">{field.label}</Label>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-full h-12 justify-start text-left font-bold rounded-xl bg-slate-50 border-none">
+                                  <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                                  {budgetForm.watch(field.id as any) ? format(budgetForm.watch(field.id as any), "PPP") : <span>Pick date</span>}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0 rounded-2xl overflow-hidden border-none" align="start">
+                                <Calendar mode="single" selected={budgetForm.watch(field.id as any)} onSelect={(date) => budgetForm.setValue(field.id as any, date as any)} initialFocus />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        ))}
                       </div>
                     </form>
                   </CardContent>
                   <CardFooter className="p-8 border-t bg-slate-50/50 flex justify-between">
-                    <Button variant="ghost" onClick={() => setCurrentStep(2)} className="rounded-xl font-bold h-12">
-                      <ArrowLeft className="mr-2 h-4 w-4" /> Back to Audience
-                    </Button>
+                    <Button variant="ghost" onClick={() => setCurrentStep(2)} className="rounded-xl font-bold h-12">Back</Button>
                     <Button form="budget-form" disabled={isSaving} className="rounded-xl font-black px-10 h-12">
-                      {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Final: Review & Launch <ArrowRight className="ml-2 h-4 w-4" />
+                      Next Step <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
                 </Card>
@@ -669,23 +620,176 @@ export default function NewCampaignPage() {
             )}
 
             {currentStep === 4 && (
-              <motion.div
-                key="step4"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="space-y-8"
-              >
+              <motion.div key="step4" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
+                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+                  <CardHeader className="p-8 border-b bg-slate-50/30">
+                    <CardTitle className="text-xl">Step 4: Deliverables & Guidelines</CardTitle>
+                    <CardDescription>Be crystal clear about what you need from creators.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-8 space-y-10">
+                    <form id="guidelines-form" onSubmit={guidelinesForm.handleSubmit(onGuidelinesSubmit)} className="space-y-10">
+                      
+                      {/* Deliverables Builder */}
+                      <div className="space-y-6">
+                        <Label className="font-bold text-slate-700 text-lg flex items-center gap-2">
+                          <ListPlus className="h-5 w-5 text-primary" /> Required Deliverables
+                        </Label>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 items-end">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Type</Label>
+                            <Select value={newDel.type} onValueChange={(v) => setNewDel({...newDel, type: v})}>
+                              <SelectTrigger className="h-10 bg-white border-slate-200 rounded-xl">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="REEL">Instagram Reel</SelectItem>
+                                <SelectItem value="STORY">Instagram Story</SelectItem>
+                                <SelectItem value="VIDEO">YouTube Video</SelectItem>
+                                <SelectItem value="TIKTOK">TikTok Post</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Qty</Label>
+                            <Input type="number" value={newDel.qty} onChange={(e) => setNewDel({...newDel, qty: parseInt(e.target.value) || 1})} className="h-10 bg-white border-slate-200 rounded-xl font-bold" />
+                          </div>
+                          <div className="space-y-2 md:col-span-2">
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Add Deliverable</Label>
+                            <Button type="button" onClick={() => {
+                              guidelinesForm.setValue('deliverables', [...guidelinesForm.getValues('deliverables'), newDel]);
+                              setNewDel({ type: 'REEL', qty: 1, platform: 'Instagram', specs: '' });
+                            }} className="w-full h-10 rounded-xl font-bold gap-2">
+                              <PlusCircle className="h-4 w-4" /> Add to List
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          {guidelinesForm.watch('deliverables').map((del, i) => (
+                            <div key={i} className="flex items-center justify-between p-4 bg-white border-2 border-slate-100 rounded-xl group hover:border-primary/20 transition-all">
+                              <div className="flex items-center gap-4">
+                                <div className="h-10 w-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary font-black">
+                                  {del.qty}x
+                                </div>
+                                <div>
+                                  <p className="font-bold text-slate-900">{del.type.replace('_', ' ')}</p>
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{del.platform}</p>
+                                </div>
+                              </div>
+                              <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-red-500 rounded-full" onClick={() => removeArrayItem('deliverables', i)}>
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <Separator className="opacity-50" />
+
+                      {/* Content Guidelines Dos/Donts */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                          <Label className="font-bold text-slate-700">Content Dos</Label>
+                          <div className="flex gap-2">
+                            <Input placeholder="e.g. Use natural lighting" value={tempItem} onChange={(e) => setTempItem(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addArrayItem('dos', tempItem))} className="rounded-xl h-11" />
+                            <Button type="button" onClick={() => addArrayItem('dos', tempItem)} className="h-11 rounded-xl px-4 font-bold">Add</Button>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {guidelinesForm.watch('dos').map((item, i) => (
+                              <Badge key={i} className="bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100 gap-1.5 font-bold py-1 px-3">
+                                {item} <X className="h-3 w-3 cursor-pointer" onClick={() => removeArrayItem('dos', i)} />
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="space-y-4">
+                          <Label className="font-bold text-slate-700">Content Don'ts</Label>
+                          <div className="flex gap-2">
+                            <Input placeholder="e.g. No dark filters" value={tempItem} onChange={(e) => setTempItem(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addArrayItem('donts', tempItem))} className="rounded-xl h-11" />
+                            <Button type="button" onClick={() => addArrayItem('donts', tempItem)} className="h-11 rounded-xl px-4 font-bold">Add</Button>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {guidelinesForm.watch('donts').map((item, i) => (
+                              <Badge key={i} className="bg-red-50 text-red-600 border-red-100 hover:bg-red-100 gap-1.5 font-bold py-1 px-3">
+                                {item} <X className="h-3 w-3 cursor-pointer" onClick={() => removeArrayItem('donts', i)} />
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Mandatory Elements */}
+                      <div className="space-y-6">
+                        <Label className="font-bold text-slate-700">Mandatory Mentions & Links</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Required Hashtags</Label>
+                            <Input placeholder="#brand #launch (comma separated)" className="rounded-xl h-11 bg-slate-50 border-none" onBlur={(e) => guidelinesForm.setValue('hashtags', e.target.value.split(' ').filter(t => t.startsWith('#')))} />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Brand Handles</Label>
+                            <Input placeholder="@brand (comma separated)" className="rounded-xl h-11 bg-slate-50 border-none" onBlur={(e) => guidelinesForm.setValue('handles', e.target.value.split(' ').filter(t => t.startsWith('@')))} />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Product Links to Include</Label>
+                          <Input placeholder="https://store.brand.com/product" className="rounded-xl h-11 bg-slate-50 border-none" onBlur={(e) => guidelinesForm.setValue('links', [e.target.value])} />
+                        </div>
+                      </div>
+
+                      {/* Brand Kit Upload */}
+                      <div className="p-8 rounded-[2rem] bg-slate-900 text-white flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="flex items-center gap-6">
+                          <div className="h-16 w-16 rounded-[1.5rem] bg-white/10 flex items-center justify-center border border-white/20">
+                            <Building2 className="h-8 w-8 text-white" />
+                          </div>
+                          <div className="space-y-1">
+                            <h4 className="text-xl font-black">Brand Style Kit</h4>
+                            <p className="text-sm text-slate-400 font-medium">Upload logos, color palettes, and fonts for creators.</p>
+                          </div>
+                        </div>
+                        <Button type="button" className="rounded-xl h-12 px-8 bg-white text-slate-900 hover:bg-slate-100 font-black uppercase text-xs tracking-widest">
+                          Upload Assets
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                  <CardFooter className="p-8 border-t bg-slate-50/50 flex justify-between">
+                    <Button variant="ghost" onClick={() => setCurrentStep(3)} className="rounded-xl font-bold h-12">Back</Button>
+                    <Button form="guidelines-form" disabled={isSaving || guidelinesForm.watch('deliverables').length === 0} className="rounded-xl font-black px-10 h-12">
+                      Review & Launch <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            )}
+
+            {currentStep === 5 && (
+              <motion.div key="step5" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-8">
                 <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-white text-center p-12">
                   <div className="mx-auto h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center mb-8">
                     <Rocket className="h-12 w-12 text-primary" />
                   </div>
-                  <h2 className="text-3xl font-black text-slate-900 mb-4">Ready to Launch?</h2>
+                  <h2 className="text-3xl font-black text-slate-900 mb-4">Review Your Masterpiece</h2>
                   <p className="text-slate-500 max-w-md mx-auto mb-10 leading-relaxed font-medium">
-                    Your campaign draft is saved. Review all details one last time before making it visible to thousands of verified creators.
+                    Your campaign draft is complete. Our AI has verified all sections. Once you launch, it will be visible to 10,000+ verified creators instantly.
                   </p>
+                  
+                  {/* Final Preview Card */}
+                  <div className="max-w-md mx-auto mb-12 transform scale-105">
+                    <CampaignPreviewCard 
+                      title={basicsForm.getValues('title')}
+                      brandName={userProfile?.displayName || 'Your Brand'}
+                      budget={`₹${budgetForm.getValues('totalBudget').toLocaleString()}`}
+                      niche={requirementsForm.getValues('niches')[0] || 'Marketing'}
+                      platform={basicsForm.getValues('platforms')[0] || 'Instagram'}
+                    />
+                  </div>
+
                   <div className="flex flex-col sm:flex-row justify-center gap-4">
                     <Button variant="outline" className="rounded-xl h-14 px-10 font-bold" onClick={() => setCurrentStep(1)}>
-                      Review Details
+                      Edit Details
                     </Button>
                     <Button className="rounded-xl h-14 px-10 font-black shadow-2xl shadow-primary/20" onClick={() => router.push('/dashboard/brand')}>
                       Confirm & Launch Live
@@ -718,10 +822,7 @@ export default function NewCampaignPage() {
                 </div>
                 <Progress value={85} className="h-1 bg-white/10" />
                 <p className="text-slate-400 text-xs leading-relaxed font-medium">
-                  {currentStep === 3 
-                    ? `Based on ₹${(budgetForm.watch('totalBudget') || 0).toLocaleString()}, your campaign is optimized for high conversion within the ${requirementsForm.watch('creatorTier')} tier.` 
-                    : "Complete Step 3 to see how your budget maps to global reach potential."
-                  }
+                  Optimized for the {requirementsForm.watch('creatorTier')} tier. Higher engagement expected for {basicsForm.watch('contentType')} content.
                 </p>
               </div>
             </CardContent>
@@ -752,5 +853,49 @@ export default function NewCampaignPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function CampaignPreviewCard({ title, brandName, budget, niche, platform }: any) {
+  return (
+    <Card className="border-none shadow-2xl rounded-3xl overflow-hidden h-full flex flex-col bg-white text-left pointer-events-none ring-1 ring-slate-100">
+      <CardHeader className="p-6 pb-2">
+        <div className="flex items-start justify-between mb-4">
+          <Avatar className="h-12 w-12 rounded-2xl border shadow-sm">
+            <AvatarFallback className="bg-primary/5 text-primary font-bold">{brandName[0]}</AvatarFallback>
+          </Avatar>
+          <div className="bg-primary/5 px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-primary/10">
+            <Zap className="h-3 w-3 text-primary fill-primary" />
+            <span className="text-[10px] font-black text-primary">98% MATCH</span>
+          </div>
+        </div>
+        <div className="space-y-1">
+          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">{brandName}</p>
+          <h3 className="text-lg font-bold text-slate-900 leading-tight line-clamp-2">{title || 'Campaign Title'}</h3>
+        </div>
+      </CardHeader>
+      <CardContent className="p-6 pt-2 flex-1 space-y-6">
+        <div className="flex flex-wrap gap-2">
+          <Badge variant="secondary" className="bg-slate-50 text-slate-500 border-none font-bold text-[10px]">{niche}</Badge>
+          <Badge variant="outline" className="bg-white text-primary border-primary/20 font-bold text-[10px]">{platform}</Badge>
+        </div>
+        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+          <div className="space-y-1">
+            <p className="text-[9px] font-black text-slate-400 uppercase">Pay</p>
+            <p className="text-sm font-black text-emerald-600">{budget}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[9px] font-black text-slate-400 uppercase">Deadline</p>
+            <p className="text-[11px] font-bold text-slate-900">30 Days</p>
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter className="p-6 pt-0 mt-auto flex items-center justify-between border-t border-slate-50 bg-slate-50/30">
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-bold uppercase tracking-tighter">
+          <Users className="h-3.5 w-3.5" /> <span>3 SPOTS LEFT</span>
+        </div>
+        <Button size="sm" className="rounded-xl font-bold h-9 px-6 shadow-lg shadow-primary/20">Apply Now</Button>
+      </CardFooter>
+    </Card>
   );
 }
