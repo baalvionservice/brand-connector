@@ -176,7 +176,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
                 className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
                 aria-label="Log out of session"
               >
-                <LogOut className="h-4 w-4 aria-hidden="true" />
+                <LogOut className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>
