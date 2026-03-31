@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -14,7 +13,8 @@ import {
   FileText,
   UserCircle,
   Zap,
-  ArrowLeftRight
+  ArrowLeftRight,
+  BarChart3
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
 
   const creatorLinks = [
     { name: 'Dashboard', href: '/dashboard/creator', icon: LayoutDashboard },
+    { name: 'Analytics', href: '/dashboard/creator/analytics', icon: BarChart3 },
     { name: 'Find Campaigns', href: '/dashboard/discover', icon: Search },
     { name: 'My Applications', href: '/dashboard/applications', icon: Briefcase },
     { name: 'Deliverables', href: '/dashboard/deliverables', icon: FileText },
@@ -109,7 +110,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
               {currentRole === 'BRAND' ? 'Brand Account' : 'Creator Account'}
             </p>
             <div className="flex items-center">
-              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs uppercase">
+              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs uppercase border border-primary/20">
                 {currentRole === 'BRAND' ? 'L' : 'S'}
               </div>
               <div className="ml-3 overflow-hidden">
