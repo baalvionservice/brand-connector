@@ -77,6 +77,7 @@ export interface User {
   };
   twoFactorEnabled?: boolean;
   fcmTokens?: string[];
+  tourCompleted?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -262,68 +263,6 @@ export interface Campaign {
   updatedAt?: string;
 }
 
-export interface FlaggedContent {
-  id: string;
-  deliverableId: string;
-  campaignId: string;
-  creatorId: string;
-  brandId: string;
-  reason: string;
-  flagType: 'USER_REPORT' | 'AUTO_KEYWORD' | 'AI_DETECTION';
-  riskFactor: number;
-  status: 'PENDING' | 'CLEARED' | 'REMOVED';
-  createdAt: string;
-}
-
-export interface Invite {
-  id: string;
-  campaignId: string;
-  creatorId: string;
-  brandId: string;
-  message: string;
-  budgetOffer: number;
-  status: InviteStatus;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Application {
-  id: string;
-  campaignId: string;
-  creatorId: string;
-  status: ApplicationStatus;
-  pitch: string;
-  proposedBudget?: number;
-  appliedAt: string;
-}
-
-export interface Deliverable {
-  id: string;
-  applicationId: string;
-  title: string;
-  description: string;
-  status: DeliverableStatus;
-  submissionUrl?: string;
-  feedback?: string;
-  submittedAt?: string;
-}
-
-export interface Dispute {
-  id: string;
-  campaignId: string;
-  creatorId: string;
-  brandId: string;
-  deliverableId?: string;
-  reason: string;
-  category: 'UNFAIR_REJECTION' | 'PAYMENT_ISSUE' | 'SCOPE_CREEP' | 'OTHER';
-  evidenceUrls: string[];
-  proposedResolution: string;
-  status: DisputeStatus;
-  adminNotes?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface SupportTicket {
   id: string;
   userId: string;
@@ -432,6 +371,19 @@ export interface CreatorNote {
   type: 'AI_IDEA' | 'MANUAL';
   createdAt: string;
 }
+
+export type FlaggedContent = {
+  id: string;
+  deliverableId: string;
+  campaignId: string;
+  creatorId: string;
+  brandId: string;
+  reason: string;
+  flagType: 'USER_REPORT' | 'AUTO_KEYWORD' | 'AI_DETECTION';
+  riskFactor: number;
+  status: 'PENDING' | 'CLEARED' | 'REMOVED';
+  createdAt: string;
+};
 
 export type FraudAlertType = 'FOLLOWER_SPIKE' | 'HIGH_ENGAGEMENT' | 'MULTI_ACCOUNT_IP' | 'SUSPICIOUS_PAYOUT';
 

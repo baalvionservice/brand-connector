@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -36,7 +35,8 @@ import {
   LifeBuoy,
   Send,
   Clock,
-  AlertCircle
+  AlertCircle,
+  MapPin
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -156,6 +156,19 @@ export default function SettingsPage() {
       }));
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleRestartTour = async () => {
+    if (!userProfile?.id) return;
+    try {
+      await updateDoc(doc(db, 'users', userProfile.id), {
+        tourCompleted: false,
+        updatedAt: new Date().toISOString()
+      });
+      toast({ title: "Tour Reset", description: "Refresh the page to restart the platform tour." });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to reset tour." });
     }
   };
 
@@ -383,28 +396,17 @@ export default function SettingsPage() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-slate-900 text-white">
-                    <CardContent className="p-8 space-y-4">
-                      <div className="h-12 w-12 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30">
-                        <ShieldCheck className="h-6 w-6 text-primary" />
-                      </div>
-                      <div className="space-y-1">
-                        <h3 className="text-lg font-black uppercase tracking-tighter">Verification</h3>
-                        <p className="text-xs text-slate-400 font-medium">
-                          {creatorData?.isVerified ? "Your account is fully verified and trusted." : "Complete 3 campaigns to unlock your verified badge."}
-                        </p>
-                      </div>
-                      {!creatorData?.isVerified && (
-                        <div className="pt-4">
-                          <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2">
-                            <span>Progress</span>
-                            <span>1 / 3 Campaigns</span>
-                          </div>
-                          <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                            <div className="h-full w-1/3 bg-primary" />
-                          </div>
-                        </div>
-                      )}
+                  <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-slate-50 border border-slate-100">
+                    <CardContent className="p-6 space-y-4">
+                      <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest">Platform Help</h4>
+                      <Button 
+                        variant="outline" 
+                        className="w-full rounded-xl font-bold h-11 border-slate-200 bg-white"
+                        onClick={handleRestartTour}
+                      >
+                        <RefreshCcw className="h-4 w-4 mr-2" />
+                        Restart Dashboard Tour
+                      </Button>
                     </CardContent>
                   </Card>
                 </div>

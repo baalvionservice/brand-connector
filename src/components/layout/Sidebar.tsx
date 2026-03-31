@@ -47,31 +47,31 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
   const currentRole = userProfile?.role || mockRole || 'BRAND';
 
   const creatorLinks = [
-    { name: 'Dashboard', href: '/dashboard/creator', icon: LayoutDashboard },
-    { name: 'Analytics', href: '/dashboard/creator/analytics', icon: BarChart3 },
-    { name: 'Portfolio', href: '/dashboard/creator/portfolio', icon: ImageIcon },
-    { name: 'Rate Card', href: '/dashboard/creator/rates', icon: IndianRupee },
-    { name: 'Find Campaigns', href: '/dashboard/creator/campaigns', icon: Search },
-    { name: 'My Applications', href: '/dashboard/applications', icon: Briefcase },
-    { name: 'Tax & Compliance', href: '/dashboard/creator/tax', icon: FileBadge },
-    { name: 'Wallet', href: '/dashboard/creator/wallet', icon: Wallet },
-    { name: 'Messages', href: '/dashboard/creator/messages', icon: MessageSquare },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+    { name: 'Dashboard', href: '/dashboard/creator', icon: LayoutDashboard, id: 'sidebar-dashboard' },
+    { name: 'Analytics', href: '/dashboard/creator/analytics', icon: BarChart3, id: 'sidebar-analytics' },
+    { name: 'Portfolio', href: '/dashboard/creator/portfolio', icon: ImageIcon, id: 'sidebar-portfolio' },
+    { name: 'Rate Card', href: '/dashboard/creator/rates', icon: IndianRupee, id: 'sidebar-rates' },
+    { name: 'Find Campaigns', href: '/dashboard/creator/campaigns', icon: Search, id: 'sidebar-campaigns' },
+    { name: 'My Applications', href: '/dashboard/applications', icon: Briefcase, id: 'sidebar-apps' },
+    { name: 'Tax & Compliance', href: '/dashboard/creator/tax', icon: FileBadge, id: 'sidebar-tax' },
+    { name: 'Wallet', href: '/dashboard/creator/wallet', icon: Wallet, id: 'sidebar-wallet' },
+    { name: 'Messages', href: '/dashboard/creator/messages', icon: MessageSquare, id: 'sidebar-messages' },
+    { name: 'Settings', href: '/dashboard/settings', icon: Settings, id: 'sidebar-settings' },
   ];
 
   const brandLinks = [
-    { name: 'Dashboard', href: '/dashboard/brand', icon: LayoutDashboard },
-    { name: 'Performance', href: '/dashboard/brand/analytics', icon: LineChart },
-    { name: 'My Campaigns', href: '/dashboard/brand/campaigns', icon: Briefcase },
-    { name: 'Find Creators', href: '/dashboard/brand/creators', icon: Users },
-    { name: 'Matchmaking', href: '/dashboard/matchmaking', icon: Zap },
-    { name: 'Deliverables', href: '/dashboard/brand/deliverables', icon: FileText },
-    { name: 'Team Hub', href: '/dashboard/brand/team', icon: UserPlus },
-    { name: 'Tax & Compliance', href: '/dashboard/brand/tax', icon: FileBadge },
-    { name: 'Billing & Plans', href: '/dashboard/brand/billing', icon: CreditCard },
-    { name: 'Wallet', href: '/dashboard/brand/wallet', icon: Wallet },
-    { name: 'Messages', href: '/dashboard/brand/messages', icon: MessageSquare },
-    { name: 'Settings', href: '/dashboard/brand/settings', icon: Settings },
+    { name: 'Dashboard', href: '/dashboard/brand', icon: LayoutDashboard, id: 'sidebar-dashboard' },
+    { name: 'Performance', href: '/dashboard/brand/analytics', icon: LineChart, id: 'sidebar-analytics' },
+    { name: 'My Campaigns', href: '/dashboard/brand/campaigns', icon: Briefcase, id: 'sidebar-campaigns' },
+    { name: 'Find Creators', href: '/dashboard/brand/creators', icon: Users, id: 'sidebar-creators' },
+    { name: 'Matchmaking', href: '/dashboard/matchmaking', icon: Zap, id: 'sidebar-matching' },
+    { name: 'Deliverables', href: '/dashboard/brand/deliverables', icon: FileText, id: 'sidebar-deliverables' },
+    { name: 'Team Hub', href: '/dashboard/brand/team', icon: UserPlus, id: 'sidebar-team' },
+    { name: 'Tax & Compliance', href: '/dashboard/brand/tax', icon: FileBadge, id: 'sidebar-tax' },
+    { name: 'Billing & Plans', href: '/dashboard/brand/billing', icon: CreditCard, id: 'sidebar-billing' },
+    { name: 'Wallet', href: '/dashboard/brand/wallet', icon: Wallet, id: 'sidebar-wallet' },
+    { name: 'Messages', href: '/dashboard/brand/messages', icon: MessageSquare, id: 'sidebar-messages' },
+    { name: 'Settings', href: '/dashboard/brand/settings', icon: Settings, id: 'sidebar-settings' },
   ];
 
   const adminLinks = [
@@ -113,6 +113,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
               <Link
                 key={item.name}
                 href={item.href}
+                id={item.id}
                 className={cn(
                   pathname === item.href
                     ? 'bg-primary/10 text-primary'
@@ -151,7 +152,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
               {currentRole === 'ADMIN' ? 'Admin Access' : currentRole === 'BRAND' ? 'Brand Account' : 'Creator Account'}
             </p>
             <div className="flex items-center">
-              <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs uppercase border border-primary/20">
+              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs uppercase border border-primary/20">
                 {currentRole === 'ADMIN' ? 'A' : currentRole === 'BRAND' ? 'L' : 'S'}
               </div>
               <div className="ml-3 overflow-hidden">

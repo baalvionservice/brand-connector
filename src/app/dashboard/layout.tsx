@@ -45,6 +45,7 @@ import { useNotifications } from '@/hooks/use-realtime-data';
 import { requestPermission, getFcmToken, onMessageListener } from '@/lib/fcm';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
+import { OnboardingTour } from '@/components/dashboard/OnboardingTour';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -157,6 +158,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-slate-50/50">
       <DashboardSidebar mockRole={role} onToggleRole={toggleRole} />
+      <OnboardingTour />
       
       <div className="md:pl-64 flex flex-col flex-1">
         <header className="sticky top-0 z-20 h-16 bg-white/80 backdrop-blur-md border-b px-4 md:px-8 flex items-center justify-between">
