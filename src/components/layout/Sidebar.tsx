@@ -37,7 +37,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Find Campaigns', href: '/dashboard/creator/campaigns', icon: Search },
     { name: 'My Applications', href: '/dashboard/applications', icon: Briefcase },
     { name: 'Deliverables', href: '/dashboard/deliverables', icon: FileText },
-    { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },
+    { name: 'Wallet', href: '/dashboard/creator/wallet', icon: Wallet },
     { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
     { name: 'Profile', href: '/dashboard/profile', icon: UserCircle },
   ];
