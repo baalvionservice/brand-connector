@@ -452,3 +452,23 @@ export interface FraudAlert {
   adminNote?: string;
   feedback?: 'ACCURATE' | 'FALSE_POSITIVE' | 'INCONCLUSIVE';
 }
+
+export interface ChatMessage {
+  id: string;
+  senderId: string;
+  text: string;
+  mediaUrl?: string;
+  mediaType?: 'IMAGE' | 'DOCUMENT';
+  readBy: string[];
+  createdAt: string;
+}
+
+export interface Conversation {
+  id: string;
+  participantIds: string[];
+  lastMessage?: string;
+  lastSenderId?: string;
+  updatedAt: string;
+  typing?: Record<string, boolean>;
+  campaignTitle?: string;
+}
