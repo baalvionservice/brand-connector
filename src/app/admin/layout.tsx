@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -34,8 +33,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCollection, useFirestore } from '@/firebase';
-import { collection, query, where, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
+import { useNotifications } from '@/hooks/use-realtime-data';
 import { cn } from '@/lib/utils';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -43,18 +43,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { currentUser, userProfile, loading, signOut } = useAuth();
   const db = useFirestore();
 
-  // Real-time notifications for the bell (System focused for Admin)
-  const notificationsQuery = useMemo(() => {
-    if (!userProfile?.id) return null;
-    return query(
-      collection(db, 'notifications'),
-      where('userId', '==', userProfile.id),
-      orderBy('createdAt', 'desc'),
-      limit(10)
-    );
-  }, [db, userProfile?.id]);
-
-  const { data: notifications } = useCollection<any>(notificationsQuery);
+  // Use real-time hook for admin system alerts
+  const { data: notifications } = useNotifications(userProfile?.id);
   const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {

@@ -38,10 +38,10 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { useDoc, useCollection, useFirestore } from '@/firebase';
+import { useDoc, useFirestore } from '@/firebase';
 import { CreatorProfile, BrandProfile, OnboardingStatus, Notification, NotificationType } from '@/types';
-import { collection, query, where, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
 import { markNotificationAsRead } from '@/lib/notifications';
+import { useNotifications } from '@/hooks/use-realtime-data';
 import { cn } from '@/lib/utils';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -50,28 +50,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { currentUser, userProfile, loading, signOut } = useAuth();
   const db = useFirestore();
   
-  // Real-time hook for creator onboarding status
+  // Real-time hooks for onboarding status
   const { data: creatorProfile } = useDoc<CreatorProfile>(
     userProfile?.role === 'CREATOR' ? `creators/creator_${userProfile.id}` : null
   );
 
-  // Real-time hook for brand onboarding status
   const { data: brandProfile } = useDoc<BrandProfile>(
     userProfile?.role === 'BRAND' ? `brands/brand_${userProfile.id}` : null
   );
 
-  // Real-time notifications for the bell
-  const notificationsQuery = useMemo(() => {
-    if (!userProfile?.id) return null;
-    return query(
-      collection(db, 'notifications'),
-      where('userId', '==', userProfile.id),
-      orderBy('createdAt', 'desc'),
-      limit(10)
-    );
-  }, [db, userProfile?.id]);
-
-  const { data: notifications } = useCollection<Notification>(notificationsQuery);
+  // Use specialized real-time hook for notifications
+  const { data: notifications } = useNotifications(userProfile?.id);
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const [role, setRole] = useState<'BRAND' | 'CREATOR'>('BRAND');

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -37,6 +36,7 @@ import {
   updateDoc, 
   limit
 } from 'firebase/firestore';
+import { useMessages } from '@/hooks/use-realtime-data';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -73,7 +73,8 @@ const QUICK_REPLIES = [
 ];
 
 export default function BrandMessagesPage() {
-  const { userProfile } = useAuth();
+  const { userProfile } = userProfile ? { ...userProfile } : { id: null, displayName: '' };
+  const { userProfile: authProfile } = useAuth();
   const db = useFirestore();
   
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
@@ -85,27 +86,18 @@ export default function BrandMessagesPage() {
 
   // 1. Fetch Conversations for this brand
   const convQuery = useMemo(() => {
-    if (!userProfile?.id) return null;
+    if (!authProfile?.id) return null;
     return query(
       collection(db, 'conversations'),
-      where('participantIds', 'array-contains', userProfile.id),
+      where('participantIds', 'array-contains', authProfile.id),
       orderBy('updatedAt', 'desc')
     );
-  }, [db, userProfile?.id]);
+  }, [db, authProfile?.id]);
 
   const { data: conversations, loading: convLoading } = useCollection<any>(convQuery);
 
-  // 2. Fetch Messages for selected conversation
-  const msgQuery = useMemo(() => {
-    if (!selectedConvId) return null;
-    return query(
-      collection(db, 'conversations', selectedConvId, 'messages'),
-      orderBy('createdAt', 'asc'),
-      limit(100)
-    );
-  }, [db, selectedConvId]);
-
-  const { data: messages, loading: msgLoading } = useCollection<any>(msgQuery);
+  // 2. Fetch Messages for selected conversation using specialized hook
+  const { data: messages, loading: msgLoading } = useMessages(selectedConvId || undefined);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -115,32 +107,32 @@ export default function BrandMessagesPage() {
 
   const filteredConversations = useMemo(() => {
     return conversations.filter(conv => {
-      const creatorId = conv.participantIds.find((id: string) => id !== userProfile?.id);
+      const creatorId = conv.participantIds.find((id: string) => id !== authProfile?.id);
       const creator = CREATOR_DATA[creatorId] || { name: 'New Creator' };
       return creator.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
              conv.lastMessage?.toLowerCase().includes(searchQuery.toLowerCase());
     });
-  }, [conversations, searchQuery, userProfile?.id]);
+  }, [conversations, searchQuery, authProfile?.id]);
 
   const activeConversation = useMemo(() => 
     conversations.find(c => c.id === selectedConvId), 
     [conversations, selectedConvId]
   );
 
-  const creatorId = activeConversation?.participantIds?.find((id: string) => id !== userProfile?.id);
+  const creatorId = activeConversation?.participantIds?.find((id: string) => id !== authProfile?.id);
   const activeCreator = creatorId ? (CREATOR_DATA[creatorId] || { name: 'Baalvion Creator', avatar: `https://picsum.photos/seed/${creatorId}/100/100`, handle: '@creator' }) : null;
 
   const handleSendMessage = async (e?: React.FormEvent, customText?: string) => {
     if (e) e.preventDefault();
     const textToSend = customText || messageText;
-    if (!textToSend.trim() || !selectedConvId || !userProfile) return;
+    if (!textToSend.trim() || !selectedConvId || !authProfile) return;
 
     setMessageText('');
     setIsSending(true);
 
     const messageData = {
       conversationId: selectedConvId,
-      senderId: userProfile.id,
+      senderId: authProfile.id,
       text: textToSend,
       createdAt: new Date().toISOString()
     };
@@ -149,7 +141,7 @@ export default function BrandMessagesPage() {
       addDoc(collection(db, 'conversations', selectedConvId, 'messages'), messageData);
       updateDoc(doc(db, 'conversations', selectedConvId), {
         lastMessage: textToSend,
-        lastSenderId: userProfile.id,
+        lastSenderId: authProfile.id,
         updatedAt: new Date().toISOString()
       });
     } catch (err: any) {
@@ -165,7 +157,7 @@ export default function BrandMessagesPage() {
 
   const toggleStar = (id: string, current: boolean) => {
     updateDoc(doc(db, 'conversations', id), {
-      [`importantBy.${userProfile?.id}`]: !current
+      [`importantBy.${authProfile?.id}`]: !current
     }).catch(() => {});
   };
 
@@ -205,11 +197,11 @@ export default function BrandMessagesPage() {
           ) : filteredConversations.length > 0 ? (
             <div className="divide-y divide-slate-50">
               {filteredConversations.map((conv) => {
-                const cId = conv.participantIds.find((id: string) => id !== userProfile?.id);
+                const cId = conv.participantIds.find((id: string) => id !== authProfile?.id);
                 const creator = CREATOR_DATA[cId] || { name: 'Baalvion Creator', avatar: `https://picsum.photos/seed/${cId}/100/100` };
                 const isSelected = selectedConvId === conv.id;
-                const unreadCount = conv.unreadCounts?.[userProfile?.id || ''] || 0;
-                const isImportant = conv.importantBy?.[userProfile?.id || ''] === true;
+                const unreadCount = conv.unreadCounts?.[authProfile?.id || ''] || 0;
+                const isImportant = conv.importantBy?.[authProfile?.id || ''] === true;
 
                 return (
                   <button
@@ -305,8 +297,8 @@ export default function BrandMessagesPage() {
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className={cn("rounded-full", activeConversation?.importantBy?.[userProfile?.id || ''] ? "text-yellow-500 fill-yellow-500" : "text-slate-300")}
-                  onClick={() => toggleStar(selectedConvId, activeConversation?.importantBy?.[userProfile?.id || ''])}
+                  className={cn("rounded-full", activeConversation?.importantBy?.[authProfile?.id || ''] ? "text-yellow-500 fill-yellow-500" : "text-slate-300")}
+                  onClick={() => toggleStar(selectedConvId, activeConversation?.importantBy?.[authProfile?.id || ''])}
                 >
                   <Star className="h-5 w-5" />
                 </Button>
@@ -350,7 +342,7 @@ export default function BrandMessagesPage() {
                   </div>
                 ) : (
                   messages.map((msg, i) => {
-                    const isMe = msg.senderId === userProfile?.id;
+                    const isMe = msg.senderId === authProfile?.id;
                     return (
                       <motion.div
                         key={msg.id}

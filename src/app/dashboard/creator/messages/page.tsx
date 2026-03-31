@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
@@ -29,9 +28,9 @@ import {
   addDoc, 
   doc, 
   updateDoc, 
-  serverTimestamp,
   limit
 } from 'firebase/firestore';
+import { useMessages } from '@/hooks/use-realtime-data';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -73,17 +72,8 @@ export default function CreatorMessagesPage() {
 
   const { data: conversations, loading: convLoading } = useCollection<any>(convQuery);
 
-  // 2. Fetch Messages for selected conversation
-  const msgQuery = useMemo(() => {
-    if (!selectedConvId) return null;
-    return query(
-      collection(db, 'conversations', selectedConvId, 'messages'),
-      orderBy('createdAt', 'asc'),
-      limit(100)
-    );
-  }, [db, selectedConvId]);
-
-  const { data: messages, loading: msgLoading } = useCollection<any>(msgQuery);
+  // 2. Fetch Messages for selected conversation using specialized hook
+  const { data: messages, loading: msgLoading } = useMessages(selectedConvId || undefined);
 
   // Scroll to bottom on new messages
   useEffect(() => {
