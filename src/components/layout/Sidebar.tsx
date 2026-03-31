@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -79,6 +78,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Moderation Flow', href: '/admin/campaigns', icon: ShieldAlert },
     { name: 'AI Monitoring', href: '/admin/ai', icon: Cpu },
     { name: 'Financial Control', href: '/admin/finance', icon: IndianRupee },
+    { name: 'Plan & Tiers', href: '/admin/plans', icon: CreditCard },
     { name: 'Mediation Hub', href: '/admin/disputes', icon: Scale },
     { name: 'Broadcast Center', href: '/admin/notifications', icon: Megaphone },
     { name: 'System Settings', href: '/admin/settings', icon: Settings },

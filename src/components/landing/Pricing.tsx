@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Check, X, Zap, ArrowRight, Star } from 'lucide-react';
+import { Check, X, Zap, ArrowRight, Star, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -17,14 +17,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from '@/lib/utils';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
-const pricingData = [
+const DEFAULT_PRICING = [
   {
+    id: "STARTER",
     name: "Starter",
     description: "Perfect for brands just starting their influencer journey.",
     monthlyPrice: 0,
     annualPrice: 0,
-    commission: "5% Platform Fee",
+    commission: 5,
     features: [
       "Basic AI Matching",
       "Escrow Protection",
@@ -42,11 +45,12 @@ const pricingData = [
     popular: false
   },
   {
+    id: "GROWTH",
     name: "Growth",
     description: "For growing brands looking to scale their impact.",
     monthlyPrice: 9999,
     annualPrice: 7999,
-    commission: "3% Platform Fee",
+    commission: 3,
     features: [
       "Everything in Starter",
       "Advanced Analytics",
@@ -63,11 +67,12 @@ const pricingData = [
     popular: true
   },
   {
+    id: "ENTERPRISE",
     name: "Enterprise",
     description: "Tailored solutions for large-scale operations.",
-    monthlyPrice: "Custom",
-    annualPrice: "Custom",
-    commission: "2% Platform Fee",
+    monthlyPrice: 49999,
+    annualPrice: 39999,
+    commission: 2,
     features: [
       "Everything in Growth",
       "Dedicated Manager",
@@ -82,18 +87,21 @@ const pricingData = [
   }
 ];
 
-const comparisonData = [
-  { feature: "Active Campaigns", starter: "1", growth: "5", enterprise: "Unlimited" },
-  { feature: "Platform Commission", starter: "5%", growth: "3%", enterprise: "2%" },
-  { feature: "AI Matching", starter: "Basic", growth: "Advanced", enterprise: "Full Access" },
-  { feature: "Analytics", starter: "Standard", growth: "Professional", enterprise: "Custom/White-label" },
-  { feature: "Escrow Protection", starter: true, growth: true, enterprise: true },
-  { feature: "Priority Support", starter: false, growth: true, enterprise: true },
-  { feature: "Dedicated Manager", starter: false, growth: false, enterprise: true },
-];
-
 export function Pricing() {
   const [isAnnual, setIsAnnual] = useState(false);
+  const db = useFirestore();
+  const { data: livePlans, loading } = useCollection<any>(collection(db, 'system_plans'));
+  const [plans, setPlans] = useState<any[]>(DEFAULT_PRICING);
+
+  useEffect(() => {
+    if (livePlans && livePlans.length > 0) {
+      const merged = DEFAULT_PRICING.map(def => {
+        const live = livePlans.find((p: any) => p.id === def.id);
+        return live ? { ...def, ...live } : def;
+      });
+      setPlans(merged);
+    }
+  }, [livePlans]);
 
   return (
     <section id="pricing" className="py-24 bg-white overflow-hidden">
@@ -125,9 +133,9 @@ export function Pricing() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-24">
-          {pricingData.map((plan, idx) => (
+          {plans.map((plan, idx) => (
             <motion.div
-              key={plan.name}
+              key={plan.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -151,25 +159,25 @@ export function Pricing() {
                   <div className="mb-6">
                     <div className="flex items-baseline gap-1">
                       <span className="text-4xl font-black">
-                        {typeof plan.monthlyPrice === 'number' ? `₹${(isAnnual ? plan.annualPrice : plan.monthlyPrice).toLocaleString()}` : plan.monthlyPrice}
+                        {plan.id === 'ENTERPRISE' && plan.monthlyPrice > 40000 ? 'Custom' : `₹${(isAnnual ? plan.annualPrice : plan.monthlyPrice).toLocaleString()}`}
                       </span>
-                      {typeof plan.monthlyPrice === 'number' && (
+                      {plan.id !== 'ENTERPRISE' && (
                         <span className="text-muted-foreground font-medium">/mo</span>
                       )}
                     </div>
-                    <p className="text-sm font-bold text-primary mt-2">{plan.commission}</p>
+                    <p className="text-sm font-bold text-primary mt-2">{plan.commission}% Platform Fee</p>
                   </div>
 
                   <div className="space-y-4">
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">What's Included</p>
                     <ul className="space-y-3">
-                      {plan.features.map(feature => (
+                      {plan.features.map((feature: string) => (
                         <li key={feature} className="flex items-center gap-3 text-sm">
                           <Check className="h-4 w-4 text-green-500 shrink-0" />
                           <span className="text-slate-700">{feature}</span>
                         </li>
                       ))}
-                      {plan.notIncluded.map(feature => (
+                      {plan.notIncluded?.map((feature: string) => (
                         <li key={feature} className="flex items-center gap-3 text-sm opacity-50">
                           <X className="h-4 w-4 text-slate-400 shrink-0" />
                           <span className="text-slate-400 line-through">{feature}</span>
@@ -190,41 +198,6 @@ export function Pricing() {
               </Card>
             </motion.div>
           ))}
-        </div>
-
-        {/* Feature Comparison Table */}
-        <div className="hidden lg:block">
-          <div className="text-center mb-12">
-            <h3 className="text-2xl font-headline font-bold">Compare Features</h3>
-          </div>
-          <div className="max-w-4xl mx-auto bg-slate-50 rounded-2xl border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-[300px] h-16 text-lg font-bold pl-8">Feature</TableHead>
-                  <TableHead className="text-center font-bold">Starter</TableHead>
-                  <TableHead className="text-center font-bold text-primary">Growth</TableHead>
-                  <TableHead className="text-center font-bold">Enterprise</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {comparisonData.map((row) => (
-                  <TableRow key={row.feature} className="hover:bg-slate-100/50">
-                    <TableCell className="font-medium py-4 pl-8">{row.feature}</TableCell>
-                    <TableCell className="text-center text-muted-foreground">
-                      {typeof row.starter === 'boolean' ? (row.starter ? <Check className="mx-auto h-5 w-5 text-green-500" /> : <X className="mx-auto h-5 w-5 text-slate-300" />) : row.starter}
-                    </TableCell>
-                    <TableCell className="text-center font-semibold text-primary">
-                      {typeof row.growth === 'boolean' ? (row.growth ? <Check className="mx-auto h-5 w-5 text-primary" /> : <X className="mx-auto h-5 w-5 text-slate-300" />) : row.growth}
-                    </TableCell>
-                    <TableCell className="text-center text-muted-foreground">
-                      {typeof row.enterprise === 'boolean' ? (row.enterprise ? <Check className="mx-auto h-5 w-5 text-green-500" /> : <X className="mx-auto h-5 w-5 text-slate-300" />) : row.enterprise}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
         </div>
       </div>
     </section>
