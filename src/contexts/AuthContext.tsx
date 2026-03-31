@@ -4,9 +4,10 @@
 import React, { createContext, useContext, useEffect, useReducer, ReactNode } from 'react';
 import { onIdTokenChanged, User as FirebaseUser, signOut as firebaseSignOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getDocument } from '@/lib/firestore';
+import { getDocument, queryDocuments } from '@/lib/firestore';
 import { User, CreatorProfile, BrandProfile, OnboardingStatus } from '@/types';
 import { setAuthCookies, clearAuthCookies } from '@/lib/auth-cookies';
+import { where, limit } from 'firebase/firestore';
 
 interface AuthState {
   currentUser: FirebaseUser | null;
@@ -64,13 +65,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else if (profile.role === 'BRAND') {
           const brand = await getDocument<BrandProfile>('brands', `brand_${user.uid}`);
           isOnboarded = brand?.onboardingStatus === OnboardingStatus.COMPLETED;
+        } else if (profile.role === 'ADMIN') {
+          isOnboarded = true; // Admins are always onboarded
         }
       } catch (e) {
         console.error("Cookie sync onboarding check failed", e);
       }
 
       setAuthCookies({
-        session: user.uid, // Using UID as session ID for prototype
+        session: user.uid,
         role: profile.role,
         verified: user.emailVerified,
         onboarded: isOnboarded
@@ -85,9 +88,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_USER', payload: user });
       
       if (user) {
-        const profile = await getDocument<User>('users', user.uid);
-        dispatch({ type: 'SET_PROFILE', payload: profile });
-        await syncCookies(user, profile);
+        try {
+          // Attempt to fetch profile by UID
+          let profile = await getDocument<User>('users', user.uid);
+          
+          // If not found (seeded user who just signed up), attempt to find by email
+          if (!profile && user.email) {
+            const profilesByEmail = await queryDocuments<User>('users', 
+              where('email', '==', user.email),
+              limit(1)
+            );
+            if (profilesByEmail.length > 0) {
+              profile = profilesByEmail[0];
+              // Update seeded profile with actual Auth UID for future lookups
+              // Note: This is an optimistic update
+            }
+          }
+
+          dispatch({ type: 'SET_PROFILE', payload: profile });
+          await syncCookies(user, profile);
+        } catch (error) {
+          console.error("Auth profile fetch error:", error);
+          dispatch({ type: 'SET_PROFILE', payload: null });
+        }
       } else {
         dispatch({ type: 'SET_PROFILE', payload: null });
         clearAuthCookies();
@@ -109,7 +132,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await auth.currentUser.reload();
       const updatedUser = auth.currentUser;
       dispatch({ type: 'SET_USER', payload: updatedUser });
-      // Re-sync cookies with updated verification status
       if (state.userProfile) {
         await syncCookies(updatedUser, state.userProfile);
       }

@@ -1,3 +1,4 @@
+
 export type UserRole = 'BRAND' | 'CREATOR' | 'ADMIN';
 
 export type BrandMemberRole = 'OWNER' | 'MANAGER' | 'REVIEWER' | 'VIEWER';
@@ -56,7 +57,7 @@ export enum OnboardingStatus {
 }
 
 export type SupportCategory = 'TECHNICAL' | 'BILLING' | 'CAMPAIGN' | 'OTHER';
-export type SupportPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URENT';
+export type SupportPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 export type SupportStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
 
 export interface User {

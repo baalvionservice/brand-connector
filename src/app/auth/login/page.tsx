@@ -68,13 +68,20 @@ export default function LoginPage() {
       });
       router.push('/dashboard');
     } catch (err: any) {
-      console.error(err);
+      console.error('Firebase Login Error:', err);
       let message = "An unexpected error occurred. Please try again.";
+      
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
-        message = "Invalid email or password.";
+        message = "Invalid email or password. Please verify your credentials or sign up if you haven't yet.";
       } else if (err.code === 'auth/too-many-requests') {
         message = "Too many failed attempts. Please try again later.";
+      } else if (err.code === 'auth/operation-not-allowed') {
+        message = "Email/Password sign-in is not enabled in the Firebase Console. Please enable it under Auth Providers.";
+      } else if (err.message) {
+        // Show raw error if it's something else to help debug
+        message = `Auth Error: ${err.message}`;
       }
+      
       setError(message);
     } finally {
       setIsLoading(false);
@@ -101,7 +108,7 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error(err);
       if (err.code !== 'auth/popup-closed-by-user') {
-        setError("Failed to sign in with Google. Please try again.");
+        setError(err.message || "Failed to sign in with Google. Please try again.");
       }
     } finally {
       setIsLoading(false);
@@ -283,6 +290,7 @@ export default function LoginPage() {
                   Creator
                 </Button>
               </div>
+              <p className="text-[9px] text-center text-slate-400 font-bold uppercase">Note: You must sign up with these emails once to use quick login.</p>
             </div>
           </CardContent>
           <CardFooter className="flex flex-col items-center pb-8 pt-4">
