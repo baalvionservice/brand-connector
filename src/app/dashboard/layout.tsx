@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { DashboardSidebar } from '@/components/layout/Sidebar';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -156,21 +157,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <div className="min-h-screen bg-slate-50/50 flex flex-col">
+      {/* Desktop Sidebar */}
       <DashboardSidebar mockRole={role} onToggleRole={toggleRole} />
       <OnboardingTour />
       
-      <div className="md:pl-64 flex flex-col flex-1">
+      <div className="md:pl-64 flex flex-col flex-1 pb-20 md:pb-0">
         <header className="sticky top-0 z-20 h-16 bg-white/80 backdrop-blur-md border-b px-4 md:px-8 flex items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <Sheet>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" className="rounded-xl hover:bg-slate-100">
+                    <Menu className="h-5 w-5 text-slate-600" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-64">
+                <SheetContent side="left" className="p-0 w-64 border-none shadow-2xl">
                   <DashboardSidebar mockRole={role} onToggleRole={toggleRole} />
                 </SheetContent>
               </Sheet>
@@ -183,10 +185,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className="pl-10 bg-slate-100/50 border-none rounded-xl h-10 focus-visible:ring-primary"
               />
             </div>
+
+            {/* Mobile Title - Only visible on smallest screens */}
+            <div className="sm:hidden flex items-center gap-2">
+              <div className="bg-primary p-1 rounded-lg">
+                <Zap className="h-4 w-4 text-white fill-current" />
+              </div>
+              <span className="font-headline font-bold text-slate-900">Baalvion</span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
-            {/* Notification Bell Dropdown */}
             <Popover>
               <PopoverTrigger asChild>
                 <div className="relative">
@@ -261,7 +270,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <ChevronDown className="h-3 w-3 text-slate-400" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 rounded-xl p-2">
+              <DropdownMenuContent align="end" className="w-56 rounded-xl p-2 shadow-2xl border-none">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="rounded-lg py-2">
@@ -286,6 +295,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {children}
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 }
