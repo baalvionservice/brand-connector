@@ -20,3 +20,4 @@ export * from './alert-dialog';
 export * from './accordion';
 export * from './tooltip';
 export * from './cards';
+export * from './Modal';
