@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -51,9 +52,9 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'My Campaigns', href: '/dashboard/brand/campaigns', icon: Briefcase },
     { name: 'Find Creators', href: '/dashboard/brand/creators', icon: Users },
     { name: 'Matchmaking', href: '/dashboard/matchmaking', icon: Zap },
-    { name: 'Deliverables', href: '/dashboard/deliverables', icon: FileText },
-    { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },
-    { name: 'Messages', href: '/dashboard/messages', icon: MessageSquare },
+    { name: 'Deliverables', href: '/dashboard/brand/deliverables', icon: FileText },
+    { name: 'Wallet', href: '/dashboard/brand/wallet', icon: Wallet },
+    { name: 'Messages', href: '/dashboard/creator/messages', icon: MessageSquare },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
   ];
 
