@@ -376,7 +376,9 @@ export type NotificationType =
   | 'DEADLINE_REMINDER' 
   | 'DISPUTE_UPDATE' 
   | 'NEW_MESSAGE' 
-  | 'SYSTEM';
+  | 'SYSTEM'
+  | 'PROFILE_VIEW'
+  | 'CAMPAIGN_INVITE';
 
 export interface Notification {
   id: string;
