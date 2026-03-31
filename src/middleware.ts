@@ -1,84 +1,17 @@
 
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/request';
 
 /**
- * Baalvion Route Protection Middleware
- * 
- * Logic:
- * 1. Unauthenticated -> /auth/login
- * 2. Authenticated but Unverified -> /auth/verify-email
- * 3. Verified but Wrong Dashboard Role -> Redirect to correct dashboard
- * 4. Verified but Incomplete Onboarding -> /onboarding/[role]
- * 5. Admin Routes -> Only role === 'ADMIN'
- * 6. Authenticated users hitting /auth routes -> Redirect to dashboard
+ * Baalvion Route Protection Middleware - DISABLED for unrestricted access
  */
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  
-  // Extract state from cookies
-  const session = request.cookies.get('baalvion_session')?.value;
-  const role = request.cookies.get('baalvion_role')?.value;
-  const isVerified = request.cookies.get('baalvion_verified')?.value === 'true';
-  const isOnboarded = request.cookies.get('baalvion_onboarded')?.value === 'true';
-
-  const isAuthRoute = pathname.startsWith('/auth');
-  const isDashboardRoute = pathname.startsWith('/dashboard');
-  const isOnboardingRoute = pathname.startsWith('/onboarding');
-  const isAdminRoute = pathname.startsWith('/admin');
-  const isVerifyEmailRoute = pathname === '/auth/verify-email';
-
-  // 1. Redirect unauthenticated users
-  if (!session && (isDashboardRoute || isOnboardingRoute || isAdminRoute)) {
-    return NextResponse.redirect(new URL('/auth/login', request.url));
-  }
-
-  // 2. Redirect authenticated users away from login/signup
-  if (session && isAuthRoute && !isVerifyEmailRoute) {
-    const target = role === 'CREATOR' ? '/dashboard/creator' : role === 'ADMIN' ? '/admin' : '/dashboard/brand';
-    return NextResponse.redirect(new URL(target, request.url));
-  }
-
-  // 3. Handle Email Verification
-  if (session && !isVerified && !isVerifyEmailRoute && (isDashboardRoute || isOnboardingRoute || isAdminRoute)) {
-    return NextResponse.redirect(new URL('/auth/verify-email', request.url));
-  }
-
-  // 4. Admin Protection
-  if (session && isAdminRoute && role !== 'ADMIN') {
-    const target = role === 'CREATOR' ? '/dashboard/creator' : '/dashboard/brand';
-    return NextResponse.redirect(new URL(target, request.url));
-  }
-
-  // 5. Role-based Dashboard Protection
-  if (session && isVerified && isDashboardRoute) {
-    if (role === 'CREATOR' && pathname.startsWith('/dashboard/brand')) {
-      return NextResponse.redirect(new URL('/dashboard/creator', request.url));
-    }
-    if (role === 'BRAND' && pathname.startsWith('/dashboard/creator')) {
-      return NextResponse.redirect(new URL('/dashboard/brand', request.url));
-    }
-  }
-
-  // 6. Onboarding Protection
-  if (session && isVerified && !isOnboarded && isDashboardRoute && !isOnboardingRoute && role !== 'ADMIN') {
-    const target = role === 'BRAND' ? '/onboarding/brand' : '/onboarding/creator';
-    return NextResponse.redirect(new URL(target, request.url));
-  }
-
+  // Authorization checks removed to allow instant access to all routes
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public (public folder)
-     */
     '/((?!api|_next/static|_next/image|favicon.ico|public|logo.png).*)',
   ],
 };

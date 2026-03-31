@@ -9,6 +9,19 @@ import { User, CreatorProfile, BrandProfile, OnboardingStatus } from '@/types';
 import { setAuthCookies, clearAuthCookies } from '@/lib/auth-cookies';
 import { where, limit } from 'firebase/firestore';
 
+// MOCK ADMIN USER FOR UNRESTRICTED ACCESS
+const MOCK_ADMIN_PROFILE: User = {
+  id: 'admin_root',
+  email: 'admin@baalvion.com',
+  role: 'ADMIN',
+  displayName: 'Root Administrator',
+  status: 'ACTIVE',
+  isVerified: true,
+  tourCompleted: true,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString()
+};
+
 interface AuthState {
   currentUser: FirebaseUser | null;
   userProfile: User | null;
@@ -23,9 +36,9 @@ type AuthAction =
   | { type: 'SET_ERROR'; payload: string | null };
 
 const initialState: AuthState = {
-  currentUser: null,
-  userProfile: null,
-  loading: true,
+  currentUser: { uid: 'mock_uid', email: 'admin@baalvion.com' } as any, // Mocked Auth User
+  userProfile: MOCK_ADMIN_PROFILE, // Default to Admin for access
+  loading: false, // Start directly
   error: null,
 };
 
@@ -54,89 +67,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  const syncCookies = async (user: FirebaseUser | null, profile: User | null) => {
-    if (user && profile) {
-      // Check onboarding status from the secondary profile
-      let isOnboarded = false;
-      try {
-        if (profile.role === 'CREATOR') {
-          const creator = await getDocument<CreatorProfile>('creators', `creator_${user.uid}`);
-          isOnboarded = creator?.onboardingStatus === OnboardingStatus.COMPLETED;
-        } else if (profile.role === 'BRAND') {
-          const brand = await getDocument<BrandProfile>('brands', `brand_${user.uid}`);
-          isOnboarded = brand?.onboardingStatus === OnboardingStatus.COMPLETED;
-        } else if (profile.role === 'ADMIN') {
-          isOnboarded = true; // Admins are always onboarded
-        }
-      } catch (e) {
-        console.error("Cookie sync onboarding check failed", e);
-      }
-
-      setAuthCookies({
-        session: user.uid,
-        role: profile.role,
-        verified: user.emailVerified,
-        onboarded: isOnboarded
-      });
-    } else if (!user) {
-      clearAuthCookies();
-    }
-  };
+  // Sync logic disabled for mock mode
+  const syncCookies = async (user: FirebaseUser | null, profile: User | null) => {};
 
   useEffect(() => {
-    const unsubscribe = onIdTokenChanged(auth, async (user) => {
-      dispatch({ type: 'SET_USER', payload: user });
-      
-      if (user) {
-        try {
-          // Attempt to fetch profile by UID
-          let profile = await getDocument<User>('users', user.uid);
-          
-          // If not found (seeded user who just signed up), attempt to find by email
-          if (!profile && user.email) {
-            const profilesByEmail = await queryDocuments<User>('users', 
-              where('email', '==', user.email),
-              limit(1)
-            );
-            if (profilesByEmail.length > 0) {
-              profile = profilesByEmail[0];
-              // Update seeded profile with actual Auth UID for future lookups
-              // Note: This is an optimistic update
-            }
-          }
-
-          dispatch({ type: 'SET_PROFILE', payload: profile });
-          await syncCookies(user, profile);
-        } catch (error) {
-          console.error("Auth profile fetch error:", error);
-          dispatch({ type: 'SET_PROFILE', payload: null });
-        }
-      } else {
-        dispatch({ type: 'SET_PROFILE', payload: null });
-        clearAuthCookies();
-      }
-      
-      dispatch({ type: 'SET_LOADING', payload: false });
-    });
-
-    return unsubscribe;
+    // In mock mode, we don't listen to actual Firebase Auth changes to prevent errors
+    // If you want to use real auth again, uncomment the standard implementation
   }, []);
 
   const signOutAction = async () => {
     clearAuthCookies();
-    await firebaseSignOut(auth);
+    // Redirect to home in mock mode
+    window.location.href = '/';
   };
 
-  const refreshUser = async () => {
-    if (auth.currentUser) {
-      await auth.currentUser.reload();
-      const updatedUser = auth.currentUser;
-      dispatch({ type: 'SET_USER', payload: updatedUser });
-      if (state.userProfile) {
-        await syncCookies(updatedUser, state.userProfile);
-      }
-    }
-  };
+  const refreshUser = async () => {};
 
   return (
     <AuthContext.Provider value={{ ...state, signOut: signOutAction, refreshUser }}>

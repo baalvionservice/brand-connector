@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardSidebar } from '@/components/layout/Sidebar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { useRouter, usePathname } from 'next/navigation';
@@ -39,88 +40,26 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { useDoc, useFirestore } from '@/firebase';
-import { CreatorProfile, BrandProfile, OnboardingStatus, Notification, NotificationType } from '@/types';
-import { markNotificationAsRead } from '@/lib/notifications';
 import { useNotifications } from '@/hooks/use-realtime-data';
-import { requestPermission, getFcmToken, onMessageListener } from '@/lib/fcm';
-import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
-import { OnboardingTour } from '@/components/dashboard/OnboardingTour';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { currentUser, userProfile, loading, signOut } = useAuth();
-  const db = useFirestore();
+  const { userProfile, loading, signOut } = useAuth();
   
-  // Real-time hooks for onboarding status
-  const { data: creatorProfile } = useDoc<CreatorProfile>(
-    userProfile?.role === 'CREATOR' ? `creators/creator_${userProfile.id}` : null
-  );
-
-  const { data: brandProfile } = useDoc<BrandProfile>(
-    userProfile?.role === 'BRAND' ? `brands/brand_${userProfile.id}` : null
-  );
-
   // Use specialized real-time hook for notifications
   const { data: notifications } = useNotifications(userProfile?.id);
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const [role, setRole] = useState<'BRAND' | 'CREATOR'>('BRAND');
-
-  // FCM Integration
-  useEffect(() => {
-    if (userProfile?.id && typeof window !== 'undefined') {
-      const setupNotifications = async () => {
-        const hasPermission = await requestPermission();
-        if (hasPermission) {
-          const token = await getFcmToken();
-          if (token) {
-            // Save token to user profile for push targeting
-            await updateDoc(doc(db, 'users', userProfile.id), {
-              fcmTokens: arrayUnion(token),
-              updatedAt: new Date().toISOString()
-            });
-          }
-        }
-      };
-
-      setupNotifications();
-      
-      // Start foreground listener
-      onMessageListener().then((payload) => {
-        if (payload) {
-          // You could trigger a toast here if needed
-        }
-      });
-    }
-  }, [userProfile?.id, db]);
+  const [role, setRole] = useState<'BRAND' | 'CREATOR' | 'ADMIN'>('ADMIN');
 
   useEffect(() => {
-    if (!loading) {
-      if (!currentUser) {
-        router.replace('/auth/login');
-      } else if (!currentUser.emailVerified) {
-        router.replace('/auth/verify-email');
-      } else if (userProfile) {
-        setRole(userProfile.role as 'BRAND' | 'CREATOR');
-        
-        if (userProfile.role === 'CREATOR' && creatorProfile) {
-          if (creatorProfile.onboardingStatus !== OnboardingStatus.COMPLETED && !pathname.startsWith('/onboarding')) {
-            router.replace('/onboarding/creator');
-          }
-        }
-
-        if (userProfile.role === 'BRAND' && brandProfile) {
-          if (brandProfile.onboardingStatus !== OnboardingStatus.COMPLETED && !pathname.startsWith('/onboarding')) {
-            router.replace('/onboarding/brand');
-          }
-        }
-      }
+    if (userProfile) {
+      setRole(userProfile.role as any);
     }
-  }, [currentUser, userProfile, loading, router, creatorProfile, brandProfile, pathname]);
+  }, [userProfile]);
 
   const toggleRole = () => {
     const nextRole = role === 'BRAND' ? 'CREATOR' : 'BRAND';
@@ -130,10 +69,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const handleLogout = async () => {
     await signOut();
-    router.push('/');
   };
 
-  const getNotificationIcon = (type: NotificationType) => {
+  const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'NEW_MATCH': return <Target className="h-4 w-4 text-primary" />;
       case 'APPLICATION_UPDATE': return <FileText className="h-4 w-4 text-blue-500" />;
@@ -146,22 +84,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   };
 
-  if (loading || (currentUser && !currentUser.emailVerified)) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="text-slate-500 font-medium">Preparing your workspace...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-slate-50/50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       {/* Desktop Sidebar */}
-      <DashboardSidebar mockRole={role} onToggleRole={toggleRole} />
-      <OnboardingTour />
+      <DashboardSidebar mockRole={role as any} onToggleRole={toggleRole} />
       
       <div className="md:pl-64 flex flex-col flex-1 pb-20 md:pb-0">
         <header className="sticky top-0 z-20 h-16 bg-white/80 backdrop-blur-md border-b px-4 md:px-8 flex items-center justify-between">
@@ -174,7 +100,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="p-0 w-64 border-none shadow-2xl">
-                  <DashboardSidebar mockRole={role} onToggleRole={toggleRole} />
+                  <DashboardSidebar mockRole={role as any} onToggleRole={toggleRole} />
                 </SheetContent>
               </Sheet>
             </div>
@@ -187,7 +113,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               />
             </div>
 
-            {/* Mobile Title - Only visible on smallest screens */}
             <div className="sm:hidden flex items-center gap-2">
               <div className="bg-primary p-1 rounded-lg">
                 <Zap className="h-4 w-4 text-white fill-current" />
@@ -197,6 +122,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-2 md:gap-4">
+            {role === 'ADMIN' && (
+              <Badge className="bg-slate-900 text-white border-none font-black text-[9px] uppercase tracking-widest px-3 py-1">
+                Super Admin Access
+              </Badge>
+            )}
+
             <Popover>
               <PopoverTrigger asChild>
                 <div className="relative">
@@ -221,10 +152,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       {notifications.map((n) => (
                         <button
                           key={n.id}
-                          onClick={() => {
-                            markNotificationAsRead(db, n.id);
-                            if (n.link) router.push(n.link);
-                          }}
                           className={cn(
                             "w-full p-4 flex gap-3 text-left hover:bg-slate-50 transition-colors",
                             !n.read && "bg-primary/5"
@@ -240,7 +167,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                               {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           </div>
-                          {!n.read && <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />}
                         </button>
                       ))}
                     </div>
@@ -258,14 +184,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="pl-2 pr-1 h-10 gap-2 hover:bg-slate-100 rounded-full transition-all">
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs uppercase border border-primary/20">
-                    {role === 'BRAND' ? 'L' : 'S'}
+                    {role.charAt(0)}
                   </div>
                   <div className="hidden md:flex flex-col items-start">
                     <span className="text-xs font-bold leading-tight">
-                      {role === 'BRAND' ? (userProfile?.displayName || 'Lumina Tech') : (userProfile?.displayName || 'Sarah Chen')}
+                      {userProfile?.displayName || 'Mock Admin'}
                     </span>
                     <span className="text-[10px] text-muted-foreground font-medium">
-                      {role === 'BRAND' ? 'Brand Admin' : 'Verified Creator'}
+                      {role} Access
                     </span>
                   </div>
                   <ChevronDown className="h-3 w-3 text-slate-400" />
@@ -274,9 +200,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <DropdownMenuContent align="end" className="w-56 rounded-xl p-2 shadow-2xl border-none">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="rounded-lg py-2">
-                  <User className="mr-2 h-4 w-4" /> Profile
-                </DropdownMenuItem>
                 <DropdownMenuItem className="rounded-lg py-2" onClick={() => router.push('/dashboard/settings')}>
                   <Settings className="mr-2 h-4 w-4" /> Settings
                 </DropdownMenuItem>
@@ -285,7 +208,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   className="rounded-lg py-2 text-red-600 hover:bg-red-50" 
                   onClick={handleLogout}
                 >
-                  <LogOut className="mr-2 h-4 w-4" /> Logout
+                  <LogOut className="mr-2 h-4 w-4" /> Exit Session
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -299,7 +222,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation */}
       <BottomNav />
     </div>
   );

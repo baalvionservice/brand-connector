@@ -1,6 +1,7 @@
+
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardSidebar } from '@/components/layout/Sidebar';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -10,13 +11,9 @@ import {
   Menu,
   ChevronDown,
   LogOut,
-  User,
   Settings,
-  Loader2,
   Zap,
-  Wallet,
-  MessageSquare,
-  AlertCircle
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -31,59 +28,25 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFirestore } from '@/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
 import { useNotifications } from '@/hooks/use-realtime-data';
 import { cn } from '@/lib/utils';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { currentUser, userProfile, loading, signOut } = useAuth();
-  const db = useFirestore();
+  const { userProfile, loading, signOut } = useAuth();
 
   // Use real-time hook for admin system alerts
   const { data: notifications } = useNotifications(userProfile?.id);
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  useEffect(() => {
-    if (!loading) {
-      if (!currentUser) {
-        router.replace('/auth/login');
-      } else if (userProfile?.role !== 'ADMIN') {
-        router.replace('/dashboard');
-      }
-    }
-  }, [currentUser, userProfile, loading, router]);
-
   const handleLogout = async () => {
     await signOut();
-    router.push('/');
   };
-
-  const markAsRead = async (id: string) => {
-    try {
-      await updateDoc(doc(db, 'notifications', id), { read: true });
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  if (loading || (currentUser && userProfile?.role !== 'ADMIN')) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="text-slate-500 font-medium">Authorizing secure access...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <div className="min-h-screen bg-slate-50">
       <DashboardSidebar mockRole="ADMIN" />
       
       <div className="md:pl-64 flex flex-col flex-1">
@@ -133,34 +96,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <PopoverContent align="end" className="w-80 p-0 rounded-2xl overflow-hidden shadow-2xl border-none">
                 <div className="p-4 border-b bg-slate-50/50 flex items-center justify-between">
                   <h3 className="text-xs font-black uppercase tracking-widest text-slate-900">System Alerts</h3>
-                  <Link href="/dashboard/notifications" className="text-[10px] font-bold text-primary hover:underline">View History</Link>
                 </div>
                 <ScrollArea className="max-h-[400px]">
                   {notifications.length > 0 ? (
                     <div className="divide-y divide-slate-50">
                       {notifications.map((n) => (
-                        <button
-                          key={n.id}
-                          onClick={() => {
-                            markAsRead(n.id);
-                            if (n.link) router.push(n.link);
-                          }}
-                          className={cn(
-                            "w-full p-4 flex gap-3 text-left hover:bg-slate-50 transition-colors",
-                            !n.read && "bg-primary/5"
-                          )}
-                        >
+                        <div key={n.id} className="w-full p-4 flex gap-3 text-left">
                           <div className="h-8 w-8 rounded-lg bg-white border shadow-sm flex items-center justify-center shrink-0">
                             <Zap className="h-4 w-4 text-primary" />
                           </div>
                           <div className="space-y-0.5 min-w-0">
                             <p className="text-xs font-bold text-slate-900 truncate">{n.title}</p>
                             <p className="text-[10px] text-slate-500 line-clamp-2">{n.message}</p>
-                            <p className="text-[8px] font-bold text-slate-400 mt-1">
-                              {new Date(n.createdAt).toLocaleTimeString()}
-                            </p>
                           </div>
-                        </button>
+                        </div>
                       ))}
                     </div>
                   ) : (
@@ -196,7 +145,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   className="rounded-lg py-2 text-red-600 hover:bg-red-50" 
                   onClick={handleLogout}
                 >
-                  <LogOut className="mr-2 h-4 w-4" /> Exit Admin Mode
+                  <LogOut className="mr-2 h-4 w-4" /> Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
