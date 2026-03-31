@@ -125,7 +125,7 @@ export function Pricing() {
             <Switch
               id="billing-toggle"
               checked={isAnnual}
-              onValueChange={(v) => setIsAnnual(v)}
+              onCheckedChange={(v) => setIsAnnual(v)}
             />
             <Label htmlFor="billing-toggle" className={cn("text-sm font-bold transition-colors cursor-pointer mr-2 flex items-center gap-1.5", isAnnual ? "text-primary" : "text-muted-foreground")}>
               Annual
