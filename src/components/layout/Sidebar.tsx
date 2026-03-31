@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -69,6 +70,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
 
   const adminLinks = [
     { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard },
+    { name: 'Platform Analytics', href: '/admin/analytics', icon: BarChart3 },
     { name: 'User Directory', href: '/admin/users', icon: Users },
     { name: 'Verification Queue', href: '/admin/creators/verify', icon: ShieldCheck },
     { name: 'Moderation Flow', href: '/admin/campaigns', icon: ShieldAlert },
