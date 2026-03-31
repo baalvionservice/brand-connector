@@ -26,6 +26,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, where, doc, updateDoc, addDoc, orderBy } from 'firebase/firestore';
@@ -47,6 +48,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
 type SortOption = 'newest' | 'deadline' | 'budget';
@@ -54,6 +63,7 @@ type SortOption = 'newest' | 'deadline' | 'budget';
 export default function BrandCampaignsPage() {
   const { userProfile } = useAuth();
   const db = useFirestore();
+  const router = useRouter();
   const { toast } = useToast();
   
   const [activeTab, setActiveTab] = useState<string>('ACTIVE');
@@ -101,23 +111,9 @@ export default function BrandCampaignsPage() {
   };
 
   const handleDuplicate = (campaign: Campaign) => {
-    const { id, ...rest } = campaign;
-    const newData = {
-      ...rest,
-      title: `${rest.title} (Copy)`,
-      status: CampaignStatus.DRAFT,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    addDoc(collection(db, 'campaigns'), newData).catch(async (err) => {
-      errorEmitter.emitPermissionError(new FirestorePermissionError({
-        path: '/campaigns',
-        operation: 'create',
-        requestResourceData: newData
-      }));
-    });
-    toast({ title: "Campaign duplicated as draft" });
+    // Redirect to creation flow with source ID for pre-population
+    router.push(`/dashboard/campaigns/new?sourceId=${campaign.id}`);
+    toast({ title: "Cloning Campaign...", description: "Preparing draft from source settings." });
   };
 
   return (
@@ -258,16 +254,16 @@ function CampaignManagementCard({ campaign, index, onStatusUpdate, onDuplicate }
             </Badge>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 text-slate-400 hover:bg-slate-50 transition-colors">
+                <button className="rounded-full h-8 w-8 flex items-center justify-center text-slate-400 hover:bg-slate-50 transition-colors">
                   <MoreHorizontal className="h-4 w-4" />
-                </Button>
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 rounded-xl p-2 border shadow-xl">
                 <DropdownMenuItem className="rounded-lg font-bold">
                   <Edit2 className="h-4 w-4 mr-2" /> Edit Campaign
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={onDuplicate} className="rounded-lg font-bold">
-                  <Copy className="h-4 w-4 mr-2" /> Duplicate
+                  <Copy className="h-4 w-4 mr-2" /> Duplicate Strategy
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {campaign.status === 'ACTIVE' ? (
@@ -357,27 +353,3 @@ function EmptyState({ tab }: { tab: string }) {
     </div>
   );
 }
-
-function Select({ value, onValueChange, children }: any) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-10 rounded-xl bg-slate-50 border-none font-bold text-xs gap-2">
-          {value === 'newest' ? 'Newest First' : value === 'budget' ? 'By Budget' : 'By Deadline'}
-          <ChevronRight className="h-3 w-3 rotate-90" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="rounded-xl font-bold">
-        <DropdownMenuItem onClick={() => onValueChange('newest')}>Newest First</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onValueChange('deadline')}>By Deadline</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onValueChange('budget')}>By Budget</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
-function SelectTrigger({ children, className }: any) { return <div className={className}>{children}</div>; }
-function SelectValue({ placeholder }: any) { return <span>{placeholder}</span>; }
-function SelectContent({ children }: any) { return <div className="hidden">{children}</div>; }
-function SelectItem({ value, children, className }: any) { return null; }
-function Separator({ className, orientation }: any) { return <div className={cn(className, orientation === 'vertical' ? 'w-px h-full bg-slate-200' : 'h-px w-full bg-slate-200')} />; }

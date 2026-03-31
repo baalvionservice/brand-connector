@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -205,7 +206,9 @@
         "audienceAgeMax": { "type": "number" },
         "audienceGender": { "type": "string" },
         "minPosts": { "type": "number" },
-        "isExclusive": { "type": "boolean" }
+        "isExclusive": { "type": "boolean" },
+        "sourceCampaignId": { "type": "string" },
+        "sourceCampaignTitle": { "type": "string" }
       },
       "required": ["id", "brandId", "title", "status"]
     },

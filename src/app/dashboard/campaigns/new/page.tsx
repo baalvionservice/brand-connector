@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,12 +38,13 @@ import {
   Youtube,
   Music2,
   ChevronRight,
-  AlertCircle
+  AlertCircle,
+  Copy
 } from 'lucide-react';
-import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, getDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useAuth } from '@/contexts/AuthContext';
-import { CampaignStatus, CampaignDeliverable } from '@/types';
+import { CampaignStatus, CampaignDeliverable, Campaign } from '@/types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
@@ -161,6 +162,8 @@ const TIERS = [
 
 export default function NewCampaignPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sourceId = searchParams.get('sourceId');
   const db = useFirestore();
   const { userProfile } = useAuth();
   const { toast } = useToast();
@@ -170,6 +173,7 @@ export default function NewCampaignPage() {
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [particlesInit, setParticlesInit] = useState(false);
+  const [sourceCampaign, setSourceCampaign] = useState<Campaign | null>(null);
 
   useEffect(() => {
     initParticlesEngine(async (engine) => {
@@ -177,62 +181,86 @@ export default function NewCampaignPage() {
     }).then(() => setParticlesInit(true));
   }, []);
 
-  // Forms
+  // Form initialization
   const basicsForm = useForm<CampaignBasicsValues>({
     resolver: zodResolver(campaignBasicsSchema),
-    defaultValues: {
-      title: '',
-      objective: 'AWARENESS',
-      platforms: ['Instagram'],
-      contentType: 'REEL',
-      description: '',
-    },
+    defaultValues: { title: '', objective: 'AWARENESS', platforms: ['Instagram'], contentType: 'REEL', description: '' },
   });
 
   const requirementsForm = useForm<CreatorRequirementsValues>({
     resolver: zodResolver(creatorRequirementsSchema),
-    defaultValues: {
-      creatorTier: 'MICRO',
-      minFollowers: 10000,
-      maxFollowers: 50000,
-      minEngagementRate: 3,
-      niches: [],
-      targetLocations: ['India'],
-      languages: ['English'],
-      audienceAgeMin: 18,
-      audienceAgeMax: 35,
-      audienceGender: 'ALL',
-      minPosts: 1,
-      isExclusive: false,
-    },
+    defaultValues: { creatorTier: 'MICRO', minFollowers: 10000, maxFollowers: 50000, minEngagementRate: 3, niches: [], targetLocations: ['India'], languages: ['English'], audienceAgeMin: 18, audienceAgeMax: 35, audienceGender: 'ALL', minPosts: 1, isExclusive: false },
   });
 
   const budgetForm = useForm<BudgetTimelineValues>({
     resolver: zodResolver(budgetTimelineSchema),
-    defaultValues: {
-      totalBudget: 50000,
-      budgetPerCreator: [5000, 15000],
-      paymentMethod: 'UPI',
-      startDate: new Date(),
-      endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
-      applicationDeadline: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
-      submissionDeadline: new Date(Date.now() + 1000 * 60 * 60 * 24 * 21),
-      postLiveDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 25),
-    },
+    defaultValues: { totalBudget: 50000, budgetPerCreator: [5000, 15000], paymentMethod: 'UPI', startDate: new Date(), endDate: new Date(Date.now() + 86400000 * 30), applicationDeadline: new Date(Date.now() + 86400000 * 7), submissionDeadline: new Date(Date.now() + 86400000 * 21), postLiveDate: new Date(Date.now() + 86400000 * 25) },
   });
 
   const guidelinesForm = useForm<GuidelinesValues>({
     resolver: zodResolver(guidelinesSchema),
-    defaultValues: {
-      deliverables: [],
-      dos: [],
-      donts: [],
-      hashtags: [],
-      handles: [],
-      links: [],
-      mandatoryMentions: ''
-    },
+    defaultValues: { deliverables: [], dos: [], donts: [], hashtags: [], handles: [], links: [], mandatoryMentions: '' },
   });
+
+  // Handle Duplication logic
+  useEffect(() => {
+    if (sourceId && db) {
+      const fetchSource = async () => {
+        const docRef = doc(db, 'campaigns', sourceId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data() as Campaign;
+          setSourceCampaign(data);
+          
+          // Pre-fill forms
+          basicsForm.reset({
+            title: `${data.title} (Clone)`,
+            objective: data.objectives?.[0] || 'AWARENESS',
+            platforms: data.targetLocations ? ['Instagram'] : ['Instagram'], // Simplified for prototype
+            contentType: 'REEL',
+            description: data.description,
+          });
+
+          requirementsForm.reset({
+            creatorTier: data.creatorTier || 'MICRO',
+            minFollowers: data.minFollowers || 10000,
+            maxFollowers: data.maxFollowers || 50000,
+            minEngagementRate: data.minEngagementRate || 3,
+            niches: data.niches || [],
+            targetLocations: data.targetLocations || ['India'],
+            languages: data.languages || ['English'],
+            audienceAgeMin: data.audienceAgeMin || 18,
+            audienceAgeMax: data.audienceAgeMax || 35,
+            audienceGender: (data.audienceGender as any) || 'ALL',
+            minPosts: data.minPosts || 1,
+            isExclusive: data.isExclusive || false,
+          });
+
+          budgetForm.reset({
+            totalBudget: data.budget || 50000,
+            budgetPerCreator: [data.minBudgetPerCreator || 5000, data.maxBudgetPerCreator || 15000],
+            paymentMethod: 'UPI',
+            startDate: new Date(),
+            endDate: new Date(Date.now() + 86400000 * 30),
+            applicationDeadline: new Date(Date.now() + 86400000 * 7),
+            submissionDeadline: new Date(Date.now() + 86400000 * 21),
+            postLiveDate: new Date(Date.now() + 86400000 * 25),
+          });
+
+          guidelinesForm.reset({
+            deliverables: data.deliverables || [],
+            dos: data.dos || [],
+            donts: data.donts || [],
+            hashtags: data.hashtags || [],
+            handles: data.handles || [],
+            links: data.links || [],
+            mandatoryMentions: data.mandatoryMentions || ''
+          });
+        }
+      };
+      fetchSource();
+    }
+  }, [sourceId, db]);
 
   const [newDel, setNewDel] = useState<CampaignDeliverable>({ type: 'REEL', qty: 1, platform: 'Instagram', specs: '' });
   const [tempItem, setTempItem] = useState('');
@@ -249,6 +277,8 @@ export default function NewCampaignPage() {
       status: CampaignStatus.DRAFT,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      sourceCampaignId: sourceId || undefined,
+      sourceCampaignTitle: sourceCampaign?.title || undefined,
       step: 1
     };
 
@@ -271,7 +301,7 @@ export default function NewCampaignPage() {
       addDoc(collection(db, 'campaigns'), campaignData)
         .then((docRef) => {
           setCampaignId(docRef.id);
-          toast({ title: "Basics Saved" });
+          toast({ title: "Draft Created" });
           setCurrentStep(2);
           setIsSaving(false);
         })
@@ -289,33 +319,20 @@ export default function NewCampaignPage() {
   const onRequirementsSubmit = (values: CreatorRequirementsValues) => {
     if (!campaignId) return;
     setIsSaving(true);
-
-    const updateData = {
-      ...values,
-      updatedAt: new Date().toISOString(),
-      step: 2
-    };
-
-    updateDoc(doc(db, 'campaigns', campaignId), updateData)
-      .then(() => {
-        toast({ title: "Requirements Saved" });
-        setCurrentStep(3);
-        setIsSaving(false);
-      })
-      .catch(async (err) => {
-        errorEmitter.emitPermissionError(new FirestorePermissionError({
-          path: `/campaigns/${campaignId}`,
-          operation: 'update',
-          requestResourceData: updateData
-        } satisfies SecurityRuleContext));
-        setIsSaving(false);
-      });
+    const updateData = { ...values, updatedAt: new Date().toISOString(), step: 2 };
+    updateDoc(doc(db, 'campaigns', campaignId), updateData).then(() => {
+      toast({ title: "Requirements Saved" });
+      setCurrentStep(3);
+      setIsSaving(false);
+    }).catch(async (err) => {
+      errorEmitter.emitPermissionError(new FirestorePermissionError({ path: `/campaigns/${campaignId}`, operation: 'update', requestResourceData: updateData }));
+      setIsSaving(false);
+    });
   };
 
   const onBudgetSubmit = (values: BudgetTimelineValues) => {
     if (!campaignId) return;
     setIsSaving(true);
-
     const updateData = {
       budget: values.totalBudget,
       minBudgetPerCreator: values.budgetPerCreator[0],
@@ -328,72 +345,42 @@ export default function NewCampaignPage() {
       updatedAt: new Date().toISOString(),
       step: 3
     };
-
-    updateDoc(doc(db, 'campaigns', campaignId), updateData)
-      .then(() => {
-        toast({ title: "Budget Saved" });
-        setCurrentStep(4);
-        setIsSaving(false);
-      })
-      .catch(async (err) => {
-        errorEmitter.emitPermissionError(new FirestorePermissionError({
-          path: `/campaigns/${campaignId}`,
-          operation: 'update',
-          requestResourceData: updateData
-        } satisfies SecurityRuleContext));
-        setIsSaving(false);
-      });
+    updateDoc(doc(db, 'campaigns', campaignId), updateData).then(() => {
+      toast({ title: "Budget Saved" });
+      setCurrentStep(4);
+      setIsSaving(false);
+    }).catch(async (err) => {
+      errorEmitter.emitPermissionError(new FirestorePermissionError({ path: `/campaigns/${campaignId}`, operation: 'update', requestResourceData: updateData }));
+      setIsSaving(false);
+    });
   };
 
   const onGuidelinesSubmit = (values: GuidelinesValues) => {
     if (!campaignId) return;
     setIsSaving(true);
-
-    const updateData = {
-      ...values,
-      updatedAt: new Date().toISOString(),
-      step: 4
-    };
-
-    updateDoc(doc(db, 'campaigns', campaignId), updateData)
-      .then(() => {
-        toast({ title: "Guidelines Saved" });
-        setCurrentStep(5);
-        setIsSaving(false);
-      })
-      .catch(async (err) => {
-        errorEmitter.emitPermissionError(new FirestorePermissionError({
-          path: `/campaigns/${campaignId}`,
-          operation: 'update',
-          requestResourceData: updateData
-        } satisfies SecurityRuleContext));
-        setIsSaving(false);
-      });
+    const updateData = { ...values, updatedAt: new Date().toISOString(), step: 4 };
+    updateDoc(doc(db, 'campaigns', campaignId), updateData).then(() => {
+      toast({ title: "Guidelines Saved" });
+      setCurrentStep(5);
+      setIsSaving(false);
+    }).catch(async (err) => {
+      errorEmitter.emitPermissionError(new FirestorePermissionError({ path: `/campaigns/${campaignId}`, operation: 'update', requestResourceData: updateData }));
+      setIsSaving(false);
+    });
   };
 
   const handlePublish = async () => {
     if (!campaignId) return;
     setIsSaving(true);
-
-    const finalUpdate = {
-      status: CampaignStatus.ACTIVE,
-      updatedAt: new Date().toISOString()
-    };
-
-    updateDoc(doc(db, 'campaigns', campaignId), finalUpdate)
-      .then(() => {
-        setShowConfetti(true);
-        toast({ title: "Campaign Launched!", description: "AI matching engine has started finding creators." });
-        setTimeout(() => router.push('/dashboard/brand'), 4000);
-      })
-      .catch(async (err) => {
-        errorEmitter.emitPermissionError(new FirestorePermissionError({
-          path: `/campaigns/${campaignId}`,
-          operation: 'update',
-          requestResourceData: finalUpdate
-        } satisfies SecurityRuleContext));
-        setIsSaving(false);
-      });
+    const finalUpdate = { status: CampaignStatus.ACTIVE, updatedAt: new Date().toISOString() };
+    updateDoc(doc(db, 'campaigns', campaignId), finalUpdate).then(() => {
+      setShowConfetti(true);
+      toast({ title: "Campaign Launched!", description: "AI matching engine has started finding creators." });
+      setTimeout(() => router.push('/dashboard/brand'), 4000);
+    }).catch(async (err) => {
+      errorEmitter.emitPermissionError(new FirestorePermissionError({ path: `/campaigns/${campaignId}`, operation: 'update', requestResourceData: finalUpdate }));
+      setIsSaving(false);
+    });
   };
 
   const addArrayItem = (field: keyof GuidelinesValues, value: string) => {
@@ -411,11 +398,7 @@ export default function NewCampaignPage() {
   const totals = useMemo(() => {
     const budget = budgetForm.watch('totalBudget') || 0;
     const fee = Math.round(budget * (PLATFORM_FEE_PERCENTAGE / 100));
-    return {
-      budget,
-      fee,
-      total: budget + fee
-    };
+    return { budget, fee, total: budget + fee };
   }, [budgetForm.watch('totalBudget')]);
 
   const estimatedReach = useMemo(() => {
@@ -446,44 +429,31 @@ export default function NewCampaignPage() {
               shape: { type: ["circle", "square"] },
               opacity: { value: 1 },
               size: { value: { min: 2, max: 4 } },
-              move: {
-                enable: true,
-                gravity: { enable: true, acceleration: 10 },
-                speed: { min: 10, max: 20 },
-                decay: 0.1,
-                direction: "top",
-                straight: false,
-                outModes: { default: "destroy", top: "none" },
-              },
+              move: { enable: true, gravity: { enable: true, acceleration: 10 }, speed: { min: 10, max: 20 }, decay: 0.1, direction: "top", straight: false, outModes: { default: "destroy", top: "none" } },
             },
-            emitters: [
-              {
-                direction: "top-right",
-                rate: { count: 10, delay: 0.1 },
-                position: { x: 0, y: 100 },
-                size: { width: 0, height: 0 },
-              },
-              {
-                direction: "top-left",
-                rate: { count: 10, delay: 0.1 },
-                position: { x: 100, y: 100 },
-                size: { width: 0, height: 0 },
-              },
-            ],
+            emitters: [ { direction: "top-right", rate: { count: 10, delay: 0.1 }, position: { x: 0, y: 100 }, size: { width: 0, height: 0 } }, { direction: "top-left", rate: { count: 10, delay: 0.1 }, position: { x: 100, y: 100 }, size: { width: 0, height: 0 } } ],
           }}
         />
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           {!showConfetti && (
-            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => currentStep > 1 && setCurrentStep(currentStep - 1)}>
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => currentStep > 1 ? setCurrentStep(currentStep - 1) : router.back()}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
           )}
           <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Campaign Creation</h1>
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight">Campaign Creation</h1>
+              {sourceId && (
+                <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black uppercase flex items-center gap-1">
+                  <Copy className="h-3 w-3" />
+                  Duplicated from: {sourceCampaign?.title || 'Original'}
+                </Badge>
+              )}
+            </div>
             <p className="text-slate-500 font-medium">Step {currentStep}: {STEPS[currentStep-1].title}</p>
           </div>
         </div>
@@ -535,14 +505,14 @@ export default function NewCampaignPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-3">
                           <Label className="font-bold text-slate-700">Primary Objective</Label>
-                          <Select onValueChange={(v) => basicsForm.setValue('objective', v)} defaultValue={basicsForm.getValues('objective')}>
+                          <Select onValueChange={(v) => basicsForm.setValue('objective', v)} value={basicsForm.watch('objective')}>
                             <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none font-bold"><SelectValue /></SelectTrigger>
                             <SelectContent>{OBJECTIVES.map((obj) => <SelectItem key={obj.id} value={obj.id}>{obj.label}</SelectItem>)}</SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-3">
                           <Label className="font-bold text-slate-700">Content Type</Label>
-                          <Select onValueChange={(v) => basicsForm.setValue('contentType', v)} defaultValue={basicsForm.getValues('contentType')}>
+                          <Select onValueChange={(v) => basicsForm.setValue('contentType', v)} value={basicsForm.watch('contentType')}>
                             <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none font-bold"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="REEL">Reel / Short</SelectItem>
@@ -579,7 +549,7 @@ export default function NewCampaignPage() {
                     <form id="requirements-form" onSubmit={requirementsForm.handleSubmit(onRequirementsSubmit)} className="space-y-10">
                       <div className="space-y-4">
                         <Label className="font-bold text-slate-700">Creator Tier</Label>
-                        <RadioGroup defaultValue={requirementsForm.getValues('creatorTier')} onValueChange={(v: any) => requirementsForm.setValue('creatorTier', v)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <RadioGroup value={requirementsForm.watch('creatorTier')} onValueChange={(v: any) => requirementsForm.setValue('creatorTier', v)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {TIERS.map((tier) => (
                             <div key={tier.id}>
                               <RadioGroupItem value={tier.id} id={tier.id} className="peer sr-only" />
@@ -895,11 +865,7 @@ export default function NewCampaignPage() {
                           </p>
                         </div>
 
-                        <Button 
-                          onClick={handlePublish}
-                          disabled={isSaving || showConfetti}
-                          className="w-full h-14 rounded-2xl font-black text-lg shadow-xl shadow-primary/20"
-                        >
+                        <Button onClick={handlePublish} disabled={isSaving || showConfetti} className="w-full h-14 rounded-2xl font-black text-lg shadow-xl shadow-primary/20">
                           {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CreditCard className="mr-2 h-5 w-5" />}
                           Fund & Launch Live
                         </Button>
@@ -976,49 +942,5 @@ export default function NewCampaignPage() {
         )}
       </div>
     </div>
-  );
-}
-
-function CampaignPreviewCard({ title, brandName, budget, niche, platform }: any) {
-  return (
-    <Card className="border-none shadow-2xl rounded-3xl overflow-hidden h-full flex flex-col bg-white text-left pointer-events-none ring-1 ring-slate-100">
-      <CardHeader className="p-6 pb-2">
-        <div className="flex items-start justify-between mb-4">
-          <Avatar className="h-12 w-12 rounded-2xl border shadow-sm">
-            <AvatarFallback className="bg-primary/5 text-primary font-bold">{brandName[0]}</AvatarFallback>
-          </Avatar>
-          <div className="bg-primary/5 px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-primary/10">
-            <Zap className="h-3 w-3 text-primary fill-primary" />
-            <span className="text-[10px] font-black text-primary">AI MATCHED</span>
-          </div>
-        </div>
-        <div className="space-y-1">
-          <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em]">{brandName}</p>
-          <h3 className="text-lg font-bold text-slate-900 leading-tight line-clamp-2">{title || 'Campaign Title'}</h3>
-        </div>
-      </CardHeader>
-      <CardContent className="p-6 pt-2 flex-1 space-y-6">
-        <div className="flex flex-wrap gap-2">
-          <Badge variant="secondary" className="bg-slate-50 text-slate-500 border-none font-bold text-[10px]">{niche}</Badge>
-          <Badge variant="outline" className="bg-white text-primary border-primary/20 font-bold text-[10px]">{platform}</Badge>
-        </div>
-        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
-          <div className="space-y-1">
-            <p className="text-[9px] font-black text-slate-400 uppercase">Pay</p>
-            <p className="text-sm font-black text-emerald-600">{budget}</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[9px] font-black text-slate-400 uppercase">Deadline</p>
-            <p className="text-[11px] font-bold text-slate-900">30 Days</p>
-          </div>
-        </div>
-      </CardContent>
-      <CardFooter className="p-6 pt-0 mt-auto flex items-center justify-between border-t border-slate-50 bg-slate-50/30">
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-bold uppercase tracking-tighter">
-          <Users className="h-3.5 w-3.5" /> <span>OPEN SPOTS</span>
-        </div>
-        <Button size="sm" className="rounded-xl font-bold h-9 px-6 shadow-lg shadow-primary/20">Apply Now</Button>
-      </CardFooter>
-    </Card>
   );
 }
