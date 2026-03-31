@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -83,6 +82,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
+import { PaymentGateway } from '@/components/payments/PaymentGateway';
 
 // Step 1 Schema
 const campaignBasicsSchema = z.object({
@@ -373,18 +373,10 @@ export default function NewCampaignPage() {
     });
   };
 
-  const handlePublish = async () => {
-    if (!campaignId) return;
-    setIsSaving(true);
-    const finalUpdate = { status: CampaignStatus.ACTIVE, updatedAt: new Date().toISOString() };
-    updateDoc(doc(db, 'campaigns', campaignId), finalUpdate).then(() => {
-      setShowConfetti(true);
-      toast({ title: "Campaign Launched!", description: "AI matching engine has started finding creators." });
-      setTimeout(() => router.push('/dashboard/brand'), 4000);
-    }).catch(async (err) => {
-      errorEmitter.emitPermissionError(new FirestorePermissionError({ path: `/campaigns/${campaignId}`, operation: 'update', requestResourceData: finalUpdate }));
-      setIsSaving(false);
-    });
+  const handlePublishSuccess = async () => {
+    setShowConfetti(true);
+    toast({ title: "Campaign Launched!", description: "AI matching engine has started finding creators." });
+    setTimeout(() => router.push('/dashboard/brand'), 4000);
   };
 
   const addArrayItem = (field: keyof GuidelinesValues, value: string) => {
@@ -496,11 +488,11 @@ export default function NewCampaignPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Main Content Area */}
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-12">
           <AnimatePresence mode="wait">
             {currentStep === 1 && (
               <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white max-w-4xl mx-auto">
                   <CardHeader className="p-8 border-b bg-slate-50/30">
                     <CardTitle className="text-xl">Campaign Basics</CardTitle>
                     <CardDescription>Tell us about the identity and vision of your project.</CardDescription>
@@ -549,7 +541,7 @@ export default function NewCampaignPage() {
 
             {currentStep === 2 && (
               <motion.div key="step2" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white max-w-4xl mx-auto">
                   <CardHeader className="p-8 border-b bg-slate-50/30">
                     <CardTitle className="text-xl">Creator Requirements</CardTitle>
                     <CardDescription>Specify the target audience and influence scale.</CardDescription>
@@ -622,7 +614,7 @@ export default function NewCampaignPage() {
 
             {currentStep === 3 && (
               <motion.div key="step3" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white max-w-4xl mx-auto">
                   <CardHeader className="p-8 border-b bg-slate-50/30">
                     <CardTitle className="text-xl">Budget & Timeline</CardTitle>
                     <CardDescription>Define the commercial terms and milestones.</CardDescription>
@@ -751,7 +743,7 @@ export default function NewCampaignPage() {
 
             {currentStep === 4 && (
               <motion.div key="step4" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
-                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+                <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white max-w-4xl mx-auto">
                   <CardHeader className="p-8 border-b bg-slate-50/30">
                     <CardTitle className="text-xl">Deliverables & Guidelines</CardTitle>
                     <CardDescription>Clear rules lead to great content.</CardDescription>
@@ -852,176 +844,17 @@ export default function NewCampaignPage() {
 
             {currentStep === 5 && (
               <motion.div key="step5" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                  {/* Summary Area */}
-                  <div className="lg:col-span-2 space-y-6">
-                    <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
-                      <CardHeader className="p-8 border-b bg-slate-50/30">
-                        <CardTitle className="text-xl">Campaign Summary</CardTitle>
-                        <CardDescription>Review all details before funding the escrow.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="p-8 space-y-10">
-                        {/* Section: Basics */}
-                        <div className="space-y-4">
-                          <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest">Basics</h4>
-                          <div className="grid grid-cols-2 gap-6">
-                            <div>
-                              <p className="text-[10px] font-bold text-slate-400">Campaign Name</p>
-                              <p className="text-md font-bold text-slate-900">{basicsForm.getValues('title')}</p>
-                            </div>
-                            <div>
-                              <p className="text-[10px] font-bold text-slate-400">Objective</p>
-                              <p className="text-md font-bold text-slate-900">{OBJECTIVES.find(o => o.id === basicsForm.getValues('objective'))?.label}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <Separator className="opacity-50" />
-
-                        {/* Section: Audience */}
-                        <div className="space-y-4">
-                          <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest">Target Audience</h4>
-                          <div className="flex flex-wrap gap-2">
-                            <Badge variant="secondary" className="bg-primary/5 text-primary border-none">{requirementsForm.getValues('creatorTier')} TIER</Badge>
-                            {requirementsForm.getValues('niches').map(n => <Badge key={n} className="bg-slate-100 text-slate-600 border-none">{n}</Badge>)}
-                          </div>
-                        </div>
-
-                        <Separator className="opacity-50" />
-
-                        {/* Section: Rules */}
-                        <div className="space-y-4">
-                          <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest">Deliverables</h4>
-                          <div className="space-y-2">
-                            {guidelinesForm.getValues('deliverables').map((del, i) => (
-                              <div key={i} className="flex justify-between items-center text-sm font-medium">
-                                <span className="text-slate-600">{del.qty}x {del.type} ({del.platform})</span>
-                                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-
-                  {/* Payment Panel */}
-                  <div className="space-y-6">
-                    <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-slate-900 text-white">
-                      <CardHeader className="p-8 border-b border-white/10 bg-white/5">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <ShieldCheck className="h-5 w-5 text-primary" /> Escrow Funding
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-8 space-y-6">
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="text-slate-400">Campaign Budget</span>
-                            <span className="font-bold">₹{totals.budget.toLocaleString()}</span>
-                          </div>
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="text-slate-400">Platform Fee ({PLATFORM_FEE_PERCENTAGE}%)</span>
-                            <span className="font-bold">₹{totals.fee.toLocaleString()}</span>
-                          </div>
-                          <Separator className="bg-white/10" />
-                          <div className="flex justify-between items-center">
-                            <span className="text-md font-black uppercase text-primary">Total to Fund</span>
-                            <span className="text-2xl font-black">₹{totals.total.toLocaleString()}</span>
-                          </div>
-                        </div>
-
-                        <div className="bg-white/5 rounded-2xl p-4 space-y-2">
-                          <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
-                            <CheckCircle2 className="h-3 w-3" /> Secure Escrow
-                          </div>
-                          <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
-                            Funds are held securely by Baalvion Connect. Release is only triggered after you approve the final content deliverables.
-                          </p>
-                        </div>
-
-                        <Button onClick={handlePublish} disabled={isSaving || showConfetti} className="w-full h-14 rounded-2xl font-black text-lg shadow-xl shadow-primary/20">
-                          {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CreditCard className="mr-2 h-5 w-5" />}
-                          Fund & Launch Live
-                        </Button>
-                      </CardContent>
-                    </Card>
-
-                    <div className="p-6 rounded-[2rem] bg-white border border-dashed border-slate-300 text-center space-y-2">
-                      <Zap className="h-6 w-6 text-primary mx-auto mb-2" />
-                      <p className="text-xs font-black uppercase text-slate-900">AI Matcher Ready</p>
-                      <p className="text-[10px] text-slate-500 font-medium">
-                        Upon funding, we will instantly notify the top 15 matching creators in your niche.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <PaymentGateway 
+                  campaignId={campaignId!}
+                  brandId={userProfile!.id}
+                  budget={budgetForm.getValues('totalBudget')}
+                  onSuccess={handlePublishSuccess}
+                  onCancel={() => setCurrentStep(4)}
+                />
               </motion.div>
             )}
           </AnimatePresence>
         </div>
-
-        {/* Sidebar Insights */}
-        {!showConfetti && (
-          <div className="lg:col-span-4 space-y-6">
-            <Card className="border-none shadow-xl shadow-primary/5 rounded-3xl overflow-hidden bg-slate-950 text-white">
-              <CardContent className="p-8 space-y-6">
-                <div className="h-12 w-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
-                  <TrendingUp className="h-6 w-6 text-emerald-400" />
-                </div>
-                <div className="space-y-4">
-                  <h3 className="text-xl font-black">Market Reach Analysis</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Potential Reach</p>
-                      <p className="text-2xl font-black text-white">
-                        {roiForecast ? (
-                          <CountUp end={roiForecast.impressions.max} separator="," />
-                        ) : '---'}
-                      </p>
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Engagement</p>
-                      <p className="text-2xl font-black text-emerald-400">
-                        {roiForecast ? (
-                          <CountUp end={roiForecast.engagements} separator="," />
-                        ) : '---'}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="text-slate-400 text-[10px] leading-relaxed font-medium">
-                    Optimized for {requirementsForm.watch('creatorTier')} Tier. Campaign efficiency score: <span className="text-white font-bold">{roiForecast?.confidence || 0}/100</span>.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
-              <CardHeader className="p-6 border-b bg-slate-50/50">
-                <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">Timeline Check</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6 space-y-4">
-                <div className="flex gap-3">
-                  <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Clock className="h-3 w-3 text-primary" />
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-black text-slate-900 uppercase">Hiring Phase</p>
-                    <p className="text-[10px] text-slate-500 font-medium">Closes {budgetForm.watch('applicationDeadline') ? format(budgetForm.watch('applicationDeadline'), "MMM dd") : '---'}</p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <div className="h-5 w-5 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
-                    <CalendarIcon className="h-3 w-3 text-orange-500" />
-                  </div>
-                  <div className="space-y-0.5">
-                    <p className="text-xs font-black text-slate-900 uppercase">Production Phase</p>
-                    <p className="text-[10px] text-slate-500 font-medium">Starts {budgetForm.watch('startDate') ? format(budgetForm.watch('startDate'), "MMM dd") : '---'}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
       </div>
     </div>
   );
