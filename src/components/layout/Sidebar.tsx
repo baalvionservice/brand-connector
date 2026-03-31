@@ -48,7 +48,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
 
   const brandLinks = [
     { name: 'Dashboard', href: '/dashboard/brand', icon: LayoutDashboard },
-    { name: 'My Campaigns', href: '/dashboard/campaigns', icon: Briefcase },
+    { name: 'My Campaigns', href: '/dashboard/brand/campaigns', icon: Briefcase },
     { name: 'Matchmaking', href: '/dashboard/matchmaking', icon: Zap },
     { name: 'Deliverables', href: '/dashboard/deliverables', icon: FileText },
     { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },
