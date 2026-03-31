@@ -56,7 +56,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Matchmaking', href: '/dashboard/matchmaking', icon: Zap },
     { name: 'Deliverables', href: '/dashboard/brand/deliverables', icon: FileText },
     { name: 'Wallet', href: '/dashboard/brand/wallet', icon: Wallet },
-    { name: 'Messages', href: '/dashboard/creator/messages', icon: MessageSquare },
+    { name: 'Messages', href: '/dashboard/brand/messages', icon: MessageSquare },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
   ];
 

@@ -290,3 +290,25 @@ export interface MatchScore {
   score: number;
   reasoning: string;
 }
+
+export interface Conversation {
+  id: string;
+  participantIds: string[];
+  lastMessage?: string;
+  lastSenderId?: string;
+  updatedAt: string;
+  unreadCounts?: Record<string, number>;
+  campaignId?: string;
+  campaignTitle?: string;
+  importantBy?: Record<string, boolean>;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  text: string;
+  attachmentUrl?: string;
+  attachmentType?: string;
+  createdAt: string;
+}
