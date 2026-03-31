@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -24,6 +25,35 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "email", "role"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "A chat session between two or more participants.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "participantIds": { "type": "array", "items": { "type": "string" } },
+        "lastMessage": { "type": "string" },
+        "lastSenderId": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "unreadCounts": { "type": "object" }
+      },
+      "required": ["id", "participantIds", "updatedAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "An individual message within a conversation.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "conversationId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "text": { "type": "string" },
+        "attachmentUrl": { "type": "string" },
+        "attachmentType": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "conversationId", "senderId", "createdAt"]
     },
     "CreatorProfile": {
       "title": "Creator Profile",
@@ -159,6 +189,14 @@
     "/users/{userId}": {
       "schema": "UserProfile",
       "description": "User profiles and roles."
+    },
+    "/conversations/{conversationId}": {
+      "schema": "Conversation",
+      "description": "Chat conversations metadata."
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": "Message",
+      "description": "Individual chat messages."
     },
     "/creators/{creatorId}": {
       "schema": "CreatorProfile",
