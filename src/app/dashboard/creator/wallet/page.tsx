@@ -19,7 +19,11 @@ import {
   Download,
   Building2,
   Zap,
-  Check
+  Check,
+  Smartphone,
+  Globe,
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -46,6 +50,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useFirestore } from '@/firebase';
+import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
 
 // Mock Transaction Data
@@ -57,12 +66,19 @@ const MOCK_TRANSACTIONS = [
   { id: 'tx_5', date: '2024-06-20', campaign: 'Withdrawal to UPI', amount: 10000, status: 'COMPLETED', type: 'DEBIT', upi: 'sarah@okaxis' },
 ];
 
+type PayoutStep = 'amount' | 'method' | 'confirm' | 'otp' | 'processing' | 'success';
+
 export default function CreatorWalletPage() {
   const { toast } = useToast();
+  const { userProfile } = useAuth();
+  const db = useFirestore();
+
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
-  const [withdrawStep, setWithdrawStep] = useState<'input' | 'processing' | 'success'>('input');
+  const [currentStep, setCurrentStep] = useState<PayoutStep>('amount');
   const [amount, setAmount] = useState('');
   const [payoutMethod, setPayoutMethod] = useState('upi');
+  const [otpValue, setOtpValue] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const stats = {
     available: 62500,
@@ -70,31 +86,85 @@ export default function CreatorWalletPage() {
     total: 422500
   };
 
-  const handleWithdrawSubmit = () => {
-    if (!amount || Number(amount) <= 0) {
-      return toast({ variant: 'destructive', title: 'Invalid amount', description: 'Please enter a valid amount to withdraw.' });
+  const handleNextStep = () => {
+    if (currentStep === 'amount') {
+      const val = Number(amount);
+      if (isNaN(val) || val < 500) {
+        return toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Minimum withdrawal is ₹500.' });
+      }
+      if (val > stats.available) {
+        return toast({ variant: 'destructive', title: 'Insufficient Funds', description: "You don't have enough available balance." });
+      }
+      setCurrentStep('method');
+    } else if (currentStep === 'method') {
+      setCurrentStep('confirm');
+    } else if (currentStep === 'confirm') {
+      setCurrentStep('otp');
     }
-    if (Number(amount) > stats.available) {
-      return toast({ variant: 'destructive', title: 'Insufficient balance', description: 'You cannot withdraw more than your available balance.' });
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpValue.length < 6) {
+      return toast({ variant: 'destructive', title: 'Verification Error', description: 'Please enter the 6-digit code sent to your phone.' });
     }
 
-    setWithdrawStep('processing');
-    
-    // Simulate API delay
-    setTimeout(() => {
-      setWithdrawStep('success');
-      toast({
-        title: "Payout Initiated",
-        description: `₹${amount} is being transferred to your ${payoutMethod.toUpperCase()} account.`,
+    setCurrentStep('processing');
+    setIsSubmitting(true);
+
+    const transactionData = {
+      userId: userProfile?.id || 'unknown',
+      walletId: `wallet_${userProfile?.id || 'unknown'}`,
+      amount: Number(amount),
+      type: 'DEBIT',
+      status: 'PENDING',
+      description: `Withdrawal via ${payoutMethod.toUpperCase()}`,
+      payoutMethod: {
+        type: payoutMethod,
+        target: payoutMethod === 'upi' ? 'sarah@okaxis' : payoutMethod === 'bank' ? 'HDFC ****4242' : 'sarah.chen@payoneer.com'
+      },
+      createdAt: new Date().toISOString()
+    };
+
+    try {
+      // 1. Create Transaction Record
+      const txRef = collection(db, 'transactions');
+      await addDoc(txRef, transactionData);
+
+      // 2. Update Wallet (In a real app, this would be a cloud function or atomic update)
+      const walletRef = doc(db, 'wallets', transactionData.walletId);
+      // We merge updates since wallets might not exist in the prototype mock
+      updateDoc(walletRef, {
+        availableBalance: stats.available - Number(amount),
+        updatedAt: serverTimestamp()
+      }).catch(() => {
+        // Silently fail if wallet doc doesn't exist yet in mock
       });
-    }, 3000);
+
+      setTimeout(() => {
+        setCurrentStep('success');
+        setIsSubmitting(false);
+        toast({
+          title: "Payout Successful",
+          description: "Your request has been registered.",
+        });
+      }, 2000);
+    } catch (err: any) {
+      errorEmitter.emitPermissionError(new FirestorePermissionError({
+        path: '/transactions',
+        operation: 'create',
+        requestResourceData: transactionData
+      }));
+      setCurrentStep('confirm');
+      setIsSubmitting(false);
+    }
   };
 
   const resetWithdrawFlow = () => {
     setIsWithdrawModalOpen(false);
     setTimeout(() => {
-      setWithdrawStep('input');
+      setCurrentStep('amount');
       setAmount('');
+      setOtpValue('');
     }, 300);
   };
 
@@ -107,7 +177,7 @@ export default function CreatorWalletPage() {
           <p className="text-slate-500 mt-1">Manage your earnings, payouts, and campaign financial security.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-xl font-bold bg-white">
+          <Button variant="outline" className="rounded-xl font-bold bg-white h-11 border-slate-200">
             <Download className="h-4 w-4 mr-2" />
             Statements
           </Button>
@@ -119,104 +189,186 @@ export default function CreatorWalletPage() {
                 Request Payout
               </Button>
             </DialogTrigger>
-            <DialogContent className="rounded-[2rem] p-0 overflow-hidden border-none max-w-md">
+            <DialogContent className="rounded-[2.5rem] p-0 overflow-hidden border-none max-w-lg shadow-2xl">
               <AnimatePresence mode="wait">
-                {withdrawStep === 'input' && (
-                  <motion.div 
-                    key="input"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="p-8"
-                  >
-                    <DialogHeader className="mb-6">
-                      <DialogTitle className="text-2xl font-black">Withdraw Funds</DialogTitle>
-                      <DialogDescription>Transfer your available balance to your bank or UPI.</DialogDescription>
+                {currentStep === 'amount' && (
+                  <motion.div key="amount" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-10 space-y-8">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl font-black">Withdraw Amount</DialogTitle>
+                      <DialogDescription>How much would you like to transfer to your account?</DialogDescription>
                     </DialogHeader>
-                    
                     <div className="space-y-6">
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <Label className="font-bold">Amount to Withdraw</Label>
-                          <span className="text-[10px] font-black text-primary uppercase">Max: ₹{stats.available.toLocaleString()}</span>
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-end">
+                          <Label className="font-bold text-slate-700">Amount (₹)</Label>
+                          <span className="text-[10px] font-black text-primary uppercase">Available: ₹{stats.available.toLocaleString()}</span>
                         </div>
                         <div className="relative">
-                          <IndianRupee className="absolute left-3 top-3.5 h-5 w-5 text-slate-400" />
+                          <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-400" />
                           <Input 
                             type="number" 
                             placeholder="5,000" 
-                            className="pl-10 h-12 rounded-xl text-lg font-bold"
+                            className="pl-12 h-16 rounded-2xl text-2xl font-black border-slate-100 bg-slate-50 focus-visible:ring-primary"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                           />
                         </div>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center">Minimum withdrawal ₹500</p>
                       </div>
-
-                      <div className="space-y-3">
-                        <Label className="font-bold">Select Payout Method</Label>
-                        <RadioGroup defaultValue="upi" onValueChange={setPayoutMethod} className="grid grid-cols-2 gap-3">
-                          <div>
-                            <RadioGroupItem value="upi" id="upi-method" className="peer sr-only" />
-                            <Label htmlFor="upi-method" className="flex flex-col items-center justify-center rounded-xl border-2 border-slate-100 bg-white p-4 hover:bg-slate-50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all">
-                              <Zap className="h-5 w-5 text-primary mb-1" />
-                              <span className="text-xs font-bold">UPI ID</span>
-                            </Label>
-                          </div>
-                          <div>
-                            <RadioGroupItem value="bank" id="bank-method" className="peer sr-only" />
-                            <Label htmlFor="bank-method" className="flex flex-col items-center justify-center rounded-xl border-2 border-slate-100 bg-white p-4 hover:bg-slate-50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all">
-                              <Building2 className="h-5 w-5 text-emerald-600 mb-1" />
-                              <span className="text-xs font-bold">Bank A/C</span>
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-
-                      <div className="p-4 rounded-xl bg-slate-50 border text-[10px] text-slate-500 leading-relaxed italic">
-                        "Funds will be credited within 2-4 working hours."
-                      </div>
-
-                      <Button onClick={handleWithdrawSubmit} className="w-full h-12 rounded-xl font-bold shadow-xl shadow-primary/20">
-                        Confirm Withdrawal
+                      <Button onClick={handleNextStep} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20">
+                        Continue <ArrowRight className="ml-2 h-5 w-5" />
                       </Button>
                     </div>
                   </motion.div>
                 )}
 
-                {withdrawStep === 'processing' && (
-                  <motion.div 
-                    key="processing"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="p-12 flex flex-col items-center text-center space-y-6"
-                  >
-                    <div className="relative">
-                      <div className="h-20 w-20 rounded-full border-4 border-primary/10 border-t-primary animate-spin" />
-                      <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-8 text-primary" />
+                {currentStep === 'method' && (
+                  <motion.div key="method" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="p-10 space-y-8">
+                    <DialogHeader>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" onClick={() => setCurrentStep('amount')}>
+                          <ArrowLeft className="h-4 w-4" />
+                        </Button>
+                        <DialogTitle className="text-2xl font-black">Payout Method</DialogTitle>
+                      </div>
+                      <DialogDescription>Select your preferred destination for the funds.</DialogDescription>
+                    </DialogHeader>
+                    <RadioGroup defaultValue="upi" onValueChange={setPayoutMethod} className="grid grid-cols-1 gap-4">
+                      {[
+                        { id: 'upi', label: 'UPI ID', desc: 'Instant transfer to your VPA', icon: Zap, color: 'text-indigo-600', val: 'sarah@okaxis' },
+                        { id: 'bank', label: 'Bank Transfer', desc: '2-4 hours to settle', icon: Building2, color: 'text-emerald-600', val: 'HDFC Bank ****4242' },
+                        { id: 'payoneer', label: 'Payoneer', desc: 'Global payout (USD conversion)', icon: Globe, color: 'text-orange-600', val: 'sarah.chen@global.com' },
+                      ].map((m) => (
+                        <div key={m.id}>
+                          <RadioGroupItem value={m.id} id={m.id} className="peer sr-only" />
+                          <Label htmlFor={m.id} className="flex items-center justify-between p-5 rounded-2xl border-2 border-slate-50 bg-white cursor-pointer transition-all hover:bg-slate-50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5">
+                            <div className="flex items-center gap-4">
+                              <div className={cn("h-12 w-12 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0", m.color)}>
+                                <m.icon className="h-6 w-6" />
+                              </div>
+                              <div className="space-y-0.5">
+                                <p className="font-bold text-slate-900">{m.label}</p>
+                                <p className="text-xs text-slate-400 font-medium">{m.desc}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[10px] font-black uppercase text-slate-300">Account</p>
+                              <p className="text-xs font-bold text-slate-600 truncate max-w-[100px]">{m.val}</p>
+                            </div>
+                          </Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                    <Button onClick={handleNextStep} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20">
+                      Confirm Method <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </motion.div>
+                )}
+
+                {currentStep === 'confirm' && (
+                  <motion.div key="confirm" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }} className="p-10 space-y-8">
+                    <DialogHeader className="text-center">
+                      <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                        <ShieldCheck className="h-8 w-8 text-primary" />
+                      </div>
+                      <DialogTitle className="text-2xl font-black">Confirm Details</DialogTitle>
+                      <DialogDescription>Please verify the payout information below.</DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="bg-slate-50 rounded-[2rem] p-8 space-y-6">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Amount</span>
+                        <span className="text-2xl font-black text-slate-900">₹{Number(amount).toLocaleString()}</span>
+                      </div>
+                      <Separator className="opacity-50" />
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Method</span>
+                        <div className="text-right">
+                          <p className="font-bold text-slate-900 uppercase">{payoutMethod}</p>
+                          <p className="text-xs text-slate-500 font-medium">HDFC Bank ****4242</p>
+                        </div>
+                      </div>
+                      <Separator className="opacity-50" />
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Fee</span>
+                        <span className="text-sm font-bold text-emerald-600">₹0.00 (PRO)</span>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-black">Securing Transaction</h3>
-                      <p className="text-sm text-slate-500">Verifying your identity and checking gateway availability...</p>
+
+                    <div className="flex gap-3">
+                      <Button variant="outline" className="flex-1 h-14 rounded-2xl font-bold border-slate-200" onClick={() => setCurrentStep('method')}>Back</Button>
+                      <Button onClick={handleNextStep} className="flex-2 h-14 px-10 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20">
+                        Authorize Payout
+                      </Button>
                     </div>
                   </motion.div>
                 )}
 
-                {withdrawStep === 'success' && (
-                  <motion.div 
-                    key="success"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="p-12 flex flex-col items-center text-center space-y-6"
-                  >
-                    <div className="h-20 w-20 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
-                      <CheckCircle2 className="h-12 w-12" />
+                {currentStep === 'otp' && (
+                  <motion.div key="otp" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="p-10 space-y-8">
+                    <DialogHeader className="text-center">
+                      <div className="mx-auto h-16 w-16 rounded-full bg-orange-50 flex items-center justify-center mb-4">
+                        <Smartphone className="h-8 w-8 text-orange-500" />
+                      </div>
+                      <DialogTitle className="text-2xl font-black">Identity Verification</DialogTitle>
+                      <DialogDescription>A 6-digit code was sent to your registered phone number.</DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="space-y-6">
+                      <div className="space-y-2">
+                        <Input 
+                          placeholder="0 0 0 0 0 0" 
+                          className="h-16 text-center text-3xl font-black tracking-[0.5em] rounded-2xl bg-slate-50 border-slate-100"
+                          maxLength={6}
+                          value={otpValue}
+                          onChange={(e) => setOtpValue(e.target.value)}
+                        />
+                        <button className="w-full text-xs font-bold text-primary hover:underline uppercase tracking-widest mt-2">Resend Code</button>
+                      </div>
+                      <Button 
+                        disabled={otpValue.length < 6} 
+                        onClick={handleVerifyOtp}
+                        className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20"
+                      >
+                        Verify & Transfer
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {currentStep === 'processing' && (
+                  <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-16 flex flex-col items-center text-center space-y-8">
+                    <div className="relative">
+                      <div className="h-24 w-24 rounded-full border-4 border-primary/10 border-t-primary animate-spin" />
+                      <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-10 w-10 text-primary" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-black">Request Sent!</h3>
-                      <p className="text-sm text-slate-500">Your payout request for <span className="font-bold text-slate-900">₹{amount}</span> has been queued. Check your registered {payoutMethod.toUpperCase()} shortly.</p>
+                      <h3 className="text-2xl font-black">Securing Funds</h3>
+                      <p className="text-sm text-slate-500 max-w-xs mx-auto">Verifying transaction integrity and communicating with the payment gateway.</p>
                     </div>
-                    <Button onClick={resetWithdrawFlow} variant="outline" className="w-full rounded-xl font-bold border-slate-200">
-                      Close
+                  </motion.div>
+                )}
+
+                {currentStep === 'success' && (
+                  <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="p-12 flex flex-col items-center text-center space-y-8">
+                    <div className="h-24 w-24 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 shadow-inner">
+                      <CheckCircle2 className="h-14 w-14" />
+                    </div>
+                    <div className="space-y-3">
+                      <h3 className="text-3xl font-black">Transfer Initiated!</h3>
+                      <p className="text-slate-500">₹{Number(amount).toLocaleString()} is on its way to your {payoutMethod.toUpperCase()} account.</p>
+                    </div>
+                    
+                    <div className="w-full p-6 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-4 text-left">
+                      <Clock className="h-10 w-10 text-orange-500 shrink-0" />
+                      <div>
+                        <p className="text-xs font-black uppercase text-slate-400 tracking-tighter">Estimated Arrival</p>
+                        <p className="font-bold text-slate-900">Within 2 - 4 business hours</p>
+                      </div>
+                    </div>
+
+                    <Button onClick={resetWithdrawFlow} className="w-full h-14 rounded-2xl font-bold text-lg bg-slate-900 hover:bg-slate-800">
+                      Got it, Thanks!
                     </Button>
                   </motion.div>
                 )}
