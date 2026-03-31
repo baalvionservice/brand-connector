@@ -96,12 +96,12 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
   const links = currentRole === 'ADMIN' ? adminLinks : currentRole === 'BRAND' ? brandLinks : creatorLinks;
 
   return (
-    <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 border-r bg-white shadow-sm z-30">
+    <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 border-r bg-white shadow-sm z-30" aria-label="Main Navigation">
       <div className="flex flex-col flex-1 min-h-0">
         <div className="flex items-center h-16 flex-shrink-0 px-6 border-b justify-between">
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center" aria-label="Baalvion Connect Home">
             <div className="bg-primary p-1.5 rounded-lg mr-2">
-              <Zap className="h-5 w-5 text-white fill-current" />
+              <Zap className="h-5 w-5 text-white fill-current" aria-hidden="true" />
             </div>
             <span className="font-headline font-bold text-lg tracking-tight">Baalvion</span>
           </Link>
@@ -116,6 +116,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
                   key={item.name}
                   href={item.href}
                   id={item.id}
+                  aria-current={isActive ? 'page' : undefined}
                   className={cn(
                     isActive
                       ? 'bg-primary/5 text-primary shadow-sm ring-1 ring-primary/10'
@@ -144,8 +145,9 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
               size="sm" 
               className="w-full text-[10px] h-9 font-black border-dashed bg-white tracking-widest"
               onClick={onToggleRole}
+              aria-label={`Switch to ${currentRole === 'BRAND' ? 'Creator' : 'Brand'} view`}
             >
-              <ArrowLeftRight className="h-3 w-3 mr-2 text-primary" />
+              <ArrowLeftRight className="h-3 w-3 mr-2 text-primary" aria-hidden="true" />
               SWITCH TO {currentRole === 'BRAND' ? 'CREATOR' : 'BRAND'} VIEW
             </Button>
           )}
@@ -155,7 +157,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
               Account Control
             </p>
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs uppercase border border-primary/20">
+              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs uppercase border border-primary/20" aria-hidden="true">
                 {currentRole === 'ADMIN' ? 'A' : currentRole === 'BRAND' ? 'L' : 'S'}
               </div>
               <div className="flex-1 min-w-0">
@@ -169,13 +171,14 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
               <button 
                 onClick={() => signOut()}
                 className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                aria-label="Log out of session"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </aside>
   );
 }

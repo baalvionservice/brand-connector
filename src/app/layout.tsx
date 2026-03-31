@@ -34,18 +34,6 @@ export default function RootLayout({
     description: 'The premier marketplace connecting innovative brands with creative talent using AI-powered matching.',
   };
 
-  const websiteJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'Baalvion Connect',
-    url: 'https://baalvion-connect.vercel.app',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: 'https://baalvion-connect.vercel.app/search?q={search_term_string}',
-      'query-input': 'required name=search_term_string',
-    },
-  };
-
   return (
     <html lang="en">
       <head>
@@ -56,16 +44,20 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
-        />
       </head>
       <body className="font-body antialiased bg-background text-foreground min-h-screen">
+        <a 
+          href="#main-content" 
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-6 focus:py-3 focus:bg-primary focus:text-white focus:rounded-2xl focus:shadow-2xl focus:font-bold focus:ring-4 focus:ring-primary/20"
+        >
+          Skip to content
+        </a>
         <ErrorBoundary>
           <FirebaseClientProvider>
             <AuthProvider>
-              {children}
+              <div id="app-root">
+                {children}
+              </div>
               <ShadcnToaster />
               <HotToaster position="top-right" reverseOrder={false} />
             </AuthProvider>
