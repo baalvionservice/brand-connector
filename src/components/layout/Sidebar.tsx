@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -29,7 +28,8 @@ import {
   Megaphone,
   Cpu,
   LifeBuoy,
-  FileBarChart
+  FileBarChart,
+  FileBadge
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -53,6 +53,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Rate Card', href: '/dashboard/creator/rates', icon: IndianRupee },
     { name: 'Find Campaigns', href: '/dashboard/creator/campaigns', icon: Search },
     { name: 'My Applications', href: '/dashboard/applications', icon: Briefcase },
+    { name: 'Tax & Compliance', href: '/dashboard/creator/tax', icon: FileBadge },
     { name: 'Wallet', href: '/dashboard/creator/wallet', icon: Wallet },
     { name: 'Messages', href: '/dashboard/creator/messages', icon: MessageSquare },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
@@ -66,6 +67,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Matchmaking', href: '/dashboard/matchmaking', icon: Zap },
     { name: 'Deliverables', href: '/dashboard/brand/deliverables', icon: FileText },
     { name: 'Team Hub', href: '/dashboard/brand/team', icon: UserPlus },
+    { name: 'Tax & Compliance', href: '/dashboard/brand/tax', icon: FileBadge },
     { name: 'Billing & Plans', href: '/dashboard/brand/billing', icon: CreditCard },
     { name: 'Wallet', href: '/dashboard/brand/wallet', icon: Wallet },
     { name: 'Messages', href: '/dashboard/brand/messages', icon: MessageSquare },
