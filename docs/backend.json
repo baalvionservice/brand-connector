@@ -15,9 +15,10 @@
         "notificationPreferences": {
           "type": "object",
           "properties": {
-            "email": { "type": "boolean" },
-            "push": { "type": "boolean" },
-            "marketing": { "type": "boolean" }
+            "campaigns": { "type": "boolean" },
+            "payments": { "type": "boolean" },
+            "messages": { "type": "boolean" },
+            "system": { "type": "boolean" }
           }
         },
         "twoFactorEnabled": { "type": "boolean" },
@@ -90,6 +91,19 @@
         "packages": { "type": "array" },
         "location": { "type": "string" },
         "rating": { "type": "number" },
+        "visibility": { "type": "string", "enum": ["PUBLIC", "PRIVATE"] },
+        "isVerified": { "type": "boolean" },
+        "privacySettings": {
+          "type": "object",
+          "properties": {
+            "canMessage": { "type": "string" },
+            "canSeeRates": { "type": "string" }
+          }
+        },
+        "payoutAccounts": {
+          "type": "array",
+          "items": { "type": "object" }
+        },
         "onboardingStatus": { "type": "string", "enum": ["PENDING", "IN_PROGRESS", "COMPLETED"] },
         "onboardingStep": { "type": "number" },
         "payoutMethod": { "type": "object" },

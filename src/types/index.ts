@@ -52,9 +52,10 @@ export interface User {
   photoURL?: string;
   phone?: string;
   notificationPreferences?: {
-    email: boolean;
-    push: boolean;
-    marketing: boolean;
+    campaigns: boolean;
+    payments: boolean;
+    messages: boolean;
+    system: boolean;
   };
   twoFactorEnabled?: boolean;
   createdAt: string;
@@ -95,6 +96,19 @@ export interface CreatorProfile {
   packages?: PackageDeal[];
   location?: string;
   rating: number;
+  visibility?: 'PUBLIC' | 'PRIVATE';
+  isVerified?: boolean;
+  privacySettings?: {
+    canMessage: 'anyone' | 'verified' | 'invited';
+    canSeeRates: 'anyone' | 'verified';
+  };
+  payoutAccounts?: Array<{
+    id: string;
+    type: 'UPI' | 'BANK';
+    name: string;
+    details: string;
+    isPrimary: boolean;
+  }>;
   onboardingStatus: OnboardingStatus;
   onboardingStep: number;
   payoutMethod?: {
