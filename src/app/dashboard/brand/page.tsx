@@ -38,6 +38,7 @@ import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
+import { CreatorRecommendations } from '@/components/ai/CreatorRecommendations';
 
 // Mock Data for Analytics
 const PERFORMANCE_DATA = [
@@ -48,14 +49,6 @@ const PERFORMANCE_DATA = [
   { name: 'Fri', reach: 55000, engagement: 3900 },
   { name: 'Sat', reach: 67000, engagement: 4800 },
   { name: 'Sun', reach: 72000, engagement: 5100 },
-];
-
-const RECOMMENDED_CREATORS = [
-  { id: 'c1', name: 'Elena Vance', handle: '@elena_tech', match: 98, niche: 'Tech', image: 'https://picsum.photos/seed/elena/100/100' },
-  { id: 'c2', name: 'Sarah Chen', handle: '@sarah_tech', match: 96, niche: 'Gadgets', image: 'https://picsum.photos/seed/sarah/100/100' },
-  { id: 'c3', name: 'Marcus Rossi', handle: '@marco_vibe', match: 94, niche: 'Lifestyle', image: 'https://picsum.photos/seed/marcus/100/100' },
-  { id: 'c4', name: 'Priya Kapoor', handle: '@priya_explores', match: 91, niche: 'Travel', image: 'https://picsum.photos/seed/priya/100/100' },
-  { id: 'c5', name: 'Alex Rivers', handle: '@alex_creates', match: 89, niche: 'Photography', image: 'https://picsum.photos/seed/alex/100/100' },
 ];
 
 const DEADLINES = [
@@ -95,7 +88,7 @@ export default function BrandDashboard() {
         {[
           { label: 'Spend This Month', value: '₹4,22,500', trend: '+12.5%', icon: IndianRupee, color: 'text-emerald-600', bg: 'bg-emerald-50' },
           { label: 'Active Campaigns', value: '12', trend: '+2 new', icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Pending Approvals', value: '08', trend: '3 urgent', icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
+          { label: 'Pending Approvals', value: '08', trend: '3 urgent', icon: Clock, color: 'text-orange-600', bg: 'bg-orange-100' },
           { label: 'Creators Hired', value: '42', trend: '+5 this mo', icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
         ].map((stat, i) => (
           <motion.div
@@ -124,7 +117,7 @@ export default function BrandDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Left: Charts & Recs */}
-        <div className="lg:col-span-8 space-y-8">
+        <div className="lg:col-span-8 space-y-12">
           
           {/* Performance Chart */}
           <Card className="border-none shadow-sm shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
@@ -185,48 +178,8 @@ export default function BrandDashboard() {
             </CardContent>
           </Card>
 
-          {/* AI Recommendations */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-headline font-bold text-slate-900 flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary fill-primary/20" />
-                AI-Recommended Talent
-              </h2>
-              <Link href="/dashboard/matchmaking">
-                <Button variant="link" className="text-primary font-bold text-sm">Open Matchmaker <ChevronRight className="h-4 w-4 ml-1" /></Button>
-              </Link>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              {RECOMMENDED_CREATORS.map((creator, i) => (
-                <motion.div
-                  key={creator.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 + (i * 0.05) }}
-                >
-                  <Card className="border-none shadow-sm hover:shadow-xl transition-all duration-300 rounded-3xl bg-white group overflow-hidden text-center p-6">
-                    <div className="relative mb-4">
-                      <Avatar className="h-16 w-16 mx-auto border-2 border-primary/10 p-1">
-                        <AvatarImage src={creator.image} className="rounded-full" />
-                        <AvatarFallback>{creator.name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="absolute -bottom-1 right-1/2 translate-x-4 bg-primary text-white text-[8px] font-black px-1.5 py-0.5 rounded-full border border-white">
-                        {creator.match}%
-                      </div>
-                    </div>
-                    <h4 className="text-xs font-bold text-slate-900 truncate">{creator.name}</h4>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter mb-4">{creator.niche}</p>
-                    <Link href={`/creator/${creator.handle.replace('@', '')}`}>
-                      <Button size="sm" variant="secondary" className="w-full rounded-xl text-[9px] font-black uppercase h-8 group-hover:bg-primary group-hover:text-white transition-colors">
-                        View Profile
-                      </Button>
-                    </Link>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+          {/* PERSONALIZED RECOMMENDATIONS WIDGET */}
+          <CreatorRecommendations />
         </div>
 
         {/* Right: Deadlines & Activity */}
