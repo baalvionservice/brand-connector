@@ -92,6 +92,23 @@
         "billingMethod": { "type": "object" }
       },
       "required": ["id", "userId", "companyName"]
+    },
+    "FlaggedContent": {
+      "title": "Flagged Content",
+      "description": "Submissions flagged for manual safety review.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "deliverableId": { "type": "string" },
+        "campaignId": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "brandId": { "type": "string" },
+        "reason": { "type": "string" },
+        "flagType": { "type": "string", "enum": ["USER_REPORT", "AUTO_KEYWORD", "AI_DETECTION"] },
+        "riskFactor": { "type": "number" },
+        "status": { "type": "string", "enum": ["PENDING", "CLEARED", "REMOVED"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
     }
   },
   "auth": {
@@ -113,6 +130,10 @@
     "/notifications/{notificationId}": {
       "schema": "Notification",
       "description": "In-app user alerts."
+    },
+    "/flagged_content/{flagId}": {
+      "schema": "FlaggedContent",
+      "description": "Moderation review queue items."
     }
   }
 }

@@ -72,6 +72,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Platform Analytics', href: '/admin/analytics', icon: BarChart3 },
     { name: 'User Directory', href: '/admin/users', icon: Users },
+    { name: 'Content Review', href: '/admin/content', icon: ShieldAlert },
     { name: 'Verification Queue', href: '/admin/creators/verify', icon: ShieldCheck },
     { name: 'Moderation Flow', href: '/admin/campaigns', icon: ShieldAlert },
     { name: 'Financial Control', href: '/admin/finance', icon: IndianRupee },

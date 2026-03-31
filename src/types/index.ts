@@ -32,7 +32,8 @@ export enum DeliverableStatus {
   PENDING = 'PENDING',
   SUBMITTED = 'SUBMITTED',
   REVISION_REQUESTED = 'REVISION_REQUESTED',
-  APPROVED = 'APPROVED'
+  APPROVED = 'APPROVED',
+  REMOVED = 'REMOVED'
 }
 
 export enum DisputeStatus {
@@ -233,6 +234,19 @@ export interface Campaign {
   moderationNotes?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface FlaggedContent {
+  id: string;
+  deliverableId: string;
+  campaignId: string;
+  creatorId: string;
+  brandId: string;
+  reason: string;
+  flagType: 'USER_REPORT' | 'AUTO_KEYWORD' | 'AI_DETECTION';
+  riskFactor: number;
+  status: 'PENDING' | 'CLEARED' | 'REMOVED';
+  createdAt: string;
 }
 
 export interface Invite {
