@@ -73,7 +73,6 @@ const QUICK_REPLIES = [
 ];
 
 export default function BrandMessagesPage() {
-  const { userProfile } = userProfile ? { ...userProfile } : { id: null, displayName: '' };
   const { userProfile: authProfile } = useAuth();
   const db = useFirestore();
   

@@ -150,6 +150,29 @@ export const MOCK_TRANSACTIONS = Array.from({ length: 200 }).map((_, i) => {
 });
 
 /**
+ * Generates 20 Disputes
+ */
+export const MOCK_DISPUTES = Array.from({ length: 20 }).map((_, i) => {
+  const creator = rand(MOCK_CREATORS);
+  const brand = rand(MOCK_BRANDS);
+  const campaign = rand(MOCK_CAMPAIGNS);
+  const status = rand([DisputeStatus.FILED, DisputeStatus.UNDER_REVIEW, DisputeStatus.RESOLVED]);
+
+  return {
+    id: `disp_${i + 1}`,
+    campaignId: campaign.id,
+    creatorId: creator.userId,
+    brandId: brand.id,
+    category: rand(['UNFAIR_REJECTION', 'PAYMENT_ISSUE', 'SCOPE_CREEP', 'OTHER']),
+    reason: "The brand is requesting three additional revisions that were not specified in the original brief.",
+    proposedResolution: "Release 100% of escrow as work matches brief.",
+    status,
+    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+});
+
+/**
  * Master seeding function to populate Firestore
  */
 export async function seedFirestore() {

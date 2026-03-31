@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -23,8 +22,8 @@ import {
   Smartphone,
   Eye,
   Info,
-  Smartphone as UpiIcon,
-  Server
+  Server,
+  Star
 } from 'lucide-react';
 import { doc, updateDoc, setDoc } from 'firebase/firestore';
 import { useFirestore, useDoc } from '@/firebase';
