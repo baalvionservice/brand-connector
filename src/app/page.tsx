@@ -7,6 +7,7 @@ import { Rocket, ShieldCheck, Zap, ArrowRight, BarChart3, Star, Users } from 'lu
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ParticlesBackground } from '@/components/landing/ParticlesBackground';
+import { StatsBanner } from '@/components/landing/StatsBanner';
 
 export default function LandingPage() {
   return (
@@ -126,6 +127,9 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* Stats Banner Section */}
+        <StatsBanner />
 
         {/* Features Section */}
         <section id="features" className="w-full py-24 md:py-32 bg-slate-50">
