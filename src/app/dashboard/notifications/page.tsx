@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -19,7 +18,9 @@ import {
   ArrowRight,
   Sparkles,
   ShieldAlert,
-  Loader2
+  Loader2,
+  Target,
+  FileText
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -31,7 +32,8 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCollection, useFirestore } from '@/firebase';
 import { collection, query, where, orderBy, doc, updateDoc, writeBatch, deleteDoc } from 'firebase/firestore';
-import { Notification } from '@/types';
+import { Notification, NotificationType } from '@/types';
+import { markNotificationAsRead, deleteNotification } from '@/lib/notifications';
 import { cn } from '@/lib/utils';
 
 export default function NotificationsPage() {
@@ -58,7 +60,13 @@ export default function NotificationsPage() {
     return notifications.filter(n => {
       const matchesSearch = n.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            n.message.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesTab = activeTab === 'ALL' || n.type === activeTab;
+      
+      let matchesTab = activeTab === 'ALL';
+      if (activeTab === 'CAMPAIGN') matchesTab = n.type === 'NEW_MATCH' || n.type === 'APPLICATION_UPDATE' || n.type === 'DEADLINE_REMINDER';
+      if (activeTab === 'PAYMENT') matchesTab = n.type === 'PAYMENT_RECEIVED';
+      if (activeTab === 'MESSAGE') matchesTab = n.type === 'NEW_MESSAGE';
+      if (activeTab === 'SYSTEM') matchesTab = n.type === 'SYSTEM' || n.type === 'DISPUTE_UPDATE';
+
       return matchesSearch && matchesTab;
     });
   }, [notifications, searchQuery, activeTab]);
@@ -83,14 +91,22 @@ export default function NotificationsPage() {
     await batch.commit();
   };
 
-  const getIcon = (type: string) => {
+  const getIcon = (type: NotificationType) => {
     switch (type) {
-      case 'CAMPAIGN': return <Zap className="h-5 w-5 text-primary" />;
-      case 'PAYMENT': return <Wallet className="h-5 w-5 text-emerald-500" />;
-      case 'MESSAGE': return <MessageSquare className="h-5 w-5 text-blue-500" />;
-      case 'SYSTEM': return <ShieldAlert className="h-5 w-5 text-orange-500" />;
+      case 'NEW_MATCH': return <Target className="h-5 w-5 text-primary" />;
+      case 'APPLICATION_UPDATE': return <FileText className="h-5 w-5 text-blue-500" />;
+      case 'PAYMENT_RECEIVED': return <Wallet className="h-5 w-5 text-emerald-500" />;
+      case 'NEW_MESSAGE': return <MessageSquare className="h-5 w-5 text-indigo-500" />;
+      case 'DISPUTE_UPDATE': return <AlertCircle className="h-5 w-5 text-red-500" />;
+      case 'DEADLINE_REMINDER': return <Clock className="h-5 w-5 text-orange-500" />;
+      case 'SYSTEM': return <ShieldAlert className="h-5 w-5 text-slate-500" />;
       default: return <Bell className="h-5 w-5 text-slate-400" />;
     }
+  };
+
+  const handleNotificationClick = (n: Notification) => {
+    markNotificationAsRead(db, n.id);
+    if (n.link) router.push(n.link);
   };
 
   return (
@@ -100,9 +116,9 @@ export default function NotificationsPage() {
         <div>
           <h1 className="text-3xl font-headline font-bold text-slate-900 tracking-tight flex items-center gap-3">
             <Bell className="h-8 w-8 text-primary" />
-            Notifications
+            Inbox & Alerts
           </h1>
-          <p className="text-slate-500 mt-1">Stay updated on your campaign activity and financial status.</p>
+          <p className="text-slate-500 mt-1">Real-time status updates for your creative workspace.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="rounded-xl font-bold bg-white" onClick={markAllRead}>
@@ -130,7 +146,7 @@ export default function NotificationsPage() {
                 <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                 <Input 
                   placeholder="Search alerts..." 
-                  className="pl-10 h-11 rounded-xl bg-slate-50 border-none"
+                  className="pl-10 h-11 rounded-xl bg-slate-50 border-none focus-visible:ring-primary"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -138,11 +154,11 @@ export default function NotificationsPage() {
               
               <div className="space-y-1">
                 {[
-                  { id: 'ALL', label: 'All Notifications', icon: Bell },
+                  { id: 'ALL', label: 'All Alerts', icon: Bell },
                   { id: 'CAMPAIGN', label: 'Campaigns', icon: Zap },
                   { id: 'PAYMENT', label: 'Payments', icon: Wallet },
                   { id: 'MESSAGE', label: 'Messages', icon: MessageSquare },
-                  { id: 'SYSTEM', label: 'System Alerts', icon: ShieldAlert },
+                  { id: 'SYSTEM', label: 'System & Safety', icon: ShieldAlert },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -156,11 +172,6 @@ export default function NotificationsPage() {
                       <tab.icon className={cn("h-4 w-4", activeTab === tab.id ? "text-white" : "text-slate-400 group-hover:text-primary")} />
                       <span className="text-sm font-bold">{tab.label}</span>
                     </div>
-                    {notifications.filter(n => !n.read && (tab.id === 'ALL' || n.type === tab.id)).length > 0 && (
-                      <Badge className={cn("h-5 min-w-[20px] px-1.5 flex items-center justify-center rounded-full border-none text-[10px] font-black", activeTab === tab.id ? "bg-white text-primary" : "bg-primary text-white")}>
-                        {notifications.filter(n => !n.read && (tab.id === 'ALL' || n.type === tab.id)).length}
-                      </Badge>
-                    )}
                   </button>
                 ))}
               </div>
@@ -171,14 +182,11 @@ export default function NotificationsPage() {
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-3">
                 <Sparkles className="h-5 w-5" />
-                <h4 className="font-bold text-sm uppercase tracking-widest">Smart Digest</h4>
+                <h4 className="font-bold text-sm uppercase tracking-widest">Auto-Cleanup</h4>
               </div>
               <p className="text-xs font-medium leading-relaxed">
-                You have <span className="font-black">{notifications.filter(n => !n.read && n.type === 'CAMPAIGN').length}</span> new campaign opportunities matching your profile today.
+                To keep your workspace fast, notifications older than 30 days are automatically archived.
               </p>
-              <Button variant="link" className="text-primary font-bold p-0 h-auto text-xs mt-4 group">
-                Review Matches <ArrowRight className="ml-1 h-3 w-3 group-hover:translate-x-1 transition-transform" />
-              </Button>
             </CardContent>
           </Card>
         </aside>
@@ -188,7 +196,7 @@ export default function NotificationsPage() {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Loading notifications...</p>
+              <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">Syncing alerts...</p>
             </div>
           ) : filteredNotifications.length > 0 ? (
             <div className="space-y-4">
@@ -203,9 +211,9 @@ export default function NotificationsPage() {
                     layout
                   >
                     <Card className={cn(
-                      "border-none shadow-sm rounded-[2rem] overflow-hidden group hover:shadow-md transition-all",
+                      "border-none shadow-sm rounded-[2rem] overflow-hidden group hover:shadow-md transition-all cursor-pointer",
                       !n.read ? "bg-white ring-1 ring-primary/10" : "bg-white/60 opacity-80"
-                    )}>
+                    )} onClick={() => handleNotificationClick(n)}>
                       <CardContent className="p-6">
                         <div className="flex items-start gap-6">
                           <div className={cn(
@@ -229,31 +237,16 @@ export default function NotificationsPage() {
                             </p>
                             
                             <div className="flex items-center gap-4 pt-3">
-                              {!n.read && (
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="h-8 rounded-lg text-[10px] font-black uppercase text-primary hover:bg-primary/5 p-0 px-3"
-                                  onClick={() => updateDoc(doc(db, 'notifications', n.id), { read: true })}
-                                >
-                                  Mark as Read
-                                </Button>
-                              )}
                               {n.link && (
-                                <Button 
-                                  size="sm" 
-                                  variant="secondary"
-                                  className="h-8 rounded-lg text-[10px] font-black uppercase px-4"
-                                  onClick={() => router.push(n.link!)}
-                                >
-                                  Take Action <ChevronRight className="ml-1 h-3 w-3" />
-                                </Button>
+                                <Badge variant="secondary" className="h-6 rounded-lg text-[9px] font-black uppercase px-3 bg-primary/5 text-primary border-none">
+                                  Take Action <ChevronRight className="ml-1 h-2.5 w-2.5" />
+                                </Badge>
                               )}
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
                                 className="h-8 w-8 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 p-0 ml-auto opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => deleteDoc(doc(db, 'notifications', n.id))}
+                                onClick={(e) => { e.stopPropagation(); deleteNotification(db, n.id); }}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -271,15 +264,10 @@ export default function NotificationsPage() {
               <div className="h-24 w-24 rounded-[2.5rem] bg-slate-50 flex items-center justify-center mb-6">
                 <Bell className="h-12 w-12 text-slate-200" />
               </div>
-              <h3 className="text-2xl font-black text-slate-900">Quiet in here...</h3>
+              <h3 className="text-2xl font-black text-slate-900">Your inbox is clear</h3>
               <p className="text-slate-500 mt-2 max-w-sm mx-auto font-medium">
-                {searchQuery ? "We couldn't find any notifications matching your search." : "When brands interact with your applications or payments clear, you'll see them here."}
+                When important campaign events or payments occur, we'll notify you right here.
               </p>
-              {searchQuery && (
-                <Button variant="outline" className="mt-8 rounded-xl font-bold" onClick={() => setSearchQuery('')}>
-                  Clear Search
-                </Button>
-              )}
             </div>
           )}
         </div>

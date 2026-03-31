@@ -368,15 +368,26 @@ export interface Transaction {
   createdAt: string;
 }
 
+export type NotificationType = 
+  | 'NEW_MATCH' 
+  | 'APPLICATION_UPDATE' 
+  | 'PAYMENT_RECEIVED' 
+  | 'DEADLINE_REMINDER' 
+  | 'DISPUTE_UPDATE' 
+  | 'NEW_MESSAGE' 
+  | 'SYSTEM';
+
 export interface Notification {
   id: string;
   userId: string;
   title: string;
   message: string;
   read: boolean;
-  type: 'CAMPAIGN' | 'PAYMENT' | 'MESSAGE' | 'SYSTEM';
+  type: NotificationType;
   link?: string;
+  relatedId?: string;
   createdAt: string;
+  expiresAt?: string; // For 30-day cleanup logic
 }
 
 export interface Broadcast {

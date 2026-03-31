@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -19,7 +18,10 @@ import {
   Wallet,
   MessageSquare,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Target,
+  FileText,
+  ShieldAlert
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,8 +39,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDoc, useCollection, useFirestore } from '@/firebase';
-import { CreatorProfile, BrandProfile, OnboardingStatus, Notification } from '@/types';
+import { CreatorProfile, BrandProfile, OnboardingStatus, Notification, NotificationType } from '@/types';
 import { collection, query, where, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
+import { markNotificationAsRead } from '@/lib/notifications';
 import { cn } from '@/lib/utils';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -108,20 +111,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     router.push('/');
   };
 
-  const markAsRead = async (id: string) => {
-    try {
-      await updateDoc(doc(db, 'notifications', id), { read: true });
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const getNotificationIcon = (type: string) => {
+  const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
-      case 'CAMPAIGN': return <Zap className="h-4 w-4 text-primary" />;
-      case 'PAYMENT': return <Wallet className="h-4 w-4 text-emerald-500" />;
-      case 'MESSAGE': return <MessageSquare className="h-4 w-4 text-blue-500" />;
-      default: return <AlertCircle className="h-4 w-4 text-slate-400" />;
+      case 'NEW_MATCH': return <Target className="h-4 w-4 text-primary" />;
+      case 'APPLICATION_UPDATE': return <FileText className="h-4 w-4 text-blue-500" />;
+      case 'PAYMENT_RECEIVED': return <Wallet className="h-4 w-4 text-emerald-500" />;
+      case 'NEW_MESSAGE': return <MessageSquare className="h-4 w-4 text-indigo-500" />;
+      case 'DISPUTE_UPDATE': return <AlertCircle className="h-4 w-4 text-red-500" />;
+      case 'DEADLINE_REMINDER': return <Clock className="h-4 w-4 text-orange-500" />;
+      case 'SYSTEM': return <ShieldAlert className="h-4 w-4 text-slate-500" />;
+      default: return <Bell className="h-4 w-4 text-slate-400" />;
     }
   };
 
@@ -192,7 +191,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <button
                           key={n.id}
                           onClick={() => {
-                            markAsRead(n.id);
+                            markNotificationAsRead(db, n.id);
                             if (n.link) router.push(n.link);
                           }}
                           className={cn(
