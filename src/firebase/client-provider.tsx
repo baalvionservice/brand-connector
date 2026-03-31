@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { ReactNode, useMemo } from 'react';
@@ -7,12 +6,12 @@ import { FirebaseProvider } from './provider';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 export function FirebaseClientProvider({ children }: { children: ReactNode }) {
-  const { app, auth, db } = useMemo(() => initializeFirebase(), []);
+  const { app, auth, db, storage } = useMemo(() => initializeFirebase(), []);
 
-  if (!app || !auth || !db) return null;
+  if (!app || !auth || !db || !storage) return null;
 
   return (
-    <FirebaseProvider app={app} auth={auth} firestore={db}>
+    <FirebaseProvider app={app} auth={auth} firestore={db} storage={storage}>
       <FirebaseErrorListener />
       {children}
     </FirebaseProvider>

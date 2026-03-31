@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -8,7 +7,6 @@ import {
   ArrowLeft, 
   CheckCircle2, 
   Clock, 
-  FileUp, 
   MessageSquare, 
   ShieldCheck, 
   Zap, 
@@ -21,9 +19,8 @@ import {
   History,
   Info,
   Check,
-  MoreVertical,
   Download,
-  Trash2
+  ShieldAlert
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -33,20 +30,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from '@/components/ui/dropdown-menu';
+import { DeliverableUpload } from '@/components/dashboard/creator/DeliverableUpload';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFirestore, useCollection, useDoc } from '@/firebase';
-import { collection, doc, query, where, updateDoc, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, doc, query, where, orderBy } from 'firebase/firestore';
 import { DeliverableStatus } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 // Mock Campaign Data for context
@@ -79,11 +68,12 @@ export default function CreatorCampaignWorkspace() {
   const [submissionNotes, setSubmissionNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<'work' | 'feedback' | 'history'>('work');
+  const [uploadedAssets, setUploadedAssets] = useState<any[]>([]);
 
   // Real-time hook for messages
   const messagesQuery = useMemo(() => {
     return query(
-      collection(db, 'notifications'), // Reusing notifications as a mock chat
+      collection(db, 'notifications'), 
       where('userId', '==', userProfile?.id || 'anonymous'),
       orderBy('createdAt', 'desc')
     );
@@ -92,32 +82,19 @@ export default function CreatorCampaignWorkspace() {
   const { data: messages } = useCollection<any>(messagesQuery);
 
   const handleSubmitWork = async () => {
-    if (!selectedDeliverable) return;
+    if (uploadedAssets.length === 0) return toast({ variant: 'destructive', title: 'No files uploaded', description: 'Please add at least one asset to submit.' });
     setIsSubmitting(true);
 
-    const deliverableUpdate = {
-      status: DeliverableStatus.SUBMITTED,
-      submittedAt: new Date().toISOString(),
-      notes: submissionNotes,
-      submissionUrl: 'https://baalvion.storage/assets/review_v1.mp4' // Mock URL
-    };
-
-    try {
-      // In a real app, we'd update the specific deliverable document
-      // updateDoc(doc(db, 'deliverables', selectedDeliverable.id), deliverableUpdate);
-      
+    // Simulation of workflow persistence
+    setTimeout(() => {
       toast({
         title: "Work Submitted!",
         description: "Lumina Tech has been notified for review.",
       });
       setSubmissionNotes('');
-      // Update local state for mock
-      setSelectedDeliverable({ ...selectedDeliverable, status: 'SUBMITTED' });
-    } catch (err) {
-      console.error(err);
-    } finally {
+      setUploadedAssets([]);
       setIsSubmitting(false);
-    }
+    }, 1500);
   };
 
   const getStatusBadge = (status: string) => {
@@ -176,8 +153,6 @@ export default function CreatorCampaignWorkspace() {
         
         {/* Left Column: Brief & Timeline */}
         <aside className="lg:col-span-3 space-y-6">
-          
-          {/* Deadline Card */}
           <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden bg-white">
             <CardHeader className="bg-orange-50/50 border-b border-orange-100/50 p-6">
               <div className="flex items-center justify-between">
@@ -192,17 +167,10 @@ export default function CreatorCampaignWorkspace() {
                   <p className="text-xs text-slate-400 font-bold uppercase mt-1">Submission Deadline: Jul 28</p>
                 </div>
                 <Progress value={65} className="h-1.5 bg-slate-100" />
-                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
-                  <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
-                    <Info className="h-3 w-3 inline mr-1 text-slate-400" />
-                    Submitting at least 24h early increases your "Reliability Rating" on the marketplace.
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Deliverables Checklist */}
           <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden bg-white">
             <CardHeader className="p-6 border-b">
               <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">Milestone Tracker</CardTitle>
@@ -238,15 +206,8 @@ export default function CreatorCampaignWorkspace() {
                 ))}
               </div>
             </CardContent>
-            <CardFooter className="p-6 bg-slate-50/50">
-              <div className="flex justify-between items-center w-full">
-                <span className="text-[10px] font-black text-slate-400 uppercase">Overall Progress</span>
-                <span className="text-xs font-black text-slate-900">33%</span>
-              </div>
-            </CardFooter>
           </Card>
 
-          {/* Escrow Status */}
           <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden bg-slate-900 text-white">
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-4">
@@ -259,7 +220,7 @@ export default function CreatorCampaignWorkspace() {
                 </div>
               </div>
               <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
-                The full budget of <strong>{MOCK_ACTIVE_CAMPAIGN.budget}</strong> is currently held in Baalvion Escrow. Payment is released instantly upon brand approval of final deliverables.
+                The full budget of <strong>{MOCK_ACTIVE_CAMPAIGN.budget}</strong> is currently held in Baalvion Escrow.
               </p>
             </CardContent>
           </Card>
@@ -268,7 +229,6 @@ export default function CreatorCampaignWorkspace() {
         {/* Main Content Area */}
         <div className="lg:col-span-9 space-y-6">
           
-          {/* Work Tabs */}
           <div className="flex items-center gap-1 bg-slate-100/50 p-1 rounded-2xl border w-fit">
             {[
               { id: 'work', label: 'Submit Work', icon: Zap },
@@ -300,7 +260,6 @@ export default function CreatorCampaignWorkspace() {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-6"
               >
-                {/* Submission Form */}
                 <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
                   <CardHeader className="p-8 border-b bg-slate-50/30">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -310,39 +269,30 @@ export default function CreatorCampaignWorkspace() {
                           {getStatusBadge(selectedDeliverable?.status)}
                         </div>
                         <CardDescription className="font-medium">
-                          Submit assets for <span className="text-slate-900 font-bold">{selectedDeliverable?.title}</span>
+                          Manage assets for your active milestones
                         </CardDescription>
                       </div>
                       <Badge variant="outline" className="w-fit h-7 font-bold border-slate-200">
-                        Version 1.0
+                        Campaign ID: #{params.id}
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="p-8 space-y-8">
-                    {/* Drag & Drop Upload */}
-                    <div className="space-y-4">
-                      <label className="text-sm font-black uppercase text-slate-400 tracking-widest">Upload Content</label>
-                      <div className="aspect-[21/9] border-2 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center bg-slate-50 group hover:border-primary transition-all cursor-pointer">
-                        <div className="h-16 w-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                          <FileUp className="h-8 w-8 text-slate-400 group-hover:text-primary" />
-                        </div>
-                        <div className="text-center">
-                          <p className="font-bold text-slate-900">Drag and drop your files here</p>
-                          <p className="text-xs text-slate-400 font-medium mt-1">MP4, MOV or High-Res JPG (Max 500MB)</p>
-                        </div>
-                        <Button variant="secondary" className="mt-6 rounded-xl font-bold px-8">Browse Files</Button>
-                      </div>
-                    </div>
+                    {/* Deliverable Upload Component */}
+                    <DeliverableUpload 
+                      campaignId={params.id as string}
+                      deliverableTypes={MOCK_ACTIVE_CAMPAIGN.deliverables.map(d => d.title)}
+                      onAssetsChange={setUploadedAssets}
+                    />
 
-                    {/* Submission Notes */}
-                    <div className="space-y-4">
+                    <div className="space-y-4 pt-4 border-t">
                       <div className="flex justify-between items-center">
                         <label className="text-sm font-black uppercase text-slate-400 tracking-widest">Creator Notes</label>
-                        <Badge variant="ghost" className="text-[10px] text-slate-400 font-bold">Markdown Supported</Badge>
+                        <Badge variant="ghost" className="text-[10px] text-slate-400 font-bold uppercase">Briefing context</Badge>
                       </div>
                       <Textarea 
-                        placeholder="Add context for the brand. e.g. 'I focused on the kitchen automation scenes as discussed. Let me know if you need the raw clips.'" 
-                        className="min-h-[150px] rounded-2xl p-6 bg-slate-50 border-slate-200 focus-visible:ring-primary text-md"
+                        placeholder="Add context for the brand. e.g. 'I focused on the kitchen automation scenes as discussed.'" 
+                        className="min-h-[120px] rounded-2xl p-6 bg-slate-50 border-slate-200 focus-visible:ring-primary text-md"
                         value={submissionNotes}
                         onChange={(e) => setSubmissionNotes(e.target.value)}
                       />
@@ -351,35 +301,34 @@ export default function CreatorCampaignWorkspace() {
                     <div className="flex items-center gap-3 p-4 rounded-2xl bg-blue-50 border border-blue-100">
                       <AlertCircle className="h-5 w-5 text-blue-500 shrink-0" />
                       <p className="text-xs text-blue-700 font-medium leading-relaxed">
-                        By clicking submit, your work will be timestamped and the brand will have 48 hours to request revisions or approve for payout.
+                        Assets are timestamped and verified by Baalvion AI. Submitting for approval starts the brand review period.
                       </p>
                     </div>
                   </CardContent>
                   <CardFooter className="p-8 bg-slate-50/50 border-t flex flex-col sm:flex-row justify-between items-center gap-4">
                     <Button variant="ghost" className="rounded-xl font-bold h-12 px-6 text-slate-400">
-                      Save as Draft
+                      Draft Saved Locally
                     </Button>
                     <div className="flex items-center gap-3 w-full sm:w-auto">
                       <Button 
-                        disabled={!submissionNotes || isSubmitting || selectedDeliverable?.status === 'APPROVED'}
+                        disabled={uploadedAssets.length === 0 || isSubmitting}
                         onClick={handleSubmitWork}
                         className="rounded-xl font-bold h-12 px-10 shadow-xl shadow-primary/20 flex-1 sm:flex-none"
                       >
                         {isSubmitting ? (
-                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</>
+                          <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Finalizing...</>
                         ) : (
-                          <><Send className="mr-2 h-4 w-4" /> Submit for Approval</>
+                          <><Send className="mr-2 h-4 w-4" /> Submit Submission</>
                         )}
                       </Button>
                     </div>
                   </CardFooter>
                 </Card>
 
-                {/* Brief Quick Access */}
                 <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden bg-white border border-slate-100">
                   <CardHeader className="p-6 border-b">
-                    <CardTitle className="text-sm font-bold flex items-center gap-2">
-                      <Paperclip className="h-4 w-4 text-primary" /> Campaign Requirements Reference
+                    <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-400">
+                      <Paperclip className="h-4 w-4" /> Visual Requirements Reference
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -387,28 +336,18 @@ export default function CreatorCampaignWorkspace() {
                       <div className="space-y-3">
                         <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest">Brand Objectives</h4>
                         <ul className="space-y-2">
-                          <li className="flex gap-2 text-sm text-slate-600">
+                          <li className="flex gap-2 text-sm text-slate-600 font-medium">
                             <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
                             Highlight the 20% energy saving mode.
-                          </li>
-                          <li className="flex gap-2 text-sm text-slate-600">
-                            <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                            Show integration with Lumina Hub app.
                           </li>
                         </ul>
                       </div>
                       <div className="space-y-3">
-                        <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest">Visual Guidelines</h4>
-                        <ul className="space-y-2">
-                          <li className="flex gap-2 text-sm text-slate-600">
-                            <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                            Natural daylight, minimalist home setup.
-                          </li>
-                          <li className="flex gap-2 text-sm text-slate-600">
-                            <div className="h-1.5 w-1.5 rounded-full bg-primary mt-1.5 shrink-0" />
-                            Avoid mention of smart speaker competitors.
-                          </li>
-                        </ul>
+                        <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest">Safe Zones</h4>
+                        <div className="flex items-center gap-2 p-3 rounded-xl bg-orange-50 text-orange-700 text-xs font-bold">
+                          <ShieldAlert className="h-4 w-4" />
+                          Avoid logos of competitors in the background.
+                        </div>
                       </div>
                     </div>
                   </CardContent>
@@ -420,22 +359,21 @@ export default function CreatorCampaignWorkspace() {
               <motion.div
                 key="feedback-tab"
                 initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
+                animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
                 <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
                   <CardHeader className="border-b p-6">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Brand Collaboration</CardTitle>
-                      <Button variant="outline" size="sm" className="rounded-xl h-8 text-[10px] font-black uppercase">Direct Chat</Button>
+                      <CardTitle className="text-lg">Collaborator Feedback</CardTitle>
                     </div>
                   </CardHeader>
                   <CardContent className="p-8 h-[400px] flex flex-col items-center justify-center text-center">
                     <div className="h-20 w-20 rounded-full bg-slate-50 flex items-center justify-center mb-4">
                       <MessageSquare className="h-10 w-10 text-slate-200" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900">No current feedback</h3>
+                    <h3 className="text-xl font-bold text-slate-900">No brand feedback yet</h3>
                     <p className="text-sm text-slate-500 max-w-xs mx-auto mt-2">
                       When Lumina Tech reviews your submissions, their comments and revision requests will appear here.
                     </p>
@@ -454,13 +392,13 @@ export default function CreatorCampaignWorkspace() {
               >
                 <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
                   <CardHeader className="border-b p-6">
-                    <CardTitle className="text-lg">Revision History</CardTitle>
+                    <CardTitle className="text-lg">Submission History</CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
                     <div className="divide-y divide-slate-50">
                       {[
-                        { v: '1.0', event: 'Initial Draft Created', date: '2 days ago', status: 'DRAFT' },
-                        { v: '0.9', event: 'Contract Accepted', date: '3 days ago', status: 'SYSTEM' },
+                        { v: '1.0', event: 'Initial Draft Created', date: '2 days ago' },
+                        { v: '0.9', event: 'Contract Accepted', date: '3 days ago' },
                       ].map((item, i) => (
                         <div key={i} className="p-6 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
                           <div className="flex items-center gap-4">
@@ -472,9 +410,6 @@ export default function CreatorCampaignWorkspace() {
                               <p className="text-xs text-slate-400 font-medium">Version {item.v} • {item.date}</p>
                             </div>
                           </div>
-                          <Button variant="ghost" size="icon" className="rounded-lg">
-                            <Download className="h-4 w-4 text-slate-400" />
-                          </Button>
                         </div>
                       ))}
                     </div>
