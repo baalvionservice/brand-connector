@@ -396,3 +396,13 @@ export interface AuditLog {
   isCritical: boolean;
   ipAddress?: string;
 }
+
+export interface CreatorNote {
+  id: string;
+  userId: string;
+  campaignTitle: string;
+  title: string;
+  content: string;
+  type: 'AI_IDEA' | 'MANUAL';
+  createdAt: string;
+}
