@@ -39,6 +39,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { CreatorRecommendations } from '@/components/ai/CreatorRecommendations';
+import { CampaignOptimizer } from '@/components/ai/CampaignOptimizer';
+import { cn } from '@/lib/utils';
 
 // Mock Data for Analytics
 const PERFORMANCE_DATA = [
@@ -59,7 +61,7 @@ const DEADLINES = [
 
 export default function BrandDashboard() {
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-12 pb-20">
       {/* Header & Quick Actions */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
@@ -112,6 +114,11 @@ export default function BrandDashboard() {
           </motion.div>
         ))}
       </div>
+
+      {/* NEW: AI Campaign Optimizer Section */}
+      <section className="space-y-6">
+        <CampaignOptimizer />
+      </section>
 
       {/* Main Content Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
