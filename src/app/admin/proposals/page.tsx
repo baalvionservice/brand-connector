@@ -23,12 +23,15 @@ import {
   History,
   Zap,
   CreditCard,
-  Lock
+  Lock,
+  Rocket
 } from 'lucide-react';
 import { useProposalStore } from '@/store/useProposalStore';
 import { usePaymentStore } from '@/store/usePaymentStore';
+import { useCampaignStore } from '@/store/useCampaignStore';
 import { Proposal, Deliverable, CreatorTier, DeliverableType } from '@/types/proposal';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,11 +60,14 @@ import { cn } from '@/lib/utils';
 export default function ProposalsPage() {
   const { proposals, loading, fetchProposals, selectedProposal, selectProposal, updateProposal, sendProposal, approveProposal, rejectProposal } = useProposalStore();
   const { createPayment, processPayment, payments, fetchPayments } = usePaymentStore();
+  const { createCampaign } = useCampaignStore();
   const { toast } = useToast();
+  const router = useRouter();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<'upi' | 'card' | 'netbanking'>('card');
+  const [isLaunching, setIsLaunching] = useState(false);
 
   useEffect(() => {
     fetchProposals();
@@ -106,15 +112,25 @@ export default function ProposalsPage() {
 
   const handlePay = async () => {
     if (!selectedProposal) return;
-    
-    // 1. Create Payment Record
     const payment = await createPayment(selectedProposal.id, selectedProposal.totalPrice, selectedProposal.companyName);
-    
     if (payment) {
-      // 2. Process
       await processPayment(payment.id, selectedMethod);
       setIsPaymentModalOpen(false);
       toast({ title: "Funds Secured!", description: "Escrow funding initialized." });
+    }
+  };
+
+  const handleLaunchCampaign = async () => {
+    if (!selectedProposal) return;
+    setIsLaunching(true);
+    try {
+      const execId = await createCampaign(selectedProposal.id);
+      if (execId) {
+        toast({ title: "Campaign Launched!", description: "Project has moved to execution phase." });
+        router.push(`/admin/execution/${execId}`);
+      }
+    } finally {
+      setIsLaunching(false);
     }
   };
 
@@ -246,7 +262,6 @@ export default function ProposalsPage() {
 
               <ScrollArea className="flex-1">
                 <div className="p-8 space-y-10">
-                  {/* Status Indicator for Payment */}
                   {currentPayment && (
                     <div className={cn(
                       "p-6 rounded-[2rem] border-2 flex items-center justify-between",
@@ -264,9 +279,16 @@ export default function ProposalsPage() {
                           <p className="text-xs text-slate-500 font-medium">Transaction: {currentPayment.transactionId}</p>
                         </div>
                       </div>
-                      <Badge className={cn("bg-white border-none shadow-sm", currentPayment.status === 'escrow' ? "text-emerald-600" : "text-orange-600")}>
-                        VERIFIED
-                      </Badge>
+                      {currentPayment.status === 'escrow' && (
+                        <Button 
+                          onClick={handleLaunchCampaign} 
+                          disabled={isLaunching}
+                          className="bg-slate-900 hover:bg-black text-white rounded-xl font-bold h-10 px-6"
+                        >
+                          {isLaunching ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Rocket className="h-4 w-4 mr-2" />}
+                          Launch Campaign
+                        </Button>
+                      )}
                     </div>
                   )}
 
@@ -297,7 +319,6 @@ export default function ProposalsPage() {
                               </SelectContent>
                             </Select>
                           </div>
-                          
                           <div className="w-32 space-y-1">
                             <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Creator Tier</label>
                             <Select value={del.creatorTier} onValueChange={(v: any) => handleUpdateDeliverable(del.id, { creatorTier: v })}>
@@ -311,7 +332,6 @@ export default function ProposalsPage() {
                               </SelectContent>
                             </Select>
                           </div>
-
                           <div className="w-20 space-y-1">
                             <label className="text-[9px] font-black text-slate-400 uppercase ml-1">Qty</label>
                             <Input 
@@ -321,7 +341,6 @@ export default function ProposalsPage() {
                               className="h-10 bg-white border-none rounded-xl font-black text-center"
                             />
                           </div>
-
                           <Button variant="ghost" size="icon" className="mt-5 rounded-full text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all" onClick={() => handleRemoveDeliverable(del.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -356,7 +375,6 @@ export default function ProposalsPage() {
               <footer className="p-8 border-t bg-slate-50/50 flex items-center gap-3 shrink-0">
                 <Button variant="ghost" className="rounded-xl font-bold h-12 px-6" onClick={() => handleStatusAction('reject')}>Reject</Button>
                 <div className="flex-1" />
-                
                 {selectedProposal.status === 'approved' && !currentPayment ? (
                   <Button 
                     className="rounded-xl font-black h-12 px-10 shadow-xl bg-emerald-500 hover:bg-emerald-600 text-white"
@@ -380,7 +398,6 @@ export default function ProposalsPage() {
         )}
       </AnimatePresence>
 
-      {/* PAYMENT MODAL (Simulated Checkout) */}
       <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
         <DialogContent className="rounded-[2.5rem] p-10 max-w-lg border-none shadow-2xl">
           <DialogHeader>
@@ -390,7 +407,6 @@ export default function ProposalsPage() {
             <DialogTitle className="text-2xl font-black">Checkout</DialogTitle>
             <DialogDescription>Securely fund the campaign escrow for {selectedProposal?.companyName}</DialogDescription>
           </DialogHeader>
-          
           <div className="space-y-6 py-6">
             <div className="p-6 rounded-[2rem] bg-slate-50 border border-slate-100 flex items-center justify-between">
               <div>
@@ -399,7 +415,6 @@ export default function ProposalsPage() {
               </div>
               <Lock className="h-8 w-8 text-slate-200" />
             </div>
-
             <div className="space-y-3">
               <Label className="font-bold text-slate-700">Payment Method</Label>
               <div className="grid grid-cols-3 gap-2">
@@ -419,7 +434,6 @@ export default function ProposalsPage() {
               </div>
             </div>
           </div>
-
           <DialogFooter>
             <Button onClick={handlePay} className="w-full h-14 rounded-2xl text-lg font-black bg-slate-900 hover:bg-slate-800 text-white shadow-xl">
               Pay & Secure Funds
