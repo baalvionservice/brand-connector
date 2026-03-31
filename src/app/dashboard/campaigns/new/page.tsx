@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -36,7 +36,9 @@ import {
   ShieldCheck,
   Instagram,
   Youtube,
-  Music2
+  Music2,
+  ChevronRight,
+  AlertCircle
 } from 'lucide-react';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
@@ -70,9 +72,12 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { CREATOR_NICHES, SOCIAL_PLATFORMS } from '@/constants';
+import { CREATOR_NICHES, SOCIAL_PLATFORMS, PLATFORM_FEE_PERCENTAGE } from '@/constants';
 import { format } from "date-fns";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
+import Particles, { initParticlesEngine } from "@tsparticles/react";
+import { loadSlim } from "@tsparticles/slim";
 
 // Step 1 Schema
 const campaignBasicsSchema = z.object({
@@ -134,10 +139,10 @@ type GuidelinesValues = z.infer<typeof guidelinesSchema>;
 
 const STEPS = [
   { id: 1, title: 'Basics', icon: LayoutGrid },
-  { id: 2, title: 'Audience', icon: Target },
+  { id: 2, title: 'Target', icon: Target },
   { id: 3, title: 'Budget', icon: Sparkles },
-  { id: 4, title: 'Guidelines', icon: FileText },
-  { id: 5, title: 'Review', icon: CheckCircle2 },
+  { id: 4, title: 'Rules', icon: FileText },
+  { id: 5, title: 'Publish', icon: Rocket },
 ];
 
 const OBJECTIVES = [
@@ -163,6 +168,14 @@ export default function NewCampaignPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
   const [campaignId, setCampaignId] = useState<string | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [particlesInit, setParticlesInit] = useState(false);
+
+  useEffect(() => {
+    initParticlesEngine(async (engine) => {
+      await loadSlim(engine);
+    }).then(() => setParticlesInit(true));
+  }, []);
 
   // Forms
   const basicsForm = useForm<CampaignBasicsValues>({
@@ -221,7 +234,6 @@ export default function NewCampaignPage() {
     },
   });
 
-  // Dynamic Item States for Step 4
   const [newDel, setNewDel] = useState<CampaignDeliverable>({ type: 'REEL', qty: 1, platform: 'Instagram', specs: '' });
   const [tempItem, setTempItem] = useState('');
 
@@ -359,7 +371,31 @@ export default function NewCampaignPage() {
       });
   };
 
-  // Helper to add items to arrays in guidelines form
+  const handlePublish = async () => {
+    if (!campaignId) return;
+    setIsSaving(true);
+
+    const finalUpdate = {
+      status: CampaignStatus.ACTIVE,
+      updatedAt: new Date().toISOString()
+    };
+
+    updateDoc(doc(db, 'campaigns', campaignId), finalUpdate)
+      .then(() => {
+        setShowConfetti(true);
+        toast({ title: "Campaign Launched!", description: "AI matching engine has started finding creators." });
+        setTimeout(() => router.push('/dashboard/brand'), 4000);
+      })
+      .catch(async (err) => {
+        errorEmitter.emitPermissionError(new FirestorePermissionError({
+          path: `/campaigns/${campaignId}`,
+          operation: 'update',
+          requestResourceData: finalUpdate
+        } satisfies SecurityRuleContext));
+        setIsSaving(false);
+      });
+  };
+
   const addArrayItem = (field: keyof GuidelinesValues, value: string) => {
     if (!value.trim()) return;
     const current = guidelinesForm.getValues(field) as string[];
@@ -372,16 +408,23 @@ export default function NewCampaignPage() {
     guidelinesForm.setValue(field, current.filter((_, i) => i !== index) as any);
   };
 
-  // AI Reach Calculator Logic
+  const totals = useMemo(() => {
+    const budget = budgetForm.watch('totalBudget') || 0;
+    const fee = Math.round(budget * (PLATFORM_FEE_PERCENTAGE / 100));
+    return {
+      budget,
+      fee,
+      total: budget + fee
+    };
+  }, [budgetForm.watch('totalBudget')]);
+
   const estimatedReach = useMemo(() => {
     const budget = budgetForm.watch('totalBudget') || 0;
     const tier = requirementsForm.watch('creatorTier');
-    
     let reachMultiplier = 12.5;
     if (tier === 'NANO') reachMultiplier = 15;
     if (tier === 'MID') reachMultiplier = 10;
     if (tier === 'MACRO') reachMultiplier = 8;
-
     return {
       reach: Math.round(budget * reachMultiplier),
       engagement: Math.round(budget * reachMultiplier * 0.04)
@@ -391,21 +434,62 @@ export default function NewCampaignPage() {
   const progress = (currentStep / STEPS.length) * 100;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-20">
+    <div className="max-w-6xl mx-auto space-y-8 pb-20">
+      {showConfetti && particlesInit && (
+        <Particles
+          id="confetti"
+          options={{
+            fullScreen: { zIndex: 100 },
+            particles: {
+              number: { value: 0 },
+              color: { value: ["#6C3AE8", "#F97316", "#10B981"] },
+              shape: { type: ["circle", "square"] },
+              opacity: { value: 1 },
+              size: { value: { min: 2, max: 4 } },
+              move: {
+                enable: true,
+                gravity: { enable: true, acceleration: 10 },
+                speed: { min: 10, max: 20 },
+                decay: 0.1,
+                direction: "top",
+                straight: false,
+                outModes: { default: "destroy", top: "none" },
+              },
+            },
+            emitters: [
+              {
+                direction: "top-right",
+                rate: { count: 10, delay: 0.1 },
+                position: { x: 0, y: 100 },
+                size: { width: 0, height: 0 },
+              },
+              {
+                direction: "top-left",
+                rate: { count: 10, delay: 0.1 },
+                position: { x: 100, y: 100 },
+                size: { width: 0, height: 0 },
+              },
+            ],
+          }}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => router.back()}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          {!showConfetti && (
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => currentStep > 1 && setCurrentStep(currentStep - 1)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          )}
           <div>
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Create New Campaign</h1>
-            <p className="text-slate-500 font-medium">Build your AI-powered campaign from scratch.</p>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Campaign Creation</h1>
+            <p className="text-slate-500 font-medium">Step {currentStep}: {STEPS[currentStep-1].title}</p>
           </div>
         </div>
         <div className="hidden md:flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border shadow-sm">
           <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-xs font-black uppercase text-slate-400 tracking-widest">Draft Saved</span>
+          <span className="text-xs font-black uppercase text-slate-400 tracking-widest">{campaignId ? 'Draft Saved' : 'Creating New'}</span>
         </div>
       </div>
 
@@ -432,15 +516,15 @@ export default function NewCampaignPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Main Form Area */}
+        {/* Main Content Area */}
         <div className="lg:col-span-8">
           <AnimatePresence mode="wait">
             {currentStep === 1 && (
               <motion.div key="step1" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                 <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
                   <CardHeader className="p-8 border-b bg-slate-50/30">
-                    <CardTitle className="text-xl">Step 1: Campaign Basics</CardTitle>
-                    <CardDescription>Define the core identity and goals of your collaboration.</CardDescription>
+                    <CardTitle className="text-xl">Campaign Basics</CardTitle>
+                    <CardDescription>Tell us about the identity and vision of your project.</CardDescription>
                   </CardHeader>
                   <CardContent className="p-8 space-y-8">
                     <form id="basics-form" onSubmit={basicsForm.handleSubmit(onBasicsSubmit)} className="space-y-8">
@@ -451,14 +535,14 @@ export default function NewCampaignPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-3">
                           <Label className="font-bold text-slate-700">Primary Objective</Label>
-                          <Select onValueChange={(v) => basicsForm.setValue('objective', v)} defaultValue="AWARENESS">
+                          <Select onValueChange={(v) => basicsForm.setValue('objective', v)} defaultValue={basicsForm.getValues('objective')}>
                             <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none font-bold"><SelectValue /></SelectTrigger>
                             <SelectContent>{OBJECTIVES.map((obj) => <SelectItem key={obj.id} value={obj.id}>{obj.label}</SelectItem>)}</SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-3">
                           <Label className="font-bold text-slate-700">Content Type</Label>
-                          <Select onValueChange={(v) => basicsForm.setValue('contentType', v)} defaultValue="REEL">
+                          <Select onValueChange={(v) => basicsForm.setValue('contentType', v)} defaultValue={basicsForm.getValues('contentType')}>
                             <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none font-bold"><SelectValue /></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="REEL">Reel / Short</SelectItem>
@@ -470,14 +554,14 @@ export default function NewCampaignPage() {
                       </div>
                       <div className="space-y-3">
                         <Label className="font-bold text-slate-700">Campaign Brief</Label>
-                        <RichTextEditor value={basicsForm.watch('description')} onChange={(v) => basicsForm.setValue('description', v)} placeholder="What should creators do?" />
+                        <RichTextEditor value={basicsForm.watch('description')} onChange={(v) => basicsForm.setValue('description', v)} placeholder="What should creators do? Detail your vision here..." />
                       </div>
                     </form>
                   </CardContent>
                   <CardFooter className="p-8 border-t bg-slate-50/50 flex justify-end">
                     <Button form="basics-form" disabled={isSaving} className="rounded-xl font-black px-10 h-12">
                       {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Next Step <ArrowRight className="ml-2 h-4 w-4" />
+                      Save & Continue <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
                 </Card>
@@ -488,8 +572,8 @@ export default function NewCampaignPage() {
               <motion.div key="step2" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                 <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
                   <CardHeader className="p-8 border-b bg-slate-50/30">
-                    <CardTitle className="text-xl">Step 2: Creator Requirements</CardTitle>
-                    <CardDescription>Specify who you want to work with. AI will use these to find matches.</CardDescription>
+                    <CardTitle className="text-xl">Creator Requirements</CardTitle>
+                    <CardDescription>Specify the target audience and influence scale.</CardDescription>
                   </CardHeader>
                   <CardContent className="p-8 space-y-10">
                     <form id="requirements-form" onSubmit={requirementsForm.handleSubmit(onRequirementsSubmit)} className="space-y-10">
@@ -514,7 +598,7 @@ export default function NewCampaignPage() {
                         <div className="space-y-4">
                           <Label className="font-bold text-slate-700">Min. Engagement Rate (%)</Label>
                           <div className="flex items-center gap-4">
-                            <Slider defaultValue={[requirementsForm.getValues('minEngagementRate')]} max={15} step={0.5} onValueChange={(v) => requirementsForm.setValue('minEngagementRate', v[0])} className="flex-1" />
+                            <Slider value={[requirementsForm.watch('minEngagementRate')]} max={15} step={0.5} onValueChange={(v) => requirementsForm.setValue('minEngagementRate', v[0])} className="flex-1" />
                             <span className="w-12 text-center font-black text-primary bg-primary/5 rounded-lg py-1">{requirementsForm.watch('minEngagementRate')}%</span>
                           </div>
                         </div>
@@ -549,7 +633,8 @@ export default function NewCampaignPage() {
                   <CardFooter className="p-8 border-t bg-slate-50/50 flex justify-between">
                     <Button variant="ghost" onClick={() => setCurrentStep(1)} className="rounded-xl font-bold h-12">Back</Button>
                     <Button form="requirements-form" disabled={isSaving} className="rounded-xl font-black px-10 h-12">
-                      Next Step <ArrowRight className="ml-2 h-4 w-4" />
+                      {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save & Continue <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
                 </Card>
@@ -560,8 +645,8 @@ export default function NewCampaignPage() {
               <motion.div key="step3" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                 <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
                   <CardHeader className="p-8 border-b bg-slate-50/30">
-                    <CardTitle className="text-xl">Step 3: Budget & Timeline</CardTitle>
-                    <CardDescription>Allocate your investment and define key milestones.</CardDescription>
+                    <CardTitle className="text-xl">Budget & Timeline</CardTitle>
+                    <CardDescription>Define the commercial terms and milestones.</CardDescription>
                   </CardHeader>
                   <CardContent className="p-8 space-y-10">
                     <form id="budget-form" onSubmit={budgetForm.handleSubmit(onBudgetSubmit)} className="space-y-10">
@@ -576,7 +661,7 @@ export default function NewCampaignPage() {
                         <div className="space-y-4">
                           <Label className="font-bold text-slate-700">Budget Per Creator Range</Label>
                           <div className="pt-4">
-                            <Slider defaultValue={budgetForm.getValues('budgetPerCreator')} max={50000} step={500} onValueChange={(v) => budgetForm.setValue('budgetPerCreator', v)} className="mb-4" />
+                            <Slider value={budgetForm.watch('budgetPerCreator')} max={50000} step={500} onValueChange={(v) => budgetForm.setValue('budgetPerCreator', v)} className="mb-4" />
                             <div className="flex justify-between items-center text-sm font-black text-slate-900">
                               <span>₹{budgetForm.watch('budgetPerCreator')[0].toLocaleString()}</span>
                               <span>₹{budgetForm.watch('budgetPerCreator')[1].toLocaleString()}</span>
@@ -612,7 +697,8 @@ export default function NewCampaignPage() {
                   <CardFooter className="p-8 border-t bg-slate-50/50 flex justify-between">
                     <Button variant="ghost" onClick={() => setCurrentStep(2)} className="rounded-xl font-bold h-12">Back</Button>
                     <Button form="budget-form" disabled={isSaving} className="rounded-xl font-black px-10 h-12">
-                      Next Step <ArrowRight className="ml-2 h-4 w-4" />
+                      {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Save & Continue <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
                 </Card>
@@ -623,18 +709,15 @@ export default function NewCampaignPage() {
               <motion.div key="step4" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}>
                 <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
                   <CardHeader className="p-8 border-b bg-slate-50/30">
-                    <CardTitle className="text-xl">Step 4: Deliverables & Guidelines</CardTitle>
-                    <CardDescription>Be crystal clear about what you need from creators.</CardDescription>
+                    <CardTitle className="text-xl">Deliverables & Guidelines</CardTitle>
+                    <CardDescription>Clear rules lead to great content.</CardDescription>
                   </CardHeader>
                   <CardContent className="p-8 space-y-10">
                     <form id="guidelines-form" onSubmit={guidelinesForm.handleSubmit(onGuidelinesSubmit)} className="space-y-10">
-                      
-                      {/* Deliverables Builder */}
                       <div className="space-y-6">
                         <Label className="font-bold text-slate-700 text-lg flex items-center gap-2">
                           <ListPlus className="h-5 w-5 text-primary" /> Required Deliverables
                         </Label>
-                        
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100 items-end">
                           <div className="space-y-2">
                             <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Type</Label>
@@ -655,26 +738,22 @@ export default function NewCampaignPage() {
                             <Input type="number" value={newDel.qty} onChange={(e) => setNewDel({...newDel, qty: parseInt(e.target.value) || 1})} className="h-10 bg-white border-slate-200 rounded-xl font-bold" />
                           </div>
                           <div className="space-y-2 md:col-span-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Add Deliverable</Label>
                             <Button type="button" onClick={() => {
                               guidelinesForm.setValue('deliverables', [...guidelinesForm.getValues('deliverables'), newDel]);
                               setNewDel({ type: 'REEL', qty: 1, platform: 'Instagram', specs: '' });
                             }} className="w-full h-10 rounded-xl font-bold gap-2">
-                              <PlusCircle className="h-4 w-4" /> Add to List
+                              <PlusCircle className="h-4 w-4" /> Add Deliverable
                             </Button>
                           </div>
                         </div>
-
                         <div className="space-y-3">
                           {guidelinesForm.watch('deliverables').map((del, i) => (
-                            <div key={i} className="flex items-center justify-between p-4 bg-white border-2 border-slate-100 rounded-xl group hover:border-primary/20 transition-all">
+                            <div key={i} className="flex items-center justify-between p-4 bg-white border-2 border-slate-100 rounded-xl group">
                               <div className="flex items-center gap-4">
-                                <div className="h-10 w-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary font-black">
-                                  {del.qty}x
-                                </div>
+                                <div className="h-10 w-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary font-black">{del.qty}x</div>
                                 <div>
-                                  <p className="font-bold text-slate-900">{del.type.replace('_', ' ')}</p>
-                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{del.platform}</p>
+                                  <p className="font-bold text-slate-900">{del.type}</p>
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase">{del.platform}</p>
                                 </div>
                               </div>
                               <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-slate-300 hover:text-red-500 rounded-full" onClick={() => removeArrayItem('deliverables', i)}>
@@ -684,20 +763,16 @@ export default function NewCampaignPage() {
                           ))}
                         </div>
                       </div>
-
-                      <Separator className="opacity-50" />
-
-                      {/* Content Guidelines Dos/Donts */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                           <Label className="font-bold text-slate-700">Content Dos</Label>
                           <div className="flex gap-2">
-                            <Input placeholder="e.g. Use natural lighting" value={tempItem} onChange={(e) => setTempItem(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addArrayItem('dos', tempItem))} className="rounded-xl h-11" />
+                            <Input placeholder="e.g. Natural lighting" value={tempItem} onChange={(e) => setTempItem(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addArrayItem('dos', tempItem))} className="rounded-xl h-11" />
                             <Button type="button" onClick={() => addArrayItem('dos', tempItem)} className="h-11 rounded-xl px-4 font-bold">Add</Button>
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {guidelinesForm.watch('dos').map((item, i) => (
-                              <Badge key={i} className="bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100 gap-1.5 font-bold py-1 px-3">
+                              <Badge key={i} className="bg-emerald-50 text-emerald-600 border-emerald-100 gap-1.5 font-bold py-1 px-3">
                                 {item} <X className="h-3 w-3 cursor-pointer" onClick={() => removeArrayItem('dos', i)} />
                               </Badge>
                             ))}
@@ -711,54 +786,20 @@ export default function NewCampaignPage() {
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {guidelinesForm.watch('donts').map((item, i) => (
-                              <Badge key={i} className="bg-red-50 text-red-600 border-red-100 hover:bg-red-100 gap-1.5 font-bold py-1 px-3">
+                              <Badge key={i} className="bg-red-50 text-red-600 border-red-100 gap-1.5 font-bold py-1 px-3">
                                 {item} <X className="h-3 w-3 cursor-pointer" onClick={() => removeArrayItem('donts', i)} />
                               </Badge>
                             ))}
                           </div>
                         </div>
                       </div>
-
-                      {/* Mandatory Elements */}
-                      <div className="space-y-6">
-                        <Label className="font-bold text-slate-700">Mandatory Mentions & Links</Label>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Required Hashtags</Label>
-                            <Input placeholder="#brand #launch (comma separated)" className="rounded-xl h-11 bg-slate-50 border-none" onBlur={(e) => guidelinesForm.setValue('hashtags', e.target.value.split(' ').filter(t => t.startsWith('#')))} />
-                          </div>
-                          <div className="space-y-2">
-                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Brand Handles</Label>
-                            <Input placeholder="@brand (comma separated)" className="rounded-xl h-11 bg-slate-50 border-none" onBlur={(e) => guidelinesForm.setValue('handles', e.target.value.split(' ').filter(t => t.startsWith('@')))} />
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Product Links to Include</Label>
-                          <Input placeholder="https://store.brand.com/product" className="rounded-xl h-11 bg-slate-50 border-none" onBlur={(e) => guidelinesForm.setValue('links', [e.target.value])} />
-                        </div>
-                      </div>
-
-                      {/* Brand Kit Upload */}
-                      <div className="p-8 rounded-[2rem] bg-slate-900 text-white flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div className="flex items-center gap-6">
-                          <div className="h-16 w-16 rounded-[1.5rem] bg-white/10 flex items-center justify-center border border-white/20">
-                            <Building2 className="h-8 w-8 text-white" />
-                          </div>
-                          <div className="space-y-1">
-                            <h4 className="text-xl font-black">Brand Style Kit</h4>
-                            <p className="text-sm text-slate-400 font-medium">Upload logos, color palettes, and fonts for creators.</p>
-                          </div>
-                        </div>
-                        <Button type="button" className="rounded-xl h-12 px-8 bg-white text-slate-900 hover:bg-slate-100 font-black uppercase text-xs tracking-widest">
-                          Upload Assets
-                        </Button>
-                      </div>
                     </form>
                   </CardContent>
                   <CardFooter className="p-8 border-t bg-slate-50/50 flex justify-between">
                     <Button variant="ghost" onClick={() => setCurrentStep(3)} className="rounded-xl font-bold h-12">Back</Button>
                     <Button form="guidelines-form" disabled={isSaving || guidelinesForm.watch('deliverables').length === 0} className="rounded-xl font-black px-10 h-12">
-                      Review & Launch <ArrowRight className="ml-2 h-4 w-4" />
+                      {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Final Review <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
                 </Card>
@@ -767,90 +808,172 @@ export default function NewCampaignPage() {
 
             {currentStep === 5 && (
               <motion.div key="step5" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-8">
-                <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-white text-center p-12">
-                  <div className="mx-auto h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center mb-8">
-                    <Rocket className="h-12 w-12 text-primary" />
-                  </div>
-                  <h2 className="text-3xl font-black text-slate-900 mb-4">Review Your Masterpiece</h2>
-                  <p className="text-slate-500 max-w-md mx-auto mb-10 leading-relaxed font-medium">
-                    Your campaign draft is complete. Our AI has verified all sections. Once you launch, it will be visible to 10,000+ verified creators instantly.
-                  </p>
-                  
-                  {/* Final Preview Card */}
-                  <div className="max-w-md mx-auto mb-12 transform scale-105">
-                    <CampaignPreviewCard 
-                      title={basicsForm.getValues('title')}
-                      brandName={userProfile?.displayName || 'Your Brand'}
-                      budget={`₹${budgetForm.getValues('totalBudget').toLocaleString()}`}
-                      niche={requirementsForm.getValues('niches')[0] || 'Marketing'}
-                      platform={basicsForm.getValues('platforms')[0] || 'Instagram'}
-                    />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {/* Summary Area */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+                      <CardHeader className="p-8 border-b bg-slate-50/30">
+                        <CardTitle className="text-xl">Campaign Summary</CardTitle>
+                        <CardDescription>Review all details before funding the escrow.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-8 space-y-10">
+                        {/* Section: Basics */}
+                        <div className="space-y-4">
+                          <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest">Basics</h4>
+                          <div className="grid grid-cols-2 gap-6">
+                            <div>
+                              <p className="text-[10px] font-bold text-slate-400">Campaign Name</p>
+                              <p className="text-md font-bold text-slate-900">{basicsForm.getValues('title')}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-bold text-slate-400">Objective</p>
+                              <p className="text-md font-bold text-slate-900">{OBJECTIVES.find(o => o.id === basicsForm.getValues('objective'))?.label}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <Separator className="opacity-50" />
+
+                        {/* Section: Audience */}
+                        <div className="space-y-4">
+                          <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest">Target Audience</h4>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant="secondary" className="bg-primary/5 text-primary border-none">{requirementsForm.getValues('creatorTier')} TIER</Badge>
+                            {requirementsForm.getValues('niches').map(n => <Badge key={n} className="bg-slate-100 text-slate-600 border-none">{n}</Badge>)}
+                          </div>
+                        </div>
+
+                        <Separator className="opacity-50" />
+
+                        {/* Section: Rules */}
+                        <div className="space-y-4">
+                          <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest">Deliverables</h4>
+                          <div className="space-y-2">
+                            {guidelinesForm.getValues('deliverables').map((del, i) => (
+                              <div key={i} className="flex justify-between items-center text-sm font-medium">
+                                <span className="text-slate-600">{del.qty}x {del.type} ({del.platform})</span>
+                                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row justify-center gap-4">
-                    <Button variant="outline" className="rounded-xl h-14 px-10 font-bold" onClick={() => setCurrentStep(1)}>
-                      Edit Details
-                    </Button>
-                    <Button className="rounded-xl h-14 px-10 font-black shadow-2xl shadow-primary/20" onClick={() => router.push('/dashboard/brand')}>
-                      Confirm & Launch Live
-                    </Button>
+                  {/* Payment Panel */}
+                  <div className="space-y-6">
+                    <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-slate-900 text-white">
+                      <CardHeader className="p-8 border-b border-white/10 bg-white/5">
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          <ShieldCheck className="h-5 w-5 text-primary" /> Escrow Funding
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-8 space-y-6">
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-slate-400">Campaign Budget</span>
+                            <span className="font-bold">₹{totals.budget.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-slate-400">Platform Fee ({PLATFORM_FEE_PERCENTAGE}%)</span>
+                            <span className="font-bold">₹{totals.fee.toLocaleString()}</span>
+                          </div>
+                          <Separator className="bg-white/10" />
+                          <div className="flex justify-between items-center">
+                            <span className="text-md font-black uppercase text-primary">Total to Fund</span>
+                            <span className="text-2xl font-black">₹{totals.total.toLocaleString()}</span>
+                          </div>
+                        </div>
+
+                        <div className="bg-white/5 rounded-2xl p-4 space-y-2">
+                          <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
+                            <CheckCircle2 className="h-3 w-3" /> Secure Escrow
+                          </div>
+                          <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
+                            Funds are held securely by Baalvion Connect. Release is only triggered after you approve the final content deliverables.
+                          </p>
+                        </div>
+
+                        <Button 
+                          onClick={handlePublish}
+                          disabled={isSaving || showConfetti}
+                          className="w-full h-14 rounded-2xl font-black text-lg shadow-xl shadow-primary/20"
+                        >
+                          {isSaving ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <CreditCard className="mr-2 h-5 w-5" />}
+                          Fund & Launch Live
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    <div className="p-6 rounded-[2rem] bg-white border border-dashed border-slate-300 text-center space-y-2">
+                      <Zap className="h-6 w-6 text-primary mx-auto mb-2" />
+                      <p className="text-xs font-black uppercase text-slate-900">AI Matcher Ready</p>
+                      <p className="text-[10px] text-slate-500 font-medium">
+                        Upon funding, we will instantly notify the top 15 matching creators in your niche.
+                      </p>
+                    </div>
                   </div>
-                </Card>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Reach Insights Sidebar */}
-        <div className="lg:col-span-4 space-y-6">
-          <Card className="border-none shadow-xl shadow-primary/5 rounded-3xl overflow-hidden bg-slate-900 text-white">
-            <CardContent className="p-8 space-y-6">
-              <div className="h-12 w-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
-                <TrendingUp className="h-6 w-6 text-emerald-400" />
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-xl font-black">AI Reach Potential</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Potential Reach</p>
-                    <p className="text-2xl font-black text-white">{estimatedReach.reach.toLocaleString()}+</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Est. Engagement</p>
-                    <p className="text-2xl font-black text-emerald-400">{estimatedReach.engagement.toLocaleString()}+</p>
-                  </div>
+        {/* Sidebar Insights */}
+        {!showConfetti && (
+          <div className="lg:col-span-4 space-y-6">
+            <Card className="border-none shadow-xl shadow-primary/5 rounded-3xl overflow-hidden bg-slate-950 text-white">
+              <CardContent className="p-8 space-y-6">
+                <div className="h-12 w-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                  <TrendingUp className="h-6 w-6 text-emerald-400" />
                 </div>
-                <Progress value={85} className="h-1 bg-white/10" />
-                <p className="text-slate-400 text-xs leading-relaxed font-medium">
-                  Optimized for the {requirementsForm.watch('creatorTier')} tier. Higher engagement expected for {basicsForm.watch('contentType')} content.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="space-y-4">
+                  <h3 className="text-xl font-black">Market Reach Analysis</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Potential Reach</p>
+                      <p className="text-2xl font-black text-white">{estimatedReach.reach.toLocaleString()}+</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Engagement</p>
+                      <p className="text-2xl font-black text-emerald-400">{estimatedReach.engagement.toLocaleString()}+</p>
+                    </div>
+                  </div>
+                  <p className="text-slate-400 text-[10px] leading-relaxed font-medium">
+                    Optimized for {requirementsForm.watch('creatorTier')} Tier. Campaign efficiency score: <span className="text-white font-bold">92/100</span>.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
-          <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="p-6 border-b bg-slate-50/50">
-              <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">Campaign Logistics</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-4">
-              {[
-                { title: 'Escrow Security', desc: 'Funds are held securely and released only after your approval.' },
-                { title: 'Payout Window', desc: 'Creators are paid 48h after post-live validation.' },
-                { title: 'Match Efficiency', desc: 'AI suggests ~15 creators matching your exact profile requirements.' },
-              ].map((item, i) => (
-                <div key={i} className="flex gap-3">
+            <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
+              <CardHeader className="p-6 border-b bg-slate-50/50">
+                <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">Timeline Check</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                <div className="flex gap-3">
                   <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Check className="h-3 w-3 text-primary" />
+                    <Clock className="h-3 w-3 text-primary" />
                   </div>
                   <div className="space-y-0.5">
-                    <p className="text-xs font-black text-slate-900 uppercase">{item.title}</p>
-                    <p className="text-[10px] text-slate-500 font-medium">{item.desc}</p>
+                    <p className="text-xs font-black text-slate-900 uppercase">Hiring Phase</p>
+                    <p className="text-[10px] text-slate-500 font-medium">Closes {budgetForm.watch('applicationDeadline') ? format(budgetForm.watch('applicationDeadline'), "MMM dd") : '---'}</p>
                   </div>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
+                <div className="flex gap-3">
+                  <div className="h-5 w-5 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
+                    <CalendarIcon className="h-3 w-3 text-orange-500" />
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-black text-slate-900 uppercase">Production Phase</p>
+                    <p className="text-[10px] text-slate-500 font-medium">Starts {budgetForm.watch('startDate') ? format(budgetForm.watch('startDate'), "MMM dd") : '---'}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -866,7 +989,7 @@ function CampaignPreviewCard({ title, brandName, budget, niche, platform }: any)
           </Avatar>
           <div className="bg-primary/5 px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-primary/10">
             <Zap className="h-3 w-3 text-primary fill-primary" />
-            <span className="text-[10px] font-black text-primary">98% MATCH</span>
+            <span className="text-[10px] font-black text-primary">AI MATCHED</span>
           </div>
         </div>
         <div className="space-y-1">
@@ -892,7 +1015,7 @@ function CampaignPreviewCard({ title, brandName, budget, niche, platform }: any)
       </CardContent>
       <CardFooter className="p-6 pt-0 mt-auto flex items-center justify-between border-t border-slate-50 bg-slate-50/30">
         <div className="flex items-center gap-1.5 text-xs text-slate-500 font-bold uppercase tracking-tighter">
-          <Users className="h-3.5 w-3.5" /> <span>3 SPOTS LEFT</span>
+          <Users className="h-3.5 w-3.5" /> <span>OPEN SPOTS</span>
         </div>
         <Button size="sm" className="rounded-xl font-bold h-9 px-6 shadow-lg shadow-primary/20">Apply Now</Button>
       </CardFooter>
