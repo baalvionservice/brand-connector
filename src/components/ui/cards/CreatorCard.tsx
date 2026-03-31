@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BaseCard } from './BaseCard';
-import { Zap, CheckCircle2, Users, TrendingUp, Star } from 'lucide-react';
+import { Zap, CheckCircle2, Users, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface CreatorCardProps {
@@ -20,7 +20,7 @@ interface CreatorCardProps {
   onClick?: () => void;
 }
 
-export function CreatorCard({
+export const CreatorCard = memo(({
   name,
   handle,
   image,
@@ -31,14 +31,14 @@ export function CreatorCard({
   isVerified,
   className,
   onClick
-}) {
+}: CreatorCardProps) => {
   return (
     <BaseCard className={cn("flex flex-col h-full", className)} onClick={onClick}>
       <div className="p-6 pb-2">
         <div className="flex items-start justify-between mb-4">
           <div className="relative">
             <Avatar className="h-16 w-16 rounded-2xl border-2 border-white shadow-md ring-4 ring-primary/5">
-              <AvatarImage src={image} alt={name} />
+              <AvatarImage src={image} alt={name} loading="lazy" />
               <AvatarFallback className="bg-primary/5 text-primary font-black text-lg">{name[0]}</AvatarFallback>
             </Avatar>
             {isVerified && (
@@ -62,7 +62,7 @@ export function CreatorCard({
       <div className="p-6 pt-2 flex-1 space-y-6">
         <div className="flex flex-wrap gap-1.5">
           {niches.map((n) => (
-            <Badge key={n} variant="secondary" className="bg-slate-50 text-slate-500 border-none font-bold text-[9px] uppercase tracking-tighter px-2 h-5">
+            <Badge key={n} variant="secondary" className="bg-slate-50 text-slate-500 border-none font-bold text-[9px] uppercase tracking-tighter px-2.5 py-1">
               {n}
             </Badge>
           ))}
@@ -85,4 +85,6 @@ export function CreatorCard({
       </div>
     </BaseCard>
   );
-}
+});
+
+CreatorCard.displayName = 'CreatorCard';

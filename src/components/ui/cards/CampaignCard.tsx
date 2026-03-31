@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { BaseCard } from './BaseCard';
-import { IndianRupee, Clock, Users, Zap, MoreHorizontal } from 'lucide-react';
+import { IndianRupee, Clock, Users, Zap } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
@@ -23,7 +23,7 @@ interface CampaignCardProps {
   onClick?: () => void;
 }
 
-export function CampaignCard({
+export const CampaignCard = memo(({
   title,
   brand,
   logo,
@@ -36,7 +36,7 @@ export function CampaignCard({
   status = 'ACTIVE',
   className,
   onClick
-}) {
+}: CampaignCardProps) => {
   const fillPercentage = ((totalSpots - spots) / totalSpots) * 100;
 
   return (
@@ -44,7 +44,7 @@ export function CampaignCard({
       <div className="p-6 pb-2">
         <div className="flex items-start justify-between mb-4">
           <Avatar className="h-12 w-12 rounded-xl border-2 border-slate-50 shadow-sm">
-            <AvatarImage src={logo} alt={brand} />
+            <AvatarImage src={logo} alt={brand} loading="lazy" />
             <AvatarFallback className="bg-primary/5 text-primary font-bold">{brand[0]}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col items-end gap-2">
@@ -110,4 +110,6 @@ export function CampaignCard({
       </div>
     </BaseCard>
   );
-}
+});
+
+CampaignCard.displayName = 'CampaignCard';
