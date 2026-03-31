@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -30,6 +31,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { brandSignupSchema } from '@/lib/validations';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -55,23 +57,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-
-const brandSignupSchema = z.object({
-  // Step 1
-  companyName: z.string().min(2, { message: "Company name is required." }),
-  website: z.string().url({ message: "Please enter a valid URL." }),
-  industry: z.string().min(1, { message: "Please select an industry." }),
-  teamSize: z.string().min(1, { message: "Please select team size." }),
-  // Step 2
-  fullName: z.string().min(2, { message: "Full name is required." }),
-  email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters." }),
-  phone: z.string().min(10, { message: "Invalid phone number." }),
-  // Step 3
-  plan: z.enum(["STARTER", "GROWTH", "ENTERPRISE"], { 
-    required_error: "Please select a plan." 
-  }),
-});
 
 type BrandSignupValues = z.infer<typeof brandSignupSchema>;
 

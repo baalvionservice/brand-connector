@@ -4,6 +4,9 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { 
   ArrowLeft, 
   AlertTriangle, 
@@ -38,6 +41,14 @@ import {
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirestore, useCollection, useStorage } from '@/firebase';
 import { collection, query, where, addDoc, doc, limit } from 'firebase/firestore';
@@ -46,7 +57,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Dispute, DisputeStatus } from '@/types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { disputeSchema } from '@/lib/validations';
 import { cn } from '@/lib/utils';
+
+type DisputeFormValues = z.infer<typeof disputeSchema>;
 
 export default function DisputeFilingPage() {
   const params = useParams();
@@ -75,11 +89,17 @@ export default function DisputeFilingPage() {
   const { data: existingDisputes, loading: disputeLoading } = useCollection<Dispute>(disputeQuery);
   const activeDispute = existingDisputes?.[0];
 
-  // Form State
-  const [reason, setReason] = useState('');
-  const [category, setCategory] = useState<any>('UNFAIR_REJECTION');
-  const [proposedResolution, setProposedResolution] = useState('');
-  const [evidenceUrls, setEvidenceUrls] = useState<string[]>([]);
+  // 2. Form state
+  const form = useForm<DisputeFormValues>({
+    resolver: zodResolver(disputeSchema),
+    defaultValues: {
+      category: 'UNFAIR_REJECTION',
+      reason: '',
+      proposedResolution: '',
+      evidenceUrls: [],
+    },
+  });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -96,15 +116,16 @@ export default function DisputeFilingPage() {
       (err) => toast({ variant: 'destructive', title: 'Upload failed' }),
       async () => {
         const url = await getDownloadURL(uploadTask.snapshot.ref);
-        setEvidenceUrls(prev => [...prev, url]);
+        const currentUrls = form.getValues('evidenceUrls') || [];
+        form.setValue('evidenceUrls', [...currentUrls, url]);
         setUploadProgress(0);
         toast({ title: 'Evidence attached' });
       }
     );
   };
 
-  const handleSubmitDispute = async () => {
-    if (!reason || !proposedResolution || !userProfile) return;
+  const onSubmit = async (values: DisputeFormValues) => {
+    if (!userProfile) return;
     setIsSubmitting(true);
 
     const disputeData = {
@@ -112,10 +133,7 @@ export default function DisputeFilingPage() {
       creatorId: userProfile.id,
       brandId: 'brand_mock_id', // In a real app, fetch from campaign doc
       deliverableId: deliverableId || undefined,
-      reason,
-      category,
-      evidenceUrls,
-      proposedResolution,
+      ...values,
       status: DisputeStatus.FILED,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -194,81 +212,110 @@ export default function DisputeFilingPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="p-8 space-y-8">
-                    <div className="space-y-4">
-                      <Label className="font-bold text-slate-700">Dispute Category</Label>
-                      <Select value={category} onValueChange={setCategory}>
-                        <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none focus:ring-primary">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="UNFAIR_REJECTION" className="font-bold">Unfair Deliverable Rejection</SelectItem>
-                          <SelectItem value="PAYMENT_ISSUE" className="font-bold">Payment or Escrow Delay</SelectItem>
-                          <SelectItem value="SCOPE_CREEP" className="font-bold">Requests outside of Brief</SelectItem>
-                          <SelectItem value="OTHER" className="font-bold">Other Professional Issue</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Form {...form}>
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                        <FormField
+                          control={form.control}
+                          name="category"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="font-bold text-slate-700">Dispute Category</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none focus:ring-primary">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="UNFAIR_REJECTION" className="font-bold">Unfair Deliverable Rejection</SelectItem>
+                                  <SelectItem value="PAYMENT_ISSUE" className="font-bold">Payment or Escrow Delay</SelectItem>
+                                  <SelectItem value="SCOPE_CREEP" className="font-bold">Requests outside of Brief</SelectItem>
+                                  <SelectItem value="OTHER" className="font-bold">Other Professional Issue</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <div className="space-y-4">
-                      <Label className="font-bold text-slate-700">Detailed Reason</Label>
-                      <Textarea 
-                        placeholder="Explain exactly what happened. Be specific about dates and previous communication." 
-                        className="min-h-[150px] rounded-2xl p-6 bg-slate-50 border-none focus-visible:ring-primary text-md"
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                      />
-                    </div>
+                        <FormField
+                          control={form.control}
+                          name="reason"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="font-bold text-slate-700">Detailed Reason</FormLabel>
+                              <FormControl>
+                                <Textarea 
+                                  placeholder="Explain exactly what happened. Be specific about dates and previous communication." 
+                                  className="min-h-[150px] rounded-2xl p-6 bg-slate-50 border-none focus-visible:ring-primary text-md"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
 
-                    <div className="space-y-4">
-                      <Label className="font-bold text-slate-700">Evidence (Screenshots/Chat Logs)</Label>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        {evidenceUrls.map((url, i) => (
-                          <div key={i} className="aspect-square rounded-2xl overflow-hidden relative group border shadow-sm">
-                            <img src={url} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <button className="text-white hover:text-red-400" onClick={() => setEvidenceUrls(prev => prev.filter((_, idx) => idx !== i))}>
-                                <Trash2 className="h-5 w-5" />
-                              </button>
-                            </div>
+                        <div className="space-y-4">
+                          <Label className="font-bold text-slate-700">Evidence (Screenshots/Chat Logs)</Label>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                            {(form.watch('evidenceUrls') || []).map((url, i) => (
+                              <div key={i} className="aspect-square rounded-2xl overflow-hidden relative group border shadow-sm">
+                                <img src={url} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                  <button type="button" className="text-white hover:text-red-400" onClick={() => form.setValue('evidenceUrls', form.getValues('evidenceUrls')!.filter((_, idx) => idx !== i))}>
+                                    <Trash2 className="h-5 w-5" />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                            <button 
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center bg-slate-50 hover:border-primary transition-all group"
+                            >
+                              <PlusCircle className="h-6 w-6 text-slate-300 group-hover:text-primary mb-2" />
+                              <span className="text-[10px] font-black text-slate-400 uppercase">Attach</span>
+                            </button>
+                            <input type="file" ref={fileInputRef} hidden onChange={handleFileUpload} accept="image/*" />
                           </div>
-                        ))}
-                        <button 
-                          onClick={() => fileInputRef.current?.click()}
-                          className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center bg-slate-50 hover:border-primary transition-all group"
-                        >
-                          <Plus className="h-6 w-6 text-slate-300 group-hover:text-primary mb-2" />
-                          <span className="text-[10px] font-black text-slate-400 uppercase">Attach</span>
-                        </button>
-                        <input type="file" ref={fileInputRef} hidden onChange={handleFileUpload} accept="image/*" />
-                      </div>
-                      {uploadProgress > 0 && (
-                        <div className="space-y-1">
-                          <Progress value={uploadProgress} className="h-1" />
-                          <p className="text-[10px] text-primary font-bold uppercase tracking-widest text-right">Uploading Evidence...</p>
+                          {uploadProgress > 0 && (
+                            <div className="space-y-1">
+                              <Progress value={uploadProgress} className="h-1" />
+                              <p className="text-[10px] text-primary font-bold uppercase tracking-widest text-right">Uploading Evidence...</p>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
 
-                    <div className="space-y-4">
-                      <Label className="font-bold text-slate-700">Your Proposed Resolution</Label>
-                      <Input 
-                        placeholder="e.g. Release 100% of payment as work matches all initial requirements." 
-                        className="h-12 rounded-xl bg-slate-50 border-none focus-visible:ring-primary font-medium"
-                        value={proposedResolution}
-                        onChange={(e) => setProposedResolution(e.target.value)}
-                      />
-                    </div>
+                        <FormField
+                          control={form.control}
+                          name="proposedResolution"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="font-bold text-slate-700">Your Proposed Resolution</Label>
+                              <FormControl>
+                                <Input 
+                                  placeholder="e.g. Release 100% of payment as work matches all initial requirements." 
+                                  className="h-12 rounded-xl bg-slate-50 border-none focus-visible:ring-primary font-medium"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <Button 
+                          type="submit"
+                          disabled={isSubmitting}
+                          className="w-full h-14 rounded-2xl text-lg font-black shadow-xl shadow-primary/20"
+                        >
+                          {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Send className="mr-2 h-5 w-5" />}
+                          File Official Dispute
+                        </Button>
+                      </form>
+                    </Form>
                   </CardContent>
-                  <CardFooter className="p-8 border-t bg-slate-50/50">
-                    <Button 
-                      disabled={!reason || !proposedResolution || isSubmitting}
-                      onClick={handleSubmitDispute}
-                      className="w-full h-14 rounded-2xl text-lg font-black shadow-xl shadow-primary/20"
-                    >
-                      {isSubmitting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Send className="mr-2 h-5 w-5" />}
-                      File Official Dispute
-                    </Button>
-                  </CardFooter>
                 </Card>
               </motion.div>
             ) : (

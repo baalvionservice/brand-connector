@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
@@ -50,6 +51,12 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { predictROI } from '@/lib/ai/roi';
 import CountUp from 'react-countup';
+import { 
+  campaignBasicsSchema, 
+  creatorRequirementsSchema, 
+  budgetTimelineSchema, 
+  guidelinesSchema 
+} from '@/lib/validations';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -83,59 +90,6 @@ import { Separator } from '@/components/ui/separator';
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import { PaymentGateway } from '@/components/payments/PaymentGateway';
-
-// Step 1 Schema
-const campaignBasicsSchema = z.object({
-  title: z.string().min(5, "Campaign title must be at least 5 characters").max(100, "Too long"),
-  objective: z.string().min(1, "Objective is required"),
-  platforms: z.array(z.string()).min(1, "Select at least one platform"),
-  contentType: z.enum(["REEL", "VIDEO", "POST"]),
-  description: z.string().min(50, "Brief must be at least 50 characters").max(5000, "Brief too long"),
-});
-
-// Step 2 Schema
-const creatorRequirementsSchema = z.object({
-  creatorTier: z.enum(["NANO", "MICRO", "MID", "MACRO"]),
-  minFollowers: z.number().min(0),
-  maxFollowers: z.number().min(0),
-  minEngagementRate: z.number().min(0).max(100),
-  niches: z.array(z.string()).min(1, "Select at least one niche"),
-  targetLocations: z.array(z.string()).min(1, "Select at least one location"),
-  languages: z.array(z.string()).min(1, "Select at least one language"),
-  audienceAgeMin: z.number().min(13),
-  audienceAgeMax: z.number().min(13),
-  audienceGender: z.enum(["ALL", "MALE", "FEMALE"]),
-  minPosts: z.number().min(1),
-  isExclusive: z.boolean(),
-});
-
-// Step 3 Schema
-const budgetTimelineSchema = z.object({
-  totalBudget: z.number().min(500, "Total budget must be at least ₹500"),
-  budgetPerCreator: z.array(z.number()).length(2),
-  paymentMethod: z.enum(["UPI", "CARD", "BANK"]),
-  startDate: z.date({ required_error: "Start date is required" }),
-  endDate: z.date({ required_error: "End date is required" }),
-  applicationDeadline: z.date({ required_error: "Application deadline is required" }),
-  submissionDeadline: z.date({ required_error: "Submission deadline is required" }),
-  postLiveDate: z.date({ required_error: "Post live date is required" }),
-});
-
-// Step 4 Schema
-const guidelinesSchema = z.object({
-  deliverables: z.array(z.object({
-    type: z.string(),
-    qty: z.number(),
-    platform: z.string(),
-    specs: z.string()
-  })).min(1, "Add at least one deliverable"),
-  dos: z.array(z.string()),
-  donts: z.array(z.string()),
-  hashtags: z.array(z.string()),
-  handles: z.array(z.string()),
-  links: z.array(z.string()),
-  mandatoryMentions: z.string()
-});
 
 type CampaignBasicsValues = z.infer<typeof campaignBasicsSchema>;
 type CreatorRequirementsValues = z.infer<typeof creatorRequirementsSchema>;
@@ -502,6 +456,7 @@ export default function NewCampaignPage() {
                       <div className="space-y-3">
                         <Label className="font-bold text-slate-700">Campaign Name</Label>
                         <Input placeholder="e.g. Summer AI Tech Launch 2024" className="h-12 rounded-xl bg-slate-50 border-none font-bold text-lg" {...basicsForm.register('title')} />
+                        {basicsForm.formState.errors.title && <p className="text-xs font-bold text-red-500 uppercase">{basicsForm.formState.errors.title.message}</p>}
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-3">
@@ -510,6 +465,7 @@ export default function NewCampaignPage() {
                             <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none font-bold"><SelectValue /></SelectTrigger>
                             <SelectContent>{OBJECTIVES.map((obj) => <SelectItem key={obj.id} value={obj.id}>{obj.label}</SelectItem>)}</SelectContent>
                           </Select>
+                          {basicsForm.formState.errors.objective && <p className="text-xs font-bold text-red-500 uppercase">{basicsForm.formState.errors.objective.message}</p>}
                         </div>
                         <div className="space-y-3">
                           <Label className="font-bold text-slate-700">Content Type</Label>
@@ -521,11 +477,13 @@ export default function NewCampaignPage() {
                               <SelectItem value="POST">Feed Post</SelectItem>
                             </SelectContent>
                           </Select>
+                          {basicsForm.formState.errors.contentType && <p className="text-xs font-bold text-red-500 uppercase">{basicsForm.formState.errors.contentType.message}</p>}
                         </div>
                       </div>
                       <div className="space-y-3">
                         <Label className="font-bold text-slate-700">Campaign Brief</Label>
                         <RichTextEditor value={basicsForm.watch('description')} onChange={(v) => basicsForm.setValue('description', v)} placeholder="What should creators do? Detail your vision here..." />
+                        {basicsForm.formState.errors.description && <p className="text-xs font-bold text-red-500 uppercase">{basicsForm.formState.errors.description.message}</p>}
                       </div>
                     </form>
                   </CardContent>
@@ -598,6 +556,7 @@ export default function NewCampaignPage() {
                             </div>
                           ))}
                         </div>
+                        {requirementsForm.formState.errors.niches && <p className="text-xs font-bold text-red-500 uppercase">{requirementsForm.formState.errors.niches.message}</p>}
                       </div>
                     </form>
                   </CardContent>
@@ -628,6 +587,7 @@ export default function NewCampaignPage() {
                             <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                             <Input type="number" className="pl-12 h-14 rounded-2xl bg-slate-50 border-none text-2xl font-black text-primary" {...budgetForm.register('totalBudget', { valueAsNumber: true })} />
                           </div>
+                          {budgetForm.formState.errors.totalBudget && <p className="text-xs font-bold text-red-500 uppercase">{budgetForm.formState.errors.totalBudget.message}</p>}
                         </div>
                         <div className="space-y-4">
                           <Label className="font-bold text-slate-700">Budget Per Creator Range</Label>
@@ -725,6 +685,9 @@ export default function NewCampaignPage() {
                                 <Calendar mode="single" selected={budgetForm.watch(field.id as any)} onSelect={(date) => budgetForm.setValue(field.id as any, date as any)} initialFocus />
                               </PopoverContent>
                             </Popover>
+                            {budgetForm.formState.errors[field.id as keyof BudgetTimelineValues] && (
+                              <p className="text-xs font-bold text-red-500 uppercase">{(budgetForm.formState.errors[field.id as keyof BudgetTimelineValues] as any).message}</p>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -798,6 +761,7 @@ export default function NewCampaignPage() {
                             </div>
                           ))}
                         </div>
+                        {guidelinesForm.formState.errors.deliverables && <p className="text-xs font-bold text-red-500 uppercase">{guidelinesForm.formState.errors.deliverables.message}</p>}
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">

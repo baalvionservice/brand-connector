@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -32,6 +33,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { creatorSignupSchema } from '@/lib/validations';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,31 +55,6 @@ import { useToast } from '@/hooks/use-toast';
 import { CREATOR_NICHES } from '@/constants';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const creatorSignupSchema = z.object({
-  // Step 1
-  fullName: z.string().min(2, { message: "Full name is required." }),
-  username: z.string().min(3, { message: "Username must be at least 3 characters." }).regex(/^[a-zA-Z0-9_]+$/, { message: "Only letters, numbers, and underscores allowed." }),
-  bio: z.string().max(160, { message: "Bio must be under 160 characters." }),
-  email: z.string().email({ message: "Invalid email address." }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters." }),
-  // Step 2
-  socials: z.object({
-    instagram: z.boolean().default(false),
-    youtube: z.boolean().default(false),
-    tiktok: z.boolean().default(false),
-  }).refine(data => Object.values(data).some(v => v === true), {
-    message: "Connect at least one social account."
-  }),
-  // Step 3
-  niches: z.array(z.string()).min(1, { message: "Select at least one niche." }).max(5, { message: "Maximum 5 niches." }),
-  // Step 4
-  rates: z.object({
-    instagram: z.string().optional(),
-    youtube: z.string().optional(),
-    tiktok: z.string().optional(),
-  }),
-});
 
 type CreatorSignupValues = z.infer<typeof creatorSignupSchema>;
 

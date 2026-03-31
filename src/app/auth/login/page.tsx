@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -13,6 +14,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Rocket, Loader2, Mail, Lock, AlertCircle } from 'lucide-react';
+import { loginSchema } from '@/lib/validations';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -36,11 +38,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-
-const loginSchema = z.object({
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters." }),
-});
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
