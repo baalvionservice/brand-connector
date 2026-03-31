@@ -2,7 +2,24 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Rocket, ShieldCheck, Zap, ArrowRight, BarChart3, Star, Users, Cpu, UserCheck, Globe } from 'lucide-react';
+import { 
+  Rocket, 
+  ShieldCheck, 
+  Zap, 
+  ArrowRight, 
+  BarChart3, 
+  Star, 
+  Users, 
+  Cpu, 
+  UserCheck, 
+  Globe,
+  Twitter,
+  Linkedin,
+  Instagram,
+  Facebook,
+  Github
+} from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ParticlesBackground } from '@/components/landing/ParticlesBackground';
@@ -65,24 +82,13 @@ export default function LandingPage() {
           </div>
           <span className="font-headline font-bold text-xl tracking-tight">Baalvion <span className="text-primary">Connect</span></span>
         </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
-          <Link className="text-sm font-medium hover:text-primary transition-colors" href="#features">
-            Features
-          </Link>
-          <Link className="text-sm font-medium hover:text-primary transition-colors" href="#how-it-works">
-            How It Works
-          </Link>
-          <Link className="text-sm font-medium hover:text-primary transition-colors" href="#testimonials">
-            Testimonials
-          </Link>
-          <Link className="text-sm font-medium hover:text-primary transition-colors" href="#pricing">
-            Pricing
-          </Link>
-          <Link href="/auth/login">
-            <Button variant="ghost" size="sm">Login</Button>
-          </Link>
+        <nav className="ml-auto flex gap-4 sm:gap-6 items-center text-sm font-medium">
+          <Link className="hover:text-primary transition-colors hidden md:inline-flex" href="#features">Features</Link>
+          <Link className="hover:text-primary transition-colors hidden md:inline-flex" href="#how-it-works">Process</Link>
+          <Link className="hover:text-primary transition-colors hidden md:inline-flex" href="#pricing">Pricing</Link>
+          <Link className="hover:text-primary transition-colors" href="/auth/login">Login</Link>
           <Link href="/auth/signup">
-            <Button size="sm" className="hidden sm:inline-flex rounded-full">Get Started</Button>
+            <Button size="sm" className="rounded-full">Get Started</Button>
           </Link>
         </nav>
       </header>
@@ -91,127 +97,73 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="relative w-full min-h-[90vh] flex items-center overflow-hidden bg-gradient-to-br from-[#4c1d95] via-[#312e81] to-[#1e1b4b] text-white py-12 lg:py-0">
           <ParticlesBackground />
-          
           <div className="container px-4 md:px-6 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              {/* Left Content */}
               <motion.div 
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
+                transition={{ duration: 0.8 }}
                 className="flex flex-col space-y-8"
               >
-                <div className="inline-flex items-center rounded-full bg-white/10 px-4 py-1.5 text-sm font-semibold text-primary-foreground border border-white/20 backdrop-blur-sm w-fit">
+                <div className="inline-flex items-center rounded-full bg-white/10 px-4 py-1.5 text-sm font-semibold border border-white/20 backdrop-blur-sm w-fit">
                   <Zap className="h-4 w-4 mr-2 text-yellow-400 fill-yellow-400" />
                   AI-Powered Market Insights
                 </div>
-                
                 <h1 className="text-4xl font-headline font-extrabold tracking-tighter sm:text-6xl xl:text-7xl/none">
                   Connect Brands with <br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-indigo-200">
-                    Creators Who Deliver <br /> Real ROI
+                    Creators Who Deliver
                   </span>
                 </h1>
-                
                 <p className="max-w-[600px] text-indigo-100/80 md:text-xl font-light leading-relaxed">
                   The data-driven marketplace where performance meets creativity. 
                   Skip the guesswork and start building campaigns that actually convert.
                 </p>
-                
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button size="lg" className="rounded-full px-8 h-14 text-lg bg-white text-indigo-900 hover:bg-indigo-50 shadow-xl shadow-indigo-900/20">
+                  <Button size="lg" className="rounded-full px-8 h-14 text-lg bg-white text-indigo-900 hover:bg-indigo-50">
                     Start as Brand <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                   <Button size="lg" variant="outline" className="rounded-full px-8 h-14 text-lg border-white/30 bg-white/5 hover:bg-white/10 backdrop-blur-sm">
                     Join as Creator
                   </Button>
                 </div>
-
-                <div className="flex items-center gap-6 pt-4">
-                  <div className="flex -space-x-3">
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="h-10 w-10 rounded-full border-2 border-[#312e81] overflow-hidden">
-                        <Image 
-                          src={`https://picsum.photos/seed/user-${i}/100/100`} 
-                          alt="User" 
-                          width={40} 
-                          height={40} 
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <p className="text-sm text-indigo-200/60">
-                    Trusted by <span className="text-white font-bold">2,500+</span> creators worldwide
-                  </p>
-                </div>
               </motion.div>
-
-              {/* Right Mockup */}
               <motion.div
-                initial={{ opacity: 0, scale: 0.8, rotateY: -10 }}
-                animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1, delay: 0.2 }}
                 className="relative hidden lg:block"
               >
-                <div className="relative z-20 rounded-2xl border border-white/20 bg-white/5 p-4 backdrop-blur-md shadow-2xl transform hover:scale-[1.02] transition-transform duration-500">
-                  <div className="aspect-[16/10] relative rounded-xl overflow-hidden border border-white/10 shadow-inner">
+                <div className="relative z-20 rounded-2xl border border-white/20 bg-white/5 p-4 backdrop-blur-md shadow-2xl">
+                  <div className="aspect-[16/10] relative rounded-xl overflow-hidden border border-white/10">
                     <Image 
                       src="https://picsum.photos/seed/baalvion-dashboard/1000/625" 
                       alt="Baalvion Dashboard" 
                       fill 
                       className="object-cover"
                       priority
-                      data-ai-hint="dashboard design"
                     />
-                    {/* Floating elements inside mockup */}
-                    <div className="absolute top-4 right-4 bg-white/90 backdrop-blur p-3 rounded-lg shadow-lg text-indigo-900 flex items-center gap-3 animate-bounce">
-                      <div className="bg-green-100 p-1.5 rounded-full">
-                        <BarChart3 className="h-4 w-4 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-bold uppercase opacity-60">Engagement</p>
-                        <p className="text-sm font-extrabold">+24.8%</p>
-                      </div>
-                    </div>
                   </div>
                 </div>
-                {/* Background Glow */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] bg-primary/20 blur-[100px] -z-10 rounded-full" />
               </motion.div>
             </div>
           </div>
         </section>
 
-        {/* Stats Banner Section */}
         <StatsBanner />
-
-        {/* How It Works Section */}
         <HowItWorks />
-
-        {/* AI Matching Demo Section */}
         <MatchingDemo />
-
-        {/* Active Campaigns Feed Section */}
         <ActiveCampaigns />
-
-        {/* Top Creators Showcase Section */}
         <CreatorShowcase />
 
-        {/* Features Section */}
-        <section id="features" className="w-full py-24 md:py-32 bg-slate-50 overflow-hidden">
+        <section id="features" className="w-full py-24 bg-slate-50">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center mb-16">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-              >
-                <h2 className="text-3xl font-headline font-bold tracking-tighter md:text-5xl">Everything You Need to Scale</h2>
-                <p className="max-w-[900px] text-muted-foreground mt-4 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Powerful tools built for both sides of the marketplace, powered by advanced matching algorithms and secure infrastructure.
-                </p>
-              </motion.div>
+              <h2 className="text-3xl font-headline font-bold tracking-tighter md:text-5xl">Everything You Need to Scale</h2>
+              <p className="max-w-[900px] text-muted-foreground mt-4 md:text-xl/relaxed">
+                Powerful tools built for both sides of the marketplace, powered by advanced matching algorithms.
+              </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {features.map((feature, i) => (
@@ -220,19 +172,16 @@ export default function LandingPage() {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
-                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
-                  className="group relative bg-background p-8 rounded-2xl border transition-all hover:shadow-xl hover:border-primary/20"
+                  transition={{ delay: i * 0.1 }}
+                  className="bg-background p-8 rounded-2xl border transition-all hover:shadow-xl"
                 >
-                  <div className={`mb-6 w-14 h-14 flex items-center justify-center rounded-2xl ${feature.color} group-hover:scale-110 transition-transform duration-300`}>
+                  <div className={`mb-6 w-14 h-14 flex items-center justify-center rounded-2xl ${feature.color}`}>
                     <feature.icon className="h-7 w-7" />
                   </div>
                   <h3 className="text-xl font-headline font-bold mb-3">{feature.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed mb-6">
-                    {feature.desc}
-                  </p>
-                  <Link href="#" className="inline-flex items-center text-sm font-bold text-primary hover:underline group/link">
-                    Learn More <ArrowRight className="ml-1 h-4 w-4 group-hover/link:translate-x-1 transition-transform" />
+                  <p className="text-muted-foreground mb-6">{feature.desc}</p>
+                  <Link href="#" className="inline-flex items-center text-sm font-bold text-primary hover:underline group">
+                    Learn More <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </motion.div>
               ))}
@@ -240,31 +189,33 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Testimonials Section */}
         <Testimonials />
-
-        {/* Pricing Section */}
         <Pricing />
-
-        {/* FAQ Section */}
         <FAQ />
 
         {/* CTA Section */}
-        <section className="w-full py-24 bg-primary text-primary-foreground overflow-hidden relative">
-          <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-          <div className="container px-4 md:px-6 relative z-10">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <h2 className="text-3xl font-headline font-bold tracking-tighter md:text-5xl">Ready to Start Your Next Big Collaboration?</h2>
-              <p className="max-w-[600px] text-primary-foreground/80 md:text-xl font-light">
-                Join thousands of creators and brands already growing their reach on Baalvion Connect.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 mt-8">
-                <Button size="lg" variant="secondary" className="rounded-full px-8 font-bold text-lg h-14">
-                  Create Free Account
-                </Button>
-                <Button size="lg" variant="outline" className="rounded-full px-8 bg-transparent text-white border-white/30 hover:bg-white/10 h-14 text-lg">
-                  Book a Demo
-                </Button>
+        <section className="w-full py-24 bg-white overflow-hidden">
+          <div className="container px-4 md:px-6">
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary via-indigo-600 to-indigo-900 px-8 py-20 text-center shadow-2xl">
+              {/* Decorative elements */}
+              <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-white/10 rounded-full blur-3xl opacity-50" />
+              <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-96 h-96 bg-primary-foreground/10 rounded-full blur-3xl opacity-50" />
+              
+              <div className="relative z-10 max-w-3xl mx-auto space-y-8">
+                <h2 className="text-3xl font-headline font-bold tracking-tighter text-white md:text-5xl lg:text-6xl">
+                  Ready to grow your brand or income?
+                </h2>
+                <p className="text-indigo-100/90 md:text-xl font-light leading-relaxed">
+                  Join 10,000+ creators and 1,500+ brands already scaling their success on Baalvion Connect. Our AI matching engine is waiting for you.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
+                  <Button size="lg" variant="secondary" className="rounded-full px-10 font-bold text-lg h-16 shadow-xl hover:scale-105 transition-transform bg-white text-primary">
+                    Start as Brand
+                  </Button>
+                  <Button size="lg" variant="outline" className="rounded-full px-10 bg-transparent text-white border-white/30 hover:bg-white/10 h-16 text-lg hover:scale-105 transition-transform">
+                    Join as Creator
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -272,47 +223,72 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full py-12 bg-slate-900 text-slate-300">
+      <footer className="w-full py-20 bg-slate-950 text-slate-400 border-t border-white/5">
         <div className="container px-4 md:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
-            <div className="col-span-2">
-              <Link className="flex items-center mb-6" href="#">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+            <div className="space-y-6">
+              <Link className="flex items-center" href="#">
                 <Rocket className="h-8 w-8 text-primary mr-2" />
-                <span className="font-headline font-bold text-2xl text-white">Baalvion</span>
+                <span className="font-headline font-bold text-2xl text-white tracking-tight">Baalvion</span>
               </Link>
-              <p className="max-w-xs mb-6 text-sm">
-                The leading influencer marketplace connecting visionary brands with world-class creative talent.
+              <p className="max-w-xs text-sm leading-relaxed">
+                The leading influencer marketplace connecting visionary brands with world-class creative talent through AI-powered performance matching.
               </p>
+              <div className="flex gap-4">
+                <Link href="#" className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary hover:text-white transition-all">
+                  <Twitter className="h-5 w-5" />
+                </Link>
+                <Link href="#" className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary hover:text-white transition-all">
+                  <Linkedin className="h-5 w-5" />
+                </Link>
+                <Link href="#" className="h-10 w-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-primary hover:text-white transition-all">
+                  <Instagram className="h-5 w-5" />
+                </Link>
+              </div>
             </div>
+
             <div>
-              <h4 className="font-headline font-bold text-white mb-4">Platform</h4>
-              <ul className="space-y-2 text-sm">
+              <h4 className="font-headline font-bold text-white mb-6 uppercase tracking-wider text-xs">Platform</h4>
+              <ul className="space-y-4 text-sm">
                 <li><Link href="#" className="hover:text-primary transition-colors">Campaign Discovery</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">AI Matching</Link></li>
+                <li><Link href="#" className="hover:text-primary transition-colors">AI Matching Engine</Link></li>
                 <li><Link href="#" className="hover:text-primary transition-colors">Pricing Plans</Link></li>
+                <li><Link href="#" className="hover:text-primary transition-colors">Creator Showcase</Link></li>
+                <li><Link href="#" className="hover:text-primary transition-colors">Performance Analytics</Link></li>
               </ul>
             </div>
+
             <div>
-              <h4 className="font-headline font-bold text-white mb-4">Company</h4>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="#" className="hover:text-primary transition-colors">About Us</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">Contact</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-headline font-bold text-white mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm">
+              <h4 className="font-headline font-bold text-white mb-6 uppercase tracking-wider text-xs">Company</h4>
+              <ul className="space-y-4 text-sm">
+                <li><Link href="#" className="hover:text-primary transition-colors">About Baalvion</Link></li>
+                <li><Link href="#" className="hover:text-primary transition-colors">Success Stories</Link></li>
+                <li><Link href="#" className="hover:text-primary transition-colors">Support Center</Link></li>
                 <li><Link href="#" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
                 <li><Link href="#" className="hover:text-primary transition-colors">Terms of Service</Link></li>
               </ul>
             </div>
+
+            <div className="space-y-6">
+              <h4 className="font-headline font-bold text-white mb-6 uppercase tracking-wider text-xs">Stay Updated</h4>
+              <p className="text-sm">Subscribe to our monthly newsletter for the latest creator trends and market insights.</p>
+              <div className="flex flex-col gap-2">
+                <Input 
+                  type="email" 
+                  placeholder="Enter your email" 
+                  className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 rounded-xl"
+                />
+                <Button className="w-full rounded-xl font-bold bg-primary hover:bg-primary/90 text-white">Subscribe</Button>
+              </div>
+            </div>
           </div>
-          <div className="pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
-            <p>© 2024 Baalvion Connect. All rights reserved.</p>
-            <div className="flex gap-4">
-              <Link href="#" className="hover:text-primary">Twitter</Link>
-              <Link href="#" className="hover:text-primary">LinkedIn</Link>
-              <Link href="#" className="hover:text-primary">Instagram</Link>
+          
+          <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
+            <p>© 2024 Baalvion Connect. All rights reserved. Built for the future of creator marketing.</p>
+            <div className="flex gap-6">
+              <Link href="#" className="hover:text-white transition-colors">Status</Link>
+              <Link href="#" className="hover:text-white transition-colors">Security</Link>
+              <Link href="#" className="hover:text-white transition-colors">Cookies</Link>
             </div>
           </div>
         </div>
