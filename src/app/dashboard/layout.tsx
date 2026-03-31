@@ -27,7 +27,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDoc } from '@/firebase';
-import { CreatorProfile, OnboardingStatus } from '@/types';
+import { CreatorProfile, BrandProfile, OnboardingStatus } from '@/types';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -37,6 +37,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Real-time hook for creator onboarding status
   const { data: creatorProfile } = useDoc<CreatorProfile>(
     userProfile?.role === 'CREATOR' ? `creators/creator_${userProfile.id}` : null
+  );
+
+  // Real-time hook for brand onboarding status
+  const { data: brandProfile } = useDoc<BrandProfile>(
+    userProfile?.role === 'BRAND' ? `brands/brand_${userProfile.id}` : null
   );
 
   const [role, setRole] = useState<'BRAND' | 'CREATOR'>('BRAND');
@@ -56,9 +61,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             router.replace('/onboarding/creator');
           }
         }
+
+        if (userProfile.role === 'BRAND' && brandProfile) {
+          if (brandProfile.onboardingStatus !== OnboardingStatus.COMPLETED && !pathname.startsWith('/onboarding')) {
+            router.replace('/onboarding/brand');
+          }
+        }
       }
     }
-  }, [currentUser, userProfile, loading, router, creatorProfile, pathname]);
+  }, [currentUser, userProfile, loading, router, creatorProfile, brandProfile, pathname]);
 
   const toggleRole = () => {
     const nextRole = role === 'BRAND' ? 'CREATOR' : 'BRAND';

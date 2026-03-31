@@ -52,7 +52,10 @@
         "teamSize": { "type": "string" },
         "plan": { "type": "string", "enum": ["STARTER", "GROWTH", "ENTERPRISE"] },
         "brandGuidelines": { "type": "string" },
-        "logoUrl": { "type": "string" }
+        "logoUrl": { "type": "string" },
+        "onboardingStatus": { "type": "string", "enum": ["PENDING", "IN_PROGRESS", "COMPLETED"] },
+        "onboardingStep": { "type": "number" },
+        "billingMethod": { "type": "object" }
       },
       "required": ["id", "userId", "companyName"]
     },

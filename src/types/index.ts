@@ -79,6 +79,15 @@ export interface BrandProfile {
   plan: 'STARTER' | 'GROWTH' | 'ENTERPRISE';
   brandGuidelines: string;
   logoUrl?: string;
+  onboardingStatus: OnboardingStatus;
+  onboardingStep: number;
+  billingMethod?: {
+    type: 'CARD';
+    last4: string;
+    brand: string;
+  };
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Campaign {
