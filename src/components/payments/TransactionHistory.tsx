@@ -55,6 +55,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Transaction, TransactionStatus } from '@/types';
 import { cn } from '@/lib/utils';
+import { formatCurrency, fromBase } from '@/lib/currency';
 
 interface TransactionHistoryProps {
   data: Transaction[];
@@ -62,6 +63,7 @@ interface TransactionHistoryProps {
   title?: string;
   description?: string;
   emptyMessage?: string;
+  currency?: string;
 }
 
 export function TransactionHistory({ 
@@ -69,7 +71,8 @@ export function TransactionHistory({
   loading = false, 
   title = "Transaction History", 
   description = "A detailed ledger of all financial movements on the platform.",
-  emptyMessage = "No transactions found matching your filters."
+  emptyMessage = "No transactions found matching your filters.",
+  currency = "INR"
 }: TransactionHistoryProps) {
   const { toast } = useToast();
   
@@ -239,7 +242,7 @@ export function TransactionHistory({
             </div>
             <div className="flex gap-2">
               <Badge variant="secondary" className="bg-primary/5 text-primary border-none font-bold text-[10px] tracking-widest px-3 h-6">
-                {filteredData.length} RECORDS
+                {filteredData.length} RECORDS ({currency})
               </Badge>
             </div>
           </div>
@@ -298,7 +301,7 @@ export function TransactionHistory({
                             "text-lg font-black",
                             isCredit ? "text-emerald-600" : "text-slate-900"
                           )}>
-                            {isCredit ? '+' : '-'} ₹{tx.amount.toLocaleString()}
+                            {isCredit ? '+' : '-'} {formatCurrency(fromBase(tx.amount, currency), currency)}
                           </span>
                         </TableCell>
                         <TableCell className="text-center">

@@ -67,10 +67,12 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { TransactionHistory } from '@/components/payments/TransactionHistory';
+import { formatCurrency, fromBase } from '@/lib/currency';
 import { cn } from '@/lib/utils';
+import { BrandProfile } from '@/types';
 
 // Mock Data for Spend Chart
 const SPEND_DATA = [
@@ -87,6 +89,10 @@ export default function BrandWalletPage() {
   const { userProfile } = useAuth();
   const db = useFirestore();
   
+  const brandId = userProfile?.id ? `brand_${userProfile.id}` : null;
+  const { data: brand } = useDoc<BrandProfile>(brandId ? `brands/${brandId}` : null);
+  const preferredCurrency = brand?.currency || 'INR';
+
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
 
@@ -112,11 +118,16 @@ export default function BrandWalletPage() {
     if (!depositAmount || Number(depositAmount) <= 0) return;
     toast({
       title: "Deposit Initiated",
-      description: `₹${Number(depositAmount).toLocaleString()} is being added to your available credit.`,
+      description: `${formatCurrency(Number(depositAmount), preferredCurrency)} is being added to your available credit.`,
     });
     setIsDepositOpen(false);
     setDepositAmount('');
   };
+
+  const convertedSpendData = useMemo(() => 
+    SPEND_DATA.map(d => ({ ...d, amount: fromBase(d.amount, preferredCurrency) })),
+    [preferredCurrency]
+  );
 
   return (
     <div className="space-y-8 pb-20">
@@ -148,13 +159,18 @@ export default function BrandWalletPage() {
               </DialogHeader>
               <div className="space-y-6 py-6">
                 <div className="space-y-3">
-                  <Label className="font-bold text-slate-700">Deposit Amount (₹)</Label>
+                  <div className="flex justify-between items-center">
+                    <Label className="font-bold text-slate-700">Deposit Amount ({preferredCurrency})</Label>
+                    <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-none text-[10px] h-5">BASE: INR</Badge>
+                  </div>
                   <div className="relative">
-                    <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-400" />
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">
+                      {preferredCurrency}
+                    </div>
                     <Input 
                       type="number" 
                       placeholder="50,000" 
-                      className="h-16 pl-12 rounded-2xl text-2xl font-black border-slate-100 bg-slate-50"
+                      className="h-16 pl-16 rounded-2xl text-2xl font-black border-slate-100 bg-slate-50"
                       value={depositAmount}
                       onChange={(e) => setDepositAmount(e.target.value)}
                     />
@@ -189,12 +205,12 @@ export default function BrandWalletPage() {
           </CardHeader>
           <CardContent className="pb-8">
             <div className="flex items-baseline gap-2">
-              <span className="text-5xl font-black">₹{(stats.totalSpent / 100000).toFixed(1)}L</span>
-              <Badge className="bg-primary/20 text-primary border-none font-black text-[10px] tracking-widest">LIFETIME</Badge>
+              <span className="text-4xl font-black">{formatCurrency(fromBase(stats.totalSpent, preferredCurrency), preferredCurrency)}</span>
+              <Badge className="bg-primary/20 text-primary border-none font-black text-[10px] tracking-widest uppercase">Portfolio</Badge>
             </div>
             <p className="text-xs text-slate-500 font-bold mt-4 flex items-center gap-2">
               <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-              12% under budget this quarter
+              Allocated efficiently across platforms
             </p>
           </CardContent>
         </Card>
@@ -205,10 +221,10 @@ export default function BrandWalletPage() {
           </CardHeader>
           <CardContent className="pb-8">
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-black text-slate-900">₹{stats.escrowed.toLocaleString()}</span>
+              <span className="text-4xl font-black text-slate-900">{formatCurrency(fromBase(stats.escrowed, preferredCurrency), preferredCurrency)}</span>
               <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
             </div>
-            <p className="text-xs text-slate-400 font-bold mt-4">Secured for 8 active milestones</p>
+            <p className="text-xs text-slate-400 font-bold mt-4">Secured for active campaign milestones</p>
           </CardContent>
         </Card>
 
@@ -218,11 +234,11 @@ export default function BrandWalletPage() {
           </CardHeader>
           <CardContent className="pb-8">
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-black text-emerald-600">₹{stats.available.toLocaleString()}</span>
+              <span className="text-4xl font-black text-emerald-600">{formatCurrency(fromBase(stats.available, preferredCurrency), preferredCurrency)}</span>
             </div>
             <div className="mt-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
               <p className="text-xs text-emerald-700 font-bold leading-relaxed">
-                Ready to fund 3 more mid-tier creators.
+                Ready to fund upcoming creative partnerships.
               </p>
             </div>
           </CardContent>
@@ -237,7 +253,7 @@ export default function BrandWalletPage() {
             <CardHeader className="p-8 border-b bg-slate-50/50 flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-xl">Spending Trajectory</CardTitle>
-                <CardDescription>Monthly marketing capital allocation</CardDescription>
+                <CardDescription>Monthly marketing capital allocation in {preferredCurrency}</CardDescription>
               </div>
               <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white border shadow-sm">
                 <div className="h-2 w-2 rounded-full bg-primary" />
@@ -247,7 +263,7 @@ export default function BrandWalletPage() {
             <CardContent className="p-8">
               <div className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={SPEND_DATA}>
+                  <AreaChart data={convertedSpendData}>
                     <defs>
                       <linearGradient id="colorSpend" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#6C3AE8" stopOpacity={0.1}/>
@@ -266,7 +282,7 @@ export default function BrandWalletPage() {
                       axisLine={false} 
                       tickLine={false} 
                       tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 600}}
-                      tickFormatter={(val) => `₹${val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}`}
+                      tickFormatter={(val) => val >= 1000 ? `${(val / 1000).toFixed(0)}k` : val}
                     />
                     <Tooltip 
                       contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px'}}
@@ -291,6 +307,7 @@ export default function BrandWalletPage() {
             loading={txLoading} 
             title="Corporate Transaction Ledger"
             description="Complete audit trail of deposits, escrow holds, and platform fees."
+            currency={preferredCurrency}
           />
         </div>
       </div>
@@ -313,9 +330,9 @@ export default function BrandWalletPage() {
             <Clock className="h-8 w-8 text-orange-500" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-lg font-bold">GST Compliance</h3>
+            <h3 className="text-lg font-bold">Multi-Currency Clearance</h3>
             <p className="text-sm text-slate-500 leading-relaxed">
-              Consolidated tax-compliant invoices are generated automatically for all platform spending and commission fees.
+              All transactions are settled using real-time interbank rates to ensure you always have the most accurate financial overview.
             </p>
           </div>
         </div>

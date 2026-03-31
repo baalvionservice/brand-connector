@@ -1,4 +1,3 @@
-
 export type UserRole = 'BRAND' | 'CREATOR' | 'ADMIN';
 
 export type BrandMemberRole = 'OWNER' | 'MANAGER' | 'REVIEWER' | 'VIEWER';
@@ -69,6 +68,7 @@ export interface User {
   phone?: string;
   status?: 'ACTIVE' | 'SUSPENDED' | 'PENDING';
   isVerified?: boolean;
+  preferredCurrency?: string;
   notificationPreferences?: {
     campaigns: boolean;
     payments: boolean;
@@ -191,6 +191,7 @@ export interface BrandProfile {
   logoUrl?: string;
   onboardingStatus: OnboardingStatus;
   onboardingStep: number;
+  currency?: string;
   billingMethod?: {
     type: 'CARD';
     last4: string;

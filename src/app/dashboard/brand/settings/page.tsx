@@ -27,7 +27,8 @@ import {
   Smartphone,
   Star,
   FileCheck,
-  ChevronRight
+  ChevronRight,
+  IndianRupee
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirestore, useDoc } from '@/firebase';
@@ -36,6 +37,7 @@ import { BrandProfile } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { SUPPORTED_CURRENCIES } from '@/lib/currency';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,6 +49,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 export default function BrandSettingsPage() {
@@ -68,6 +77,7 @@ export default function BrandSettingsPage() {
   const [billingAddress, setBillingAddress] = useState('');
   const [socials, setSocials] = useState({ instagram: '', twitter: '', linkedin: '' });
   const [defaultTemplate, setDefaultTemplate] = useState('');
+  const [preferredCurrency, setPreferredCurrency] = useState('INR');
 
   useEffect(() => {
     if (brand) {
@@ -78,6 +88,7 @@ export default function BrandSettingsPage() {
       setBillingAddress(brand.billingAddress || '');
       setSocials(brand.socialLinks || { instagram: '', twitter: '', linkedin: '' });
       setDefaultTemplate(brand.defaultBriefTemplate || '');
+      setPreferredCurrency(brand.currency || 'INR');
     }
   }, [brand]);
 
@@ -93,6 +104,7 @@ export default function BrandSettingsPage() {
       billingAddress,
       socialLinks: socials,
       defaultBriefTemplate: defaultTemplate,
+      currency: preferredCurrency,
       updatedAt: new Date().toISOString()
     };
 
@@ -199,6 +211,23 @@ export default function BrandSettingsPage() {
                             <Input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://" className="pl-10 h-12 rounded-xl bg-slate-50 border-none" />
                           </div>
                         </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="font-bold text-slate-700">Display Currency</Label>
+                        <Select value={preferredCurrency} onValueChange={setPreferredCurrency}>
+                          <SelectTrigger className="h-12 rounded-xl bg-slate-50 border-none font-bold">
+                            <SelectValue placeholder="Select Currency" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {SUPPORTED_CURRENCIES.map(curr => (
+                              <SelectItem key={curr.code} value={curr.code} className="font-bold">
+                                {curr.code} - {curr.name} ({curr.symbol})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Platform conversion uses mock daily rates.</p>
                       </div>
 
                       <div className="space-y-2">
@@ -334,7 +363,7 @@ export default function BrandSettingsPage() {
                   <Separator />
 
                   <div className="space-y-4">
-                    <Label className="font-bold text-slate-700">Primary Payment Card</					Label>
+                    <Label className="font-bold text-slate-700">Primary Payment Card</Label>
                     <div className="p-6 rounded-2xl border-2 border-slate-100 bg-white flex items-center justify-between group hover:border-primary/20 transition-all">
                       <div className="flex items-center gap-4">
                         <div className="h-10 w-14 rounded-lg bg-slate-900 flex items-center justify-center text-white shrink-0">
