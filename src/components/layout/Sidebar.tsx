@@ -21,13 +21,16 @@ import {
   Users,
   LineChart,
   UserPlus,
-  CreditCard
+  CreditCard,
+  ShieldCheck,
+  ShieldAlert,
+  History
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 
 interface SidebarProps {
-  mockRole?: 'BRAND' | 'CREATOR';
+  mockRole?: 'BRAND' | 'CREATOR' | 'ADMIN';
   onToggleRole?: () => void;
 }
 
@@ -64,7 +67,17 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Settings', href: '/dashboard/brand/settings', icon: Settings },
   ];
 
-  const links = currentRole === 'BRAND' ? brandLinks : creatorLinks;
+  const adminLinks = [
+    { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard },
+    { name: 'User Directory', href: '/admin/users', icon: Users },
+    { name: 'Marketplace Oversight', href: '/admin/campaigns', icon: Briefcase },
+    { name: 'Pending Verifications', href: '/admin/verifications', icon: ShieldCheck },
+    { name: 'Mediation Hub', href: '/admin/disputes', icon: ShieldAlert },
+    { name: 'Audit Logs', href: '/admin/logs', icon: History },
+    { name: 'System Config', href: '/admin/settings', icon: Settings },
+  ];
+
+  const links = currentRole === 'ADMIN' ? adminLinks : currentRole === 'BRAND' ? brandLinks : creatorLinks;
 
   return (
     <div className="hidden border-r bg-card md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 shadow-sm z-30">
@@ -105,7 +118,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
         </div>
 
         <div className="flex-shrink-0 p-4 space-y-2 border-t">
-          {onToggleRole && (
+          {onToggleRole && currentRole !== 'ADMIN' && (
             <Button 
               variant="outline" 
               size="sm" 
@@ -119,18 +132,18 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
           
           <div className="bg-muted/50 rounded-xl p-4">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-              {currentRole === 'BRAND' ? 'Brand Account' : 'Creator Account'}
+              {currentRole === 'ADMIN' ? 'Admin Access' : currentRole === 'BRAND' ? 'Brand Account' : 'Creator Account'}
             </p>
             <div className="flex items-center">
               <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs uppercase border border-primary/20">
-                {currentRole === 'BRAND' ? 'L' : 'S'}
+                {currentRole === 'ADMIN' ? 'A' : currentRole === 'BRAND' ? 'L' : 'S'}
               </div>
               <div className="ml-3 overflow-hidden">
                 <p className="text-sm font-medium truncate">
-                  {currentRole === 'BRAND' ? 'Lumina Tech' : 'Sarah Chen'}
+                  {currentRole === 'ADMIN' ? 'Platform Admin' : currentRole === 'BRAND' ? 'Lumina Tech' : 'Sarah Chen'}
                 </p>
                 <p className="text-[10px] text-muted-foreground truncate uppercase font-bold tracking-tighter">
-                  {currentRole === 'BRAND' ? 'Enterprise Plan' : 'Verified Pro'}
+                  {currentRole === 'ADMIN' ? 'Full Control' : currentRole === 'BRAND' ? 'Enterprise Plan' : 'Verified Pro'}
                 </p>
               </div>
             </div>
