@@ -21,7 +21,8 @@ import {
   ChevronRight,
   MoreVertical,
   History,
-  X
+  X,
+  ExternalLink
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -80,7 +81,7 @@ export function TransactionHistory({
     from: undefined,
     to: undefined,
   });
-  const [currentPage, setCurrentStep] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
   // Filter Logic
@@ -123,11 +124,17 @@ export function TransactionHistory({
     toast({ title: "Ledger Exported", description: "Your transaction history has been downloaded as CSV." });
   };
 
-  const handleDownloadInvoice = (txId: string) => {
-    toast({
-      title: "Generating Statement",
-      description: `Preparing a PDF receipt for transaction #${txId.substring(0, 8)}...`,
-    });
+  const handleDownloadInvoice = (tx: Transaction) => {
+    if (tx.receiptUrl) {
+      window.open(tx.receiptUrl, '_blank');
+      toast({ title: "Opening Statement", description: "Retrieving official PDF documentation..." });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: "Statement Unavailable",
+        description: "Official documentation is still being processed for this transaction.",
+      });
+    }
   };
 
   const getStatusConfig = (status: TransactionStatus) => {
@@ -304,10 +311,13 @@ export function TransactionHistory({
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-9 w-9 rounded-xl text-slate-300 hover:text-primary hover:bg-primary/5 opacity-0 group-hover:opacity-100 transition-all"
-                            onClick={() => handleDownloadInvoice(tx.id)}
+                            className={cn(
+                              "h-9 w-9 rounded-xl transition-all",
+                              tx.receiptUrl ? "text-primary hover:bg-primary/5" : "text-slate-200 cursor-not-allowed"
+                            )}
+                            onClick={() => handleDownloadInvoice(tx)}
                           >
-                            <FileText className="h-4 w-4" />
+                            {tx.receiptUrl ? <FileText className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
                           </Button>
                         </TableCell>
                       </motion.tr>
@@ -340,7 +350,7 @@ export function TransactionHistory({
                 size="sm" 
                 className="rounded-xl h-9 w-9 p-0 bg-white border-slate-200" 
                 disabled={currentPage === 1}
-                onClick={() => setCurrentStep(currentPage - 1)}
+                onClick={() => setCurrentPage(currentPage - 1)}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -354,7 +364,7 @@ export function TransactionHistory({
                       "rounded-xl h-9 w-9 p-0 font-bold",
                       currentPage === i + 1 ? "shadow-lg shadow-primary/20" : "text-slate-400 hover:text-primary"
                     )}
-                    onClick={() => setCurrentStep(i + 1)}
+                    onClick={() => setCurrentPage(i + 1)}
                   >
                     {i + 1}
                   </Button>
@@ -365,7 +375,7 @@ export function TransactionHistory({
                 size="sm" 
                 className="rounded-xl h-9 w-9 p-0 bg-white border-slate-200" 
                 disabled={currentPage === totalPages}
-                onClick={() => setCurrentStep(currentPage + 1)}
+                onClick={() => setCurrentPage(currentPage + 1)}
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

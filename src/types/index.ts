@@ -358,6 +358,7 @@ export interface Transaction {
   type: 'DEPOSIT' | 'WITHDRAWAL' | 'PAYMENT' | 'PAYOUT' | 'CREDIT' | 'DEBIT' | 'ESCROW_LOCK' | 'ESCROW_RELEASE' | 'FEE' | 'REFUND';
   status: TransactionStatus;
   description: string;
+  receiptUrl?: string;
   createdAt: string;
 }
 

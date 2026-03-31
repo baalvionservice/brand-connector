@@ -22,8 +22,11 @@ import {
   where,
   limit
 } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import { generateAndAttachInvoice } from './invoices';
+import { Transaction, TransactionStatus } from '@/types';
 
 /**
  * Locks campaign capital from a brand wallet into campaign escrow.
@@ -66,12 +69,24 @@ export async function lockFunds(db: Firestore, campaignId: string, brandId: stri
     campaignId,
     amount,
     type: 'ESCROW_LOCK',
-    status: 'COMPLETED',
+    status: 'COMPLETED' as TransactionStatus,
     description: `Funds locked for campaign ${campaignId}`,
-    createdAt: serverTimestamp()
+    createdAt: new Date().toISOString()
   };
 
-  addDoc(txRef, txData).catch(async () => {
+  addDoc(txRef, txData).then(async (docRef) => {
+    // Auto-generate Brand Invoice
+    const storage = getStorage(); // Initialize storage
+    const brandSnap = await getDoc(doc(db, 'brands', `brand_${brandId}`));
+    const campaignSnap = await getDoc(campaignRef);
+    
+    generateAndAttachInvoice(db, storage, { id: docRef.id, ...txData } as Transaction, {
+      userName: brandSnap.data()?.companyName || 'Brand Partner',
+      userAddress: brandSnap.data()?.billingAddress,
+      gstNumber: brandSnap.data()?.gstNumber,
+      campaignTitle: campaignSnap.data()?.title
+    });
+  }).catch(async () => {
     errorEmitter.emit('permission-error', new FirestorePermissionError({
       path: 'transactions',
       operation: 'create',
@@ -119,12 +134,22 @@ export async function releaseFunds(db: Firestore, applicationId: string, creator
     campaignId,
     amount,
     type: 'ESCROW_RELEASE',
-    status: 'COMPLETED',
+    status: 'COMPLETED' as TransactionStatus,
     description: `Payout released for application ${applicationId}`,
-    createdAt: serverTimestamp()
+    createdAt: new Date().toISOString()
   };
 
-  addDoc(txRef, txData).catch(async () => {
+  addDoc(txRef, txData).then(async (docRef) => {
+    // Auto-generate Creator Payout Advice
+    const storage = getStorage();
+    const creatorSnap = await getDoc(doc(db, 'creators', `creator_${creatorId}`));
+    const campaignSnap = await getDoc(campaignRef);
+
+    generateAndAttachInvoice(db, storage, { id: docRef.id, ...txData } as Transaction, {
+      userName: creatorSnap.data()?.username || 'Verified Creator',
+      campaignTitle: campaignSnap.data()?.title
+    });
+  }).catch(async () => {
     errorEmitter.emit('permission-error', new FirestorePermissionError({
       path: 'transactions',
       operation: 'create',
@@ -173,9 +198,9 @@ export async function refundFunds(db: Firestore, campaignId: string, brandId: st
     campaignId,
     amount,
     type: 'REFUND',
-    status: 'COMPLETED',
+    status: 'COMPLETED' as TransactionStatus,
     description: `Funds refunded for campaign ${campaignId}`,
-    createdAt: serverTimestamp()
+    createdAt: new Date().toISOString()
   };
 
   addDoc(txRef, txData).catch(async () => {
