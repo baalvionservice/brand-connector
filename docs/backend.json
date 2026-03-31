@@ -88,6 +88,23 @@
         "deliverablesCount": { "type": "number" }
       },
       "required": ["id", "brandId", "title", "status"]
+    },
+    "Application": {
+      "title": "Application",
+      "description": "A proposal submitted by a creator for a campaign.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "campaignId": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "status": { "type": "string", "enum": ["PENDING", "REVIEWING", "ACCEPTED", "REJECTED"] },
+        "pitch": { "type": "string" },
+        "proposedBudget": { "type": "number" },
+        "proposedTimeline": { "type": "string" },
+        "sampleUrls": { "type": "array", "items": { "type": "string" } },
+        "appliedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "campaignId", "creatorId", "status"]
     }
   },
   "auth": {
@@ -109,6 +126,10 @@
     "/campaigns/{campaignId}": {
       "schema": "Campaign",
       "description": "Brand campaigns."
+    },
+    "/applications/{applicationId}": {
+      "schema": "Application",
+      "description": "Proposals submitted by creators."
     }
   }
 }

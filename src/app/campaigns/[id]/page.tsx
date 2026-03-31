@@ -1,10 +1,11 @@
+
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, 
   CheckCircle2, 
@@ -22,7 +23,11 @@ import {
   ChevronRight,
   Send,
   Star,
-  Globe
+  Globe,
+  Loader2,
+  Sparkles,
+  Paperclip,
+  Check
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -35,6 +40,23 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, doc, setDoc, query, where, addDoc } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+import { ApplicationStatus } from '@/types';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // Mock data for a specific campaign
 const MOCK_CAMPAIGN = {
@@ -88,23 +110,99 @@ export default function CampaignDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const [isSubmitting, setIsSaving] = useState(false);
-  const [isApplied, setIsApplied] = useState(false);
+  const { userProfile } = useAuth();
+  const db = useFirestore();
 
-  const handleApply = (e: React.FormEvent) => {
-    e.preventDefault();
+  const [isSubmitting, setIsSaving] = useState(false);
+  const [isGeneratingPitch, setIsGeneratingPitch] = useState(false);
+  const [pitch, setPitch] = useState('');
+  const [proposedRate, setProposedRate] = useState('');
+  const [timeline, setTimeline] = useState('');
+  const [isApplied, setIsApplied] = useState(false);
+  const [existingApplication, setExistingApplication] = useState<any>(null);
+
+  // Check for existing application
+  const applicationsQuery = useMemo(() => {
+    if (!userProfile?.id) return null;
+    return query(
+      collection(db, 'applications'),
+      where('campaignId', '==', params.id as string),
+      where('creatorId', '==', userProfile.id)
+    );
+  }, [db, userProfile?.id, params.id]);
+
+  const { data: userApplications, loading: appsLoading } = useCollection<any>(applicationsQuery);
+
+  useEffect(() => {
+    if (userApplications && userApplications.length > 0) {
+      setIsApplied(true);
+      setExistingApplication(userApplications[0]);
+    }
+  }, [userApplications]);
+
+  const generateAIPitch = () => {
+    setIsGeneratingPitch(true);
+    // Simulate Genkit Flow call
+    setTimeout(() => {
+      const generated = `Hey ${MOCK_CAMPAIGN.brand.name}! I've been following your work in AI for a while and I'm a huge fan of the Lumina Hub ecosystem. My audience loves deep-dive tech reviews, and I can definitely highlight the 20% energy saving mode which is a huge pain point for my viewers right now. I plan to film this in my minimalist home setup to show how it blends into high-aesthetic lifestyles. Let's make this go viral!`;
+      setPitch(generated);
+      setIsGeneratingPitch(false);
+      toast({
+        title: "AI Pitch Generated",
+        description: "Review and customize it to match your voice.",
+      });
+    }, 2000);
+  };
+
+  const handleApplySubmit = async () => {
+    if (!userProfile) return;
     setIsSaving(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSaving(false);
+    const applicationData = {
+      campaignId: params.id as string,
+      creatorId: userProfile.id,
+      status: ApplicationStatus.PENDING,
+      pitch,
+      proposedBudget: Number(proposedRate.replace(/[^0-9]/g, '')),
+      proposedTimeline: timeline,
+      appliedAt: new Date().toISOString()
+    };
+
+    try {
+      await addDoc(collection(db, 'applications'), applicationData);
       setIsApplied(true);
       toast({
         title: "Application Sent!",
-        description: "Lumina Tech has been notified of your interest.",
+        description: `${MOCK_CAMPAIGN.brand.name} has been notified.`,
       });
-    }, 1500);
+    } catch (err: any) {
+      errorEmitter.emitPermissionError(new FirestorePermissionError({
+        path: '/applications',
+        operation: 'create',
+        requestResourceData: applicationData
+      }));
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'PENDING': return 'bg-orange-100 text-orange-600';
+      case 'REVIEWING': return 'bg-blue-100 text-blue-600';
+      case 'ACCEPTED': return 'bg-emerald-100 text-emerald-600';
+      case 'REJECTED': return 'bg-red-100 text-red-600';
+      default: return 'bg-slate-100 text-slate-600';
+    }
+  };
+
+  if (appsLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -133,14 +231,16 @@ export default function CampaignDetailPage() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" className="hidden sm:flex rounded-xl font-bold border-slate-200">
-              Save for Later
-            </Button>
-            <Button className="rounded-xl font-bold shadow-lg shadow-primary/20">
-              Apply Now
-            </Button>
-          </div>
+          {!isApplied && (
+            <div className="flex items-center gap-3">
+              <Button variant="outline" className="hidden sm:flex rounded-xl font-bold border-slate-200">
+                Save for Later
+              </Button>
+              <Button className="rounded-xl font-bold shadow-lg shadow-primary/20">
+                Apply Now
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -266,20 +366,36 @@ export default function CampaignDetailPage() {
             </CardContent>
           </Card>
 
-          {/* Application Form */}
+          {/* Application Flow */}
           {!isApplied ? (
             <Card className="border-none shadow-xl shadow-primary/10 rounded-[2rem] overflow-hidden bg-white ring-1 ring-primary/20">
               <CardHeader className="p-8 md:p-10 border-b bg-primary/5">
-                <CardTitle className="text-2xl">Submit Application</CardTitle>
-                <CardDescription>Tell the brand why you're the perfect fit for this campaign.</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-2xl">Submit Application</CardTitle>
+                    <CardDescription>Tell the brand why you're the perfect fit for this campaign.</CardDescription>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="rounded-xl font-bold border-primary/30 text-primary hover:bg-primary/10 transition-all gap-2 h-10 px-4"
+                    onClick={generateAIPitch}
+                    disabled={isGeneratingPitch}
+                  >
+                    {isGeneratingPitch ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4 fill-primary/20" />}
+                    AI Assistant
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent className="p-8 md:p-10">
-                <form onSubmit={handleApply} className="space-y-8">
+                <div className="space-y-8">
                   <div className="space-y-4">
                     <Label className="text-lg font-bold">Your Creative Pitch</Label>
                     <Textarea 
                       placeholder="Share your vision. How will you make this hardware look exciting? What's your unique hook?"
                       className="min-h-[180px] rounded-2xl p-6 resize-none bg-slate-50 border-slate-200 focus-visible:ring-primary text-lg"
+                      value={pitch}
+                      onChange={(e) => setPitch(e.target.value)}
                       required
                     />
                     <p className="text-xs text-slate-400 font-medium">Tip: Brands love when you mention specific scenes or audience demographics.</p>
@@ -293,6 +409,8 @@ export default function CampaignDetailPage() {
                         <Input 
                           placeholder="45,000" 
                           className="pl-12 h-14 rounded-2xl bg-slate-50 border-slate-200 text-lg font-black"
+                          value={proposedRate}
+                          onChange={(e) => setProposedRate(e.target.value)}
                           required
                         />
                       </div>
@@ -305,26 +423,59 @@ export default function CampaignDetailPage() {
                         <Input 
                           placeholder="e.g. 10 days from receipt of hub" 
                           className="pl-12 h-14 rounded-2xl bg-slate-50 border-slate-200 text-lg font-bold"
+                          value={timeline}
+                          onChange={(e) => setTimeline(e.target.value)}
                           required
                         />
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-4">
-                    <Button 
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="w-full h-16 rounded-2xl text-xl font-black shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-95"
-                    >
-                      {isSubmitting ? (
-                        <><Zap className="mr-2 h-6 w-6 animate-bounce" /> Sending to Lumina Tech...</>
-                      ) : (
-                        <><Send className="mr-2 h-6 w-6" /> Submit Application</>
-                      )}
-                    </Button>
+                  <div className="space-y-4">
+                    <Label className="text-lg font-bold">Attach Creative Samples</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      {[1, 2].map((i) => (
+                        <div key={i} className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center bg-slate-50 group hover:border-primary transition-all cursor-pointer">
+                          <Paperclip className="h-6 w-6 text-slate-400 group-hover:text-primary mb-2" />
+                          <span className="text-[10px] font-black text-slate-400 uppercase">Upload</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </form>
+
+                  <div className="pt-4">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          disabled={!pitch || !proposedRate || !timeline}
+                          className="w-full h-16 rounded-2xl text-xl font-black shadow-2xl shadow-primary/30 transition-all hover:scale-[1.02] active:scale-95"
+                        >
+                          <Send className="mr-2 h-6 w-6" /> Submit Application
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="rounded-3xl p-8">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-2xl font-black">Confirm Proposal</AlertDialogTitle>
+                          <AlertDialogDescription className="text-slate-600 mt-2">
+                            You're about to submit a proposal for <strong>{proposedRate}</strong>. This includes 3 deliverables and a commitment to complete within <strong>{timeline}</strong>.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <div className="my-6 p-4 rounded-2xl bg-slate-50 border text-sm text-slate-600 italic">
+                          "{pitch.substring(0, 150)}..."
+                        </div>
+                        <AlertDialogFooter className="gap-3">
+                          <AlertDialogCancel className="rounded-xl font-bold">Review Proposal</AlertDialogCancel>
+                          <AlertDialogAction 
+                            onClick={handleApplySubmit}
+                            className="rounded-xl font-bold bg-primary px-8"
+                          >
+                            Confirm & Send
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
               </CardContent>
               <CardFooter className="p-8 pt-0 flex justify-center border-t bg-slate-50/50 py-6">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
@@ -334,22 +485,60 @@ export default function CampaignDetailPage() {
             </Card>
           ) : (
             <motion.div 
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="p-12 rounded-[2.5rem] bg-emerald-50 border-2 border-emerald-100 flex flex-col items-center text-center space-y-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-8"
             >
-              <div className="h-24 w-24 rounded-full bg-emerald-500 flex items-center justify-center shadow-xl shadow-emerald-200">
-                <CheckCircle2 className="h-14 w-14 text-white" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-3xl font-black text-emerald-900">Application Received!</h2>
-                <p className="text-emerald-700 font-medium text-lg max-w-md">
-                  We've sent your proposal to Lumina Tech. They usually respond to tech reviews within 48 hours.
-                </p>
-              </div>
-              <Button variant="outline" className="rounded-xl font-bold bg-white border-emerald-200 text-emerald-700 h-12 px-8 hover:bg-emerald-100" onClick={() => router.push('/dashboard/creator')}>
-                Back to Dashboard
-              </Button>
+              {/* Application Status Tracker */}
+              <Card className="border-none shadow-xl rounded-[2.5rem] overflow-hidden bg-white">
+                <CardHeader className="p-8 md:p-10 border-b bg-emerald-50/50">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-2xl text-emerald-900">Application Received</CardTitle>
+                      <CardDescription className="text-emerald-700">Lumina Tech has been notified of your interest.</CardDescription>
+                    </div>
+                    <Badge className={cn("px-4 py-1.5 rounded-full font-black text-[10px] uppercase border-none", getStatusColor(existingApplication?.status || 'PENDING'))}>
+                      {existingApplication?.status || 'PENDING'}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-8 md:p-10">
+                  <div className="relative py-10">
+                    <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-slate-100 rounded-full" />
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-emerald-500 rounded-full transition-all duration-1000" style={{ width: existingApplication?.status === 'PENDING' ? '25%' : existingApplication?.status === 'REVIEWING' ? '75%' : '100%' }} />
+                    
+                    <div className="relative flex justify-between">
+                      {[
+                        { id: 'sent', label: 'Applied', status: 'COMPLETED' },
+                        { id: 'review', label: 'In Review', status: existingApplication?.status === 'PENDING' ? 'PENDING' : 'COMPLETED' },
+                        { id: 'decision', label: 'Decision', status: ['ACCEPTED', 'REJECTED'].includes(existingApplication?.status) ? 'COMPLETED' : 'PENDING' }
+                      ].map((step, i) => (
+                        <div key={i} className="flex flex-col items-center gap-3">
+                          <div className={cn(
+                            "h-10 w-10 rounded-full border-4 flex items-center justify-center z-10 transition-colors",
+                            step.status === 'COMPLETED' ? "bg-emerald-500 border-white text-white shadow-lg" : "bg-white border-slate-100 text-slate-300"
+                          )}>
+                            {step.status === 'COMPLETED' ? <Check className="h-5 w-5" /> : <Clock className="h-5 w-5" />}
+                          </div>
+                          <span className={cn("text-xs font-black uppercase tracking-widest", step.status === 'COMPLETED' ? "text-emerald-600" : "text-slate-400")}>{step.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-8 p-6 rounded-2xl bg-slate-50 border border-slate-100">
+                    <h4 className="font-bold text-slate-900 mb-2">What happens next?</h4>
+                    <p className="text-sm text-slate-600 leading-relaxed">
+                      Lumina Tech usually responds to tech reviews within 48 hours. We'll notify you via email and push notification once your status changes to <strong>Under Review</strong>.
+                    </p>
+                  </div>
+                </CardContent>
+                <CardFooter className="bg-slate-50/50 p-8 border-t flex justify-center">
+                  <Button variant="outline" className="rounded-xl font-bold bg-white" onClick={() => router.push('/dashboard/applications')}>
+                    Manage All Applications
+                  </Button>
+                </CardFooter>
+              </Card>
             </motion.div>
           )}
         </div>
@@ -436,40 +625,6 @@ export default function CampaignDetailPage() {
                   </div>
                   <span className="text-sm font-black text-primary">{MOCK_CAMPAIGN.spots}</span>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Recent Applicants (Anonymous) */}
-          <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="p-6 border-b bg-slate-50/50 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-400">Who's Applying</CardTitle>
-              <Users className="h-4 w-4 text-slate-300" />
-            </CardHeader>
-            <CardContent className="p-6 space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center border-2 border-white shadow-sm ring-1 ring-slate-100">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-slate-200 text-[10px] font-black">PRO</AvatarFallback>
-                      </Avatar>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">Verified Creator</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase">{i * 4}5k+ Followers</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex gap-0.5 mb-1">
-                      {[1, 2, 3, 4, 5].map(s => <Star key={s} className="h-2 w-2 text-yellow-400 fill-current" />)}
-                    </div>
-                    <p className="text-[9px] font-black text-emerald-600 uppercase">90%+ Match</p>
-                  </div>
-                </div>
-              ))}
-              <div className="pt-2">
-                <p className="text-[10px] text-center text-slate-400 font-medium italic">Competition is moderate for this campaign.</p>
               </div>
             </CardContent>
           </Card>
