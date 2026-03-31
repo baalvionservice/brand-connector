@@ -171,6 +171,16 @@ export interface BrandProfile {
     last4: string;
     brand: string;
   };
+  socialLinks?: {
+    instagram?: string;
+    twitter?: string;
+    linkedin?: string;
+  };
+  gstNumber?: string;
+  billingAddress?: string;
+  verificationStatus?: 'UNVERIFIED' | 'PENDING' | 'VERIFIED';
+  apiKeys?: string[];
+  defaultBriefTemplate?: string;
   createdAt: string;
   updatedAt: string;
 }

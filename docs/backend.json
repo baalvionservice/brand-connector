@@ -160,6 +160,12 @@
         "plan": { "type": "string", "enum": ["STARTER", "GROWTH", "ENTERPRISE"] },
         "brandGuidelines": { "type": "string" },
         "logoUrl": { "type": "string" },
+        "socialLinks": { "type": "object" },
+        "gstNumber": { "type": "string" },
+        "billingAddress": { "type": "string" },
+        "verificationStatus": { "type": "string", "enum": ["UNVERIFIED", "PENDING", "VERIFIED"] },
+        "apiKeys": { "type": "array", "items": { "type": "string" } },
+        "defaultBriefTemplate": { "type": "string" },
         "onboardingStatus": { "type": "string", "enum": ["PENDING", "IN_PROGRESS", "COMPLETED"] },
         "onboardingStep": { "type": "number" },
         "billingMethod": { "type": "object" }

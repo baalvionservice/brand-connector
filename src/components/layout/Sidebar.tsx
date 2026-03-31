@@ -61,7 +61,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Billing & Plans', href: '/dashboard/brand/billing', icon: CreditCard },
     { name: 'Wallet', href: '/dashboard/brand/wallet', icon: Wallet },
     { name: 'Messages', href: '/dashboard/brand/messages', icon: MessageSquare },
-    { name: 'Settings', href: '/dashboard/settings', icon: Settings },
+    { name: 'Settings', href: '/dashboard/brand/settings', icon: Settings },
   ];
 
   const links = currentRole === 'BRAND' ? brandLinks : creatorLinks;
