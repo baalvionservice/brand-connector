@@ -20,21 +20,21 @@ import {
   Zap,
   Save,
   Users,
-  Search,
   Check,
   Calendar as CalendarIcon,
   IndianRupee,
   CreditCard,
   Building2,
   TrendingUp,
-  Clock
+  Clock,
+  Rocket
 } from 'lucide-react';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import { useAuth } from '@/contexts/AuthContext';
 import { CampaignStatus } from '@/types';
 import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -142,7 +142,7 @@ export default function NewCampaignPage() {
     defaultValues: {
       title: '',
       objective: 'AWARENESS',
-      platforms: [],
+      platforms: ['Instagram'],
       contentType: 'REEL',
       description: '',
     },
@@ -156,7 +156,7 @@ export default function NewCampaignPage() {
       maxFollowers: 50000,
       minEngagementRate: 3,
       niches: [],
-      targetLocations: ['Global'],
+      targetLocations: ['India'],
       languages: ['English'],
       audienceAgeMin: 18,
       audienceAgeMax: 35,
@@ -180,7 +180,7 @@ export default function NewCampaignPage() {
     },
   });
 
-  const onBasicsSubmit = async (values: CampaignBasicsValues) => {
+  const onBasicsSubmit = (values: CampaignBasicsValues) => {
     if (!userProfile) return;
     setIsSaving(true);
 
@@ -195,28 +195,41 @@ export default function NewCampaignPage() {
       step: 1
     };
 
-    try {
-      if (campaignId) {
-        await updateDoc(doc(db, 'campaigns', campaignId), campaignData);
-      } else {
-        const docRef = await addDoc(collection(db, 'campaigns'), campaignData);
-        setCampaignId(docRef.id);
-      }
-      
-      toast({ title: "Basics Saved", description: "Configuring creator requirements..." });
-      setCurrentStep(2);
-    } catch (err: any) {
-      errorEmitter.emitPermissionError(new FirestorePermissionError({
-        path: '/campaigns',
-        operation: campaignId ? 'update' : 'create',
-        requestResourceData: campaignData
-      }));
-    } finally {
-      setIsSaving(false);
+    if (campaignId) {
+      updateDoc(doc(db, 'campaigns', campaignId), campaignData)
+        .then(() => {
+          toast({ title: "Basics Saved", description: "Configuring creator requirements..." });
+          setCurrentStep(2);
+          setIsSaving(false);
+        })
+        .catch(async (err) => {
+          errorEmitter.emitPermissionError(new FirestorePermissionError({
+            path: `/campaigns/${campaignId}`,
+            operation: 'update',
+            requestResourceData: campaignData
+          } satisfies SecurityRuleContext));
+          setIsSaving(false);
+        });
+    } else {
+      addDoc(collection(db, 'campaigns'), campaignData)
+        .then((docRef) => {
+          setCampaignId(docRef.id);
+          toast({ title: "Basics Saved", description: "Configuring creator requirements..." });
+          setCurrentStep(2);
+          setIsSaving(false);
+        })
+        .catch(async (err) => {
+          errorEmitter.emitPermissionError(new FirestorePermissionError({
+            path: '/campaigns',
+            operation: 'create',
+            requestResourceData: campaignData
+          } satisfies SecurityRuleContext));
+          setIsSaving(false);
+        });
     }
   };
 
-  const onRequirementsSubmit = async (values: CreatorRequirementsValues) => {
+  const onRequirementsSubmit = (values: CreatorRequirementsValues) => {
     if (!campaignId) return;
     setIsSaving(true);
 
@@ -226,22 +239,23 @@ export default function NewCampaignPage() {
       step: 2
     };
 
-    try {
-      await updateDoc(doc(db, 'campaigns', campaignId), updateData);
-      toast({ title: "Requirements Saved", description: "Next: Set your campaign budget." });
-      setCurrentStep(3);
-    } catch (err: any) {
-      errorEmitter.emitPermissionError(new FirestorePermissionError({
-        path: `/campaigns/${campaignId}`,
-        operation: 'update',
-        requestResourceData: updateData
-      }));
-    } finally {
-      setIsSaving(false);
-    }
+    updateDoc(doc(db, 'campaigns', campaignId), updateData)
+      .then(() => {
+        toast({ title: "Requirements Saved", description: "Next: Set your campaign budget." });
+        setCurrentStep(3);
+        setIsSaving(false);
+      })
+      .catch(async (err) => {
+        errorEmitter.emitPermissionError(new FirestorePermissionError({
+          path: `/campaigns/${campaignId}`,
+          operation: 'update',
+          requestResourceData: updateData
+        } satisfies SecurityRuleContext));
+        setIsSaving(false);
+      });
   };
 
-  const onBudgetSubmit = async (values: BudgetTimelineValues) => {
+  const onBudgetSubmit = (values: BudgetTimelineValues) => {
     if (!campaignId) return;
     setIsSaving(true);
 
@@ -258,28 +272,36 @@ export default function NewCampaignPage() {
       step: 3
     };
 
-    try {
-      await updateDoc(doc(db, 'campaigns', campaignId), updateData);
-      toast({ title: "Budget & Schedule Saved", description: "Almost done! Review your campaign details." });
-      setCurrentStep(4);
-    } catch (err: any) {
-      errorEmitter.emitPermissionError(new FirestorePermissionError({
-        path: `/campaigns/${campaignId}`,
-        operation: 'update',
-        requestResourceData: updateData
-      }));
-    } finally {
-      setIsSaving(false);
-    }
+    updateDoc(doc(db, 'campaigns', campaignId), updateData)
+      .then(() => {
+        toast({ title: "Budget & Schedule Saved", description: "Almost done! Review your campaign details." });
+        setCurrentStep(4);
+        setIsSaving(false);
+      })
+      .catch(async (err) => {
+        errorEmitter.emitPermissionError(new FirestorePermissionError({
+          path: `/campaigns/${campaignId}`,
+          operation: 'update',
+          requestResourceData: updateData
+        } satisfies SecurityRuleContext));
+        setIsSaving(false);
+      });
   };
 
-  // Mock Reach Calculator
+  // AI Reach Calculator Logic
   const estimatedReach = useMemo(() => {
     const budget = budgetForm.watch('totalBudget') || 0;
-    const tierMultiplier = requirementsForm.getValues('creatorTier') === 'MACRO' ? 8 : 12.5;
+    const tier = requirementsForm.watch('creatorTier');
+    
+    // Multiplier based on tier efficiency (Nano/Micro usually have higher relative engagement)
+    let reachMultiplier = 12.5; // Default for Micro
+    if (tier === 'NANO') reachMultiplier = 15;
+    if (tier === 'MID') reachMultiplier = 10;
+    if (tier === 'MACRO') reachMultiplier = 8;
+
     return {
-      reach: Math.round(budget * tierMultiplier),
-      engagement: Math.round(budget * tierMultiplier * 0.04)
+      reach: Math.round(budget * reachMultiplier),
+      engagement: Math.round(budget * reachMultiplier * 0.04) // ~4% average ER
     };
   }, [budgetForm.watch('totalBudget'), requirementsForm.watch('creatorTier')]);
 
@@ -327,7 +349,7 @@ export default function NewCampaignPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Main Form */}
+        {/* Main Form Area */}
         <div className="lg:col-span-8">
           <AnimatePresence mode="wait">
             {currentStep === 1 && (
@@ -383,11 +405,11 @@ export default function NewCampaignPage() {
                       </div>
 
                       <div className="space-y-3">
-                        <Label className="font-bold text-slate-700">Brief</Label>
+                        <Label className="font-bold text-slate-700">Campaign Brief</Label>
                         <RichTextEditor 
                           value={basicsForm.watch('description')}
                           onChange={(v) => basicsForm.setValue('description', v)}
-                          placeholder="What should creators do?"
+                          placeholder="What should creators do? Be specific about hooks and visuals."
                         />
                       </div>
                     </form>
@@ -412,12 +434,10 @@ export default function NewCampaignPage() {
                 <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
                   <CardHeader className="p-8 border-b bg-slate-50/30">
                     <CardTitle className="text-xl">Step 2: Creator Requirements</CardTitle>
-                    <CardDescription>Specify who you want to work with. Our AI will use these to find matches.</CardDescription>
+                    <CardDescription>Specify who you want to work with. AI will use these to find matches.</CardDescription>
                   </CardHeader>
                   <CardContent className="p-8 space-y-10">
                     <form id="requirements-form" onSubmit={requirementsForm.handleSubmit(onRequirementsSubmit)} className="space-y-10">
-                      
-                      {/* Creator Tier */}
                       <div className="space-y-4">
                         <Label className="font-bold text-slate-700">Creator Tier</Label>
                         <RadioGroup 
@@ -440,7 +460,6 @@ export default function NewCampaignPage() {
                         </RadioGroup>
                       </div>
 
-                      {/* Performance & Niche */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-4">
                           <Label className="font-bold text-slate-700">Min. Engagement Rate (%)</Label>
@@ -465,7 +484,6 @@ export default function NewCampaignPage() {
                         </div>
                       </div>
 
-                      {/* Niches Grid */}
                       <div className="space-y-4">
                         <Label className="font-bold text-slate-700">Target Niches (Select up to 5)</Label>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -491,31 +509,6 @@ export default function NewCampaignPage() {
                         </div>
                       </div>
 
-                      {/* Demographics */}
-                      <div className="space-y-6 pt-4 border-t border-slate-50">
-                        <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest">Audience Demographics</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                          <div className="space-y-4">
-                            <Label className="font-bold text-slate-700">Target Locations</Label>
-                            <Input placeholder="e.g. United States, India" {...requirementsForm.register('targetLocations.0')} className="h-11 rounded-xl bg-slate-50 border-none" />
-                          </div>
-                          <div className="space-y-4">
-                            <Label className="font-bold text-slate-700">Audience Gender</Label>
-                            <Select onValueChange={(v) => requirementsForm.setValue('audienceGender', v as any)} defaultValue="ALL">
-                              <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-none font-bold">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="ALL">All Genders</SelectItem>
-                                <SelectItem value="FEMALE">Mostly Female</SelectItem>
-                                <SelectItem value="MALE">Mostly Male</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Campaign Terms */}
                       <div className="flex flex-col sm:flex-row items-center gap-6 p-6 rounded-3xl bg-slate-50 border border-slate-100">
                         <div className="flex items-center gap-4 flex-1">
                           <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center">
@@ -573,7 +566,7 @@ export default function NewCampaignPage() {
                               {...budgetForm.register('totalBudget', { valueAsNumber: true })}
                             />
                           </div>
-                          <p className="text-xs text-slate-400 font-medium">Market average for this niche: ₹45,000</p>
+                          <p className="text-xs text-slate-400 font-medium">Baalvion AI Suggestion: ₹45,000 for this niche.</p>
                         </div>
                         <div className="space-y-4">
                           <Label className="font-bold text-slate-700">Budget Per Creator Range</Label>
@@ -593,16 +586,16 @@ export default function NewCampaignPage() {
                         </div>
                       </div>
 
-                      {/* Payment Method */}
+                      {/* Payment Method Selection */}
                       <div className="space-y-4">
-                        <Label className="font-bold text-slate-700">Payment Infrastructure</Label>
+                        <Label className="font-bold text-slate-700">Escrow Payout Infrastructure</Label>
                         <RadioGroup 
                           defaultValue={budgetForm.getValues('paymentMethod')}
                           onValueChange={(v: any) => budgetForm.setValue('paymentMethod', v)}
                           className="grid grid-cols-1 sm:grid-cols-3 gap-4"
                         >
                           {[
-                            { id: 'UPI', label: 'UPI ID', icon: Zap },
+                            { id: 'UPI', label: 'UPI VPA', icon: Zap },
                             { id: 'CARD', label: 'Credit Card', icon: CreditCard },
                             { id: 'BANK', label: 'Bank Transfer', icon: Building2 },
                           ].map((m) => (
@@ -619,16 +612,18 @@ export default function NewCampaignPage() {
 
                       <Separator className="opacity-50" />
 
-                      {/* Scheduling Grid */}
+                      {/* Milestones Scheduling */}
                       <div className="space-y-6">
-                        <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest">Project Milestones</h3>
+                        <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-primary" /> Project Milestones
+                        </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {[
-                            { id: 'startDate', label: 'Campaign Launch', icon: Zap },
-                            { id: 'endDate', label: 'Campaign End', icon: Clock },
-                            { id: 'applicationDeadline', label: 'Hiring Closes', icon: Users },
-                            { id: 'submissionDeadline', label: 'Submission Due', icon: Save },
-                            { id: 'postLiveDate', label: 'Content Live', icon: Globe },
+                            { id: 'startDate', label: 'Campaign Window Starts', icon: Zap },
+                            { id: 'endDate', label: 'Campaign Window Ends', icon: Clock },
+                            { id: 'applicationDeadline', label: 'Creator Hiring Closes', icon: Users },
+                            { id: 'submissionDeadline', label: 'Work Submission Due', icon: Save },
+                            { id: 'postLiveDate', label: 'Final Content Live', icon: Globe },
                           ].map((field) => (
                             <div key={field.id} className="space-y-2">
                               <Label className="font-bold text-slate-700 text-xs">{field.label}</Label>
@@ -666,16 +661,43 @@ export default function NewCampaignPage() {
                     </Button>
                     <Button form="budget-form" disabled={isSaving} className="rounded-xl font-black px-10 h-12">
                       {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Next: Review & Launch <ArrowRight className="ml-2 h-4 w-4" />
+                      Final: Review & Launch <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </CardFooter>
+                </Card>
+              </motion.div>
+            )}
+
+            {currentStep === 4 && (
+              <motion.div
+                key="step4"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="space-y-8"
+              >
+                <Card className="border-none shadow-2xl rounded-[3rem] overflow-hidden bg-white text-center p-12">
+                  <div className="mx-auto h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center mb-8">
+                    <Rocket className="h-12 w-12 text-primary" />
+                  </div>
+                  <h2 className="text-3xl font-black text-slate-900 mb-4">Ready to Launch?</h2>
+                  <p className="text-slate-500 max-w-md mx-auto mb-10 leading-relaxed font-medium">
+                    Your campaign draft is saved. Review all details one last time before making it visible to thousands of verified creators.
+                  </p>
+                  <div className="flex flex-col sm:flex-row justify-center gap-4">
+                    <Button variant="outline" className="rounded-xl h-14 px-10 font-bold" onClick={() => setCurrentStep(1)}>
+                      Review Details
+                    </Button>
+                    <Button className="rounded-xl h-14 px-10 font-black shadow-2xl shadow-primary/20" onClick={() => router.push('/dashboard/brand')}>
+                      Confirm & Launch Live
+                    </Button>
+                  </div>
                 </Card>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Sidebar Context */}
+        {/* Reach Insights Sidebar */}
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-none shadow-xl shadow-primary/5 rounded-3xl overflow-hidden bg-slate-900 text-white">
             <CardContent className="p-8 space-y-6">
@@ -683,7 +705,7 @@ export default function NewCampaignPage() {
                 <TrendingUp className="h-6 w-6 text-emerald-400" />
               </div>
               <div className="space-y-4">
-                <h3 className="text-xl font-black">Estimated Reach</h3>
+                <h3 className="text-xl font-black">AI Reach Potential</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Potential Reach</p>
@@ -697,8 +719,8 @@ export default function NewCampaignPage() {
                 <Progress value={85} className="h-1 bg-white/10" />
                 <p className="text-slate-400 text-xs leading-relaxed font-medium">
                   {currentStep === 3 
-                    ? "Your budget allows for ~15 high-quality Micro creators. This is optimized for high conversion in your selected niche." 
-                    : "Complete Step 3 to see how your budget maps to market reach."
+                    ? `Based on ₹${(budgetForm.watch('totalBudget') || 0).toLocaleString()}, your campaign is optimized for high conversion within the ${requirementsForm.watch('creatorTier')} tier.` 
+                    : "Complete Step 3 to see how your budget maps to global reach potential."
                   }
                 </p>
               </div>
@@ -712,12 +734,12 @@ export default function NewCampaignPage() {
             <CardContent className="p-6 space-y-4">
               {[
                 { title: 'Escrow Security', desc: 'Funds are held securely and released only after your approval.' },
-                { title: 'Payment Window', desc: 'Creator payouts clear 48h after the post-live date validation.' },
-                { title: 'Scheduling Tip', desc: 'Allow at least 7 days between hiring and submission for best quality.' },
+                { title: 'Payout Window', desc: 'Creators are paid 48h after post-live validation.' },
+                { title: 'Match Efficiency', desc: 'AI suggests ~15 creators matching your exact profile requirements.' },
               ].map((item, i) => (
                 <div key={i} className="flex gap-3">
                   <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                    <Check className="h-3 w-3 text-primary" />
                   </div>
                   <div className="space-y-0.5">
                     <p className="text-xs font-black text-slate-900 uppercase">{item.title}</p>
