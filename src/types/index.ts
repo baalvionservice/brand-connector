@@ -406,3 +406,26 @@ export interface CreatorNote {
   type: 'AI_IDEA' | 'MANUAL';
   createdAt: string;
 }
+
+export type FraudAlertType = 'FOLLOWER_SPIKE' | 'HIGH_ENGAGEMENT' | 'MULTI_ACCOUNT_IP' | 'SUSPICIOUS_PAYOUT';
+
+export interface FraudAlert {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  type: FraudAlertType;
+  riskScore: number;
+  description: string;
+  status: 'PENDING' | 'UNDER_REVIEW' | 'RESOLVED' | 'DISMISSED';
+  metadata: {
+    ipAddress?: string;
+    delta?: string;
+    connectedAccounts?: string[];
+    [key: string]: any;
+  };
+  createdAt: string;
+  updatedAt: string;
+  adminNote?: string;
+  feedback?: 'ACCURATE' | 'FALSE_POSITIVE' | 'INCONCLUSIVE';
+}

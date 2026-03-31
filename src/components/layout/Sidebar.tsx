@@ -80,6 +80,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Content Review', href: '/admin/content', icon: ShieldAlert },
     { name: 'Verification Queue', href: '/admin/creators/verify', icon: ShieldCheck },
     { name: 'Moderation Flow', href: '/admin/campaigns', icon: ShieldAlert },
+    { name: 'Fraud & Safety', href: '/admin/fraud', icon: ShieldAlert },
     { name: 'AI Monitoring', href: '/admin/ai', icon: Cpu },
     { name: 'Financial Control', href: '/admin/finance', icon: IndianRupee },
     { name: 'Plan & Tiers', href: '/admin/plans', icon: CreditCard },
