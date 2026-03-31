@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "UserProfile": {
@@ -25,6 +24,25 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "email", "role"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Feedback left by a brand for a creator after a campaign.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "brandId": { "type": "string" },
+        "brandName": { "type": "string" },
+        "brandLogo": { "type": "string" },
+        "campaignId": { "type": "string" },
+        "campaignTitle": { "type": "string" },
+        "rating": { "type": "number", "minimum": 1, "maximum": 5 },
+        "comment": { "type": "string" },
+        "response": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "creatorId", "brandId", "rating", "comment", "createdAt"]
     },
     "Conversation": {
       "title": "Conversation",
@@ -205,6 +223,10 @@
     "/users/{userId}": {
       "schema": "UserProfile",
       "description": "User profiles and roles."
+    },
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Brand reviews for creators."
     },
     "/conversations/{conversationId}": {
       "schema": "Conversation",

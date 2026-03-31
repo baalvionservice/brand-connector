@@ -21,7 +21,8 @@ import {
   IndianRupee,
   Clock,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Loader2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -32,56 +33,63 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-// Mock data generator for the public profile
-const getCreatorData = (username: string) => ({
-  fullName: 'Sarah Chen',
-  username: username || 'sarah_creates',
-  bio: 'Visual storyteller and tech enthusiast. I help brands reach Gen-Z through high-energy unboxings and aesthetic lifestyle content. 5+ years of experience in content production.',
-  photoURL: 'https://picsum.photos/seed/sarah/400/400',
-  coverURL: 'https://picsum.photos/seed/baalvion-cover/1200/400',
-  location: 'Mumbai, India',
-  rating: 4.9,
-  reviewCount: 124,
-  isVerified: true,
-  niches: ['Tech & Gadgets', 'Lifestyle', 'Gaming', 'Education'],
-  socialStats: {
-    instagram: { followers: '850k', er: '5.8%', color: 'text-pink-600', icon: Instagram },
-    youtube: { followers: '1.2M', er: '4.2%', color: 'text-red-600', icon: Youtube },
-    tiktok: { followers: '420k', er: '8.1%', color: 'text-slate-900', icon: Music2 },
-  },
-  baseRates: [
-    { deliverable: 'Instagram Reel (30-60s)', price: '₹45,000' },
-    { deliverable: 'YouTube Dedicated Video', price: '₹1,20,000' },
-    { deliverable: 'TikTok Product Showcase', price: '₹35,000' },
-    { deliverable: 'Static Feed Post + Story', price: '₹25,000' },
-  ],
-  portfolio: [
-    { id: 1, title: 'Lumina Tech Unboxing', type: 'VIDEO', url: 'https://picsum.photos/seed/p1/600/800' },
-    { id: 2, title: 'EcoVibe Lifestyle Shot', type: 'IMAGE', url: 'https://picsum.photos/seed/p2/600/800' },
-    { id: 3, title: 'Gaming Setup Tour', type: 'VIDEO', url: 'https://picsum.photos/seed/p3/600/800' },
-    { id: 4, title: 'Morning Routine', type: 'VIDEO', url: 'https://picsum.photos/seed/p4/600/800' },
-  ],
-  reviews: [
-    { id: 1, user: 'Lumina Tech', rating: 5, comment: 'Sarah delivered ahead of schedule and the content quality was exceptional. Our ROI was 4.2x.', date: '2 months ago' },
-    { id: 2, user: 'FitFlow', rating: 5, comment: 'Highly professional. Her audience is very engaged and actually asks questions about the product.', date: '4 months ago' },
-  ]
-});
+import { CreatorReviews } from '@/components/profile/CreatorReviews';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, query, where, limit } from 'firebase/firestore';
+import { CreatorProfile } from '@/types';
 
 export default function CreatorPublicProfile() {
   const params = useParams();
   const username = params.username as string;
-  const data = getCreatorData(username);
+  const db = useFirestore();
+
+  // Fetch creator profile by username
+  const creatorQuery = React.useMemo(() => {
+    return query(
+      collection(db, 'creators'),
+      where('username', '==', username),
+      limit(1)
+    );
+  }, [db, username]);
+
+  const { data: creatorResults, loading } = useCollection<CreatorProfile>(creatorQuery);
+  const data = creatorResults?.[0];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 text-center p-8">
+        <h1 className="text-4xl font-black text-slate-900 mb-4">Creator Not Found</h1>
+        <p className="text-slate-500 mb-8">The creator profile you are looking for does not exist or has been moved.</p>
+        <Link href="/">
+          <Button className="rounded-xl font-bold">Return Home</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  // Base rates formatting
+  const formattedRates = Object.entries(data.baseRates || {}).map(([key, val]) => ({
+    deliverable: key.charAt(0).toUpperCase() + key.slice(1) + ' Content',
+    price: `₹${Number(val).toLocaleString()}`
+  }));
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
       {/* Hero / Header Section */}
       <div className="relative h-[300px] md:h-[400px] w-full overflow-hidden">
         <Image 
-          src={data.coverURL} 
+          src={data.photoURL} // Using profile photo as cover placeholder if cover is missing
           alt="Cover" 
           fill 
-          className="object-cover" 
+          className="object-cover blur-3xl opacity-50" 
           priority
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
@@ -91,19 +99,17 @@ export default function CreatorPublicProfile() {
             <div className="relative group">
               <Avatar className="h-32 w-32 md:h-40 md:w-40 border-4 border-white shadow-2xl ring-4 ring-primary/20">
                 <AvatarImage src={data.photoURL} />
-                <AvatarFallback className="text-4xl font-black">S</AvatarFallback>
+                <AvatarFallback className="text-4xl font-black">{data.username[0]}</AvatarFallback>
               </Avatar>
-              {data.isVerified && (
-                <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-lg">
-                  <CheckCircle2 className="h-8 w-8 text-primary fill-primary/10" />
-                </div>
-              )}
+              <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-1 shadow-lg">
+                <CheckCircle2 className="h-8 w-8 text-primary fill-primary/10" />
+              </div>
             </div>
             
             <div className="flex-1 space-y-2 mb-2">
               <div className="flex flex-col md:flex-row md:items-center gap-3 justify-center md:justify-start">
                 <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight">
-                  {data.fullName}
+                  {data.username}
                 </h1>
                 <Badge className="bg-primary/20 backdrop-blur-md border-primary/30 text-white w-fit self-center">
                   @{data.username}
@@ -111,18 +117,18 @@ export default function CreatorPublicProfile() {
               </div>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 text-white/90 font-medium">
                 <span className="flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4" /> {data.location}
+                  <MapPin className="h-4 w-4" /> {data.location || 'Global'}
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" /> 
-                  {data.rating} ({data.reviewCount} Reviews)
+                  {data.rating || '5.0'} Verified
                 </span>
               </div>
             </div>
 
             <div className="flex gap-3 mb-2">
               <Button size="lg" className="rounded-xl font-bold shadow-xl shadow-primary/20 px-8">
-                Work with Sarah <ArrowRight className="ml-2 h-4 w-4" />
+                Work with {data.username} <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
               <Button size="lg" variant="outline" className="rounded-xl bg-white/10 backdrop-blur-md text-white border-white/30 hover:bg-white hover:text-primary transition-all">
                 <Share2 className="h-5 w-5" />
@@ -141,7 +147,7 @@ export default function CreatorPublicProfile() {
           {/* About Section */}
           <section className="space-y-4">
             <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-              <Zap className="h-5 w-5 text-primary" /> About Sarah
+              <Zap className="h-5 w-5 text-primary" /> Professional Bio
             </h3>
             <p className="text-lg text-slate-600 leading-relaxed font-medium">
               {data.bio}
@@ -157,87 +163,56 @@ export default function CreatorPublicProfile() {
 
           {/* Social Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Object.entries(data.socialStats).map(([platform, stats]: [string, any]) => (
-              <Card key={platform} className="border-none shadow-sm shadow-slate-200/50 rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="bg-slate-50 p-2.5 rounded-xl">
-                      <stats.icon className={`h-6 w-6 ${stats.color}`} />
-                    </div>
-                    <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 text-[10px] font-black">
-                      VERIFIED REACH
-                    </Badge>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{platform}</p>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-black text-slate-900">{stats.followers}</span>
-                      <span className="text-xs font-bold text-slate-400">Fans</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-sm font-bold text-emerald-600">
-                      <TrendingUp className="h-3.5 w-3.5" />
-                      {stats.er} Avg. ER
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Portfolio Grid */}
-          <section className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" /> Recent Collaborations
-              </h3>
-              <Button variant="link" className="text-primary font-bold">View Full Portfolio</Button>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {data.portfolio.map((item) => (
-                <div key={item.id} className="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-lg cursor-pointer">
-                  <Image src={item.url} alt={item.title} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
-                    <p className="text-xs font-black text-white/80 uppercase mb-1">{item.type}</p>
-                    <p className="text-sm font-bold text-white leading-tight">{item.title}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Reviews Section */}
-          <section className="space-y-6">
-            <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary" /> Brand Feedback
-            </h3>
-            <div className="space-y-4">
-              {data.reviews.map(review => (
-                <Card key={review.id} className="border-none shadow-sm shadow-slate-200/50 rounded-2xl bg-white overflow-hidden">
+            {[
+              { id: 'instagram', icon: Instagram, color: 'text-pink-600', name: 'Instagram' },
+              { id: 'youtube', icon: Youtube, color: 'text-red-600', name: 'YouTube' },
+              { id: 'tiktok', icon: Music2, color: 'text-slate-900', name: 'TikTok' },
+            ].map((plat) => {
+              const stats = data.socialStats?.[plat.id];
+              if (!stats || !stats.connected) return null;
+              return (
+                <Card key={plat.id} className="border-none shadow-sm shadow-slate-200/50 rounded-2xl overflow-hidden hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 border border-slate-100">
-                          <AvatarFallback className="bg-primary/5 text-primary font-bold">{review.user[0]}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-bold text-slate-900">{review.user}</p>
-                          <p className="text-xs text-slate-400 font-medium">{review.date}</p>
-                        </div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="bg-slate-50 p-2.5 rounded-xl">
+                        <plat.icon className={`h-6 w-6 ${plat.color}`} />
                       </div>
-                      <div className="flex gap-0.5">
-                        {[...Array(review.rating)].map((_, i) => (
-                          <Star key={i} className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                        ))}
+                      <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 text-[10px] font-black">
+                        VERIFIED
+                      </Badge>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">{plat.name}</p>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-black text-slate-900">Syncing...</span>
                       </div>
                     </div>
-                    <p className="text-slate-600 font-medium leading-relaxed italic">
-                      "{review.comment}"
-                    </p>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          </section>
+              );
+            })}
+          </div>
+
+          {/* Reviews Section - THE NEW COMPONENT */}
+          <CreatorReviews creatorId={data.userId} />
+
+          {/* Portfolio Grid */}
+          {data.portfolioSamples && data.portfolioSamples.length > 0 && (
+            <section className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" /> Recent Collaborations
+                </h3>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {data.portfolioSamples.map((url, idx) => (
+                  <div key={idx} className="group relative aspect-[3/4] rounded-2xl overflow-hidden shadow-lg cursor-pointer">
+                    <Image src={url} alt="Portfolio" fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
         </div>
 
         {/* Right Column: Rate Card & CTA */}
@@ -261,7 +236,7 @@ export default function CreatorPublicProfile() {
                 <Progress value={98} className="h-2 bg-white/20" />
               </div>
               <p className="text-sm text-white/80 font-medium leading-relaxed">
-                Sarah's audience demographics align perfectly with premium lifestyle brands. Her high engagement rate on Reels suggests viral potential for product launches.
+                Matches your audience demographics perfectly. High engagement rate suggested for product launches.
               </p>
             </CardContent>
           </Card>
@@ -276,12 +251,16 @@ export default function CreatorPublicProfile() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-slate-100">
-                {data.baseRates.map((item, idx) => (
+                {formattedRates.length > 0 ? formattedRates.map((item, idx) => (
                   <div key={idx} className="flex items-center justify-between p-6 hover:bg-slate-50 transition-colors">
                     <span className="text-sm font-bold text-slate-700">{item.deliverable}</span>
                     <span className="text-md font-black text-primary">{item.price}</span>
                   </div>
-                ))}
+                )) : (
+                  <div className="p-8 text-center text-slate-400 text-sm font-bold uppercase tracking-widest">
+                    Request rates from creator
+                  </div>
+                )}
               </div>
             </CardContent>
             <CardFooter className="p-8 pt-0 flex flex-col gap-4">

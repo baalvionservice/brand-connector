@@ -54,6 +54,20 @@ export interface User {
   updatedAt: string;
 }
 
+export interface Review {
+  id: string;
+  creatorId: string;
+  brandId: string;
+  brandName: string;
+  brandLogo?: string;
+  campaignId: string;
+  campaignTitle: string;
+  rating: number;
+  comment: string;
+  response?: string;
+  createdAt: string;
+}
+
 export interface CreatorProfile {
   id: string;
   userId: string;
