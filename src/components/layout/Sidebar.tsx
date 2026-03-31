@@ -16,7 +16,8 @@ import {
   Zap,
   ArrowLeftRight,
   BarChart3,
-  ImageIcon
+  ImageIcon,
+  IndianRupee
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Dashboard', href: '/dashboard/creator', icon: LayoutDashboard },
     { name: 'Analytics', href: '/dashboard/creator/analytics', icon: BarChart3 },
     { name: 'Portfolio', href: '/dashboard/creator/portfolio', icon: ImageIcon },
+    { name: 'Rate Card', href: '/dashboard/creator/rates', icon: IndianRupee },
     { name: 'Find Campaigns', href: '/dashboard/creator/campaigns', icon: Search },
     { name: 'My Applications', href: '/dashboard/applications', icon: Briefcase },
     { name: 'Wallet', href: '/dashboard/creator/wallet', icon: Wallet },

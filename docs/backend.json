@@ -87,6 +87,7 @@
         "niches": { "type": "array", "items": { "type": "string" } },
         "socialStats": { "type": "object" },
         "baseRates": { "type": "object" },
+        "packages": { "type": "array" },
         "location": { "type": "string" },
         "rating": { "type": "number" },
         "onboardingStatus": { "type": "string", "enum": ["PENDING", "IN_PROGRESS", "COMPLETED"] },

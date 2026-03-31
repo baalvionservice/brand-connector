@@ -68,6 +68,14 @@ export interface Review {
   createdAt: string;
 }
 
+export interface PackageDeal {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  deliverables: string[];
+}
+
 export interface CreatorProfile {
   id: string;
   userId: string;
@@ -76,7 +84,8 @@ export interface CreatorProfile {
   photoURL: string;
   niches: string[];
   socialStats: Record<string, any>;
-  baseRates: Record<string, string>;
+  baseRates: Record<string, number>;
+  packages?: PackageDeal[];
   location?: string;
   rating: number;
   onboardingStatus: OnboardingStatus;
