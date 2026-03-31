@@ -13,6 +13,7 @@ import { Pricing } from '@/components/landing/Pricing';
 import { Testimonials } from '@/components/landing/Testimonials';
 import { CreatorShowcase } from '@/components/landing/CreatorShowcase';
 import { ActiveCampaigns } from '@/components/landing/ActiveCampaigns';
+import { FAQ } from '@/components/landing/FAQ';
 
 export default function LandingPage() {
   const features = [
@@ -244,6 +245,9 @@ export default function LandingPage() {
 
         {/* Pricing Section */}
         <Pricing />
+
+        {/* FAQ Section */}
+        <FAQ />
 
         {/* CTA Section */}
         <section className="w-full py-24 bg-primary text-primary-foreground overflow-hidden relative">
