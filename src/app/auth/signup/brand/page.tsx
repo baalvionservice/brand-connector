@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -24,9 +23,10 @@ import {
 } from 'lucide-react';
 import { 
   createUserWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  sendEmailVerification
 } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
@@ -54,6 +54,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
 
 const brandSignupSchema = z.object({
   // Step 1
@@ -148,6 +149,9 @@ export default function BrandSignupPage() {
       const user = userCredential.user;
 
       await updateProfile(user, { displayName: values.fullName });
+      
+      // Send verification email
+      await sendEmailVerification(user);
 
       // 2. Create User Document
       const userProfileData = {
@@ -190,11 +194,11 @@ export default function BrandSignupPage() {
       });
 
       toast({
-        title: "Welcome to Baalvion!",
-        description: "Your brand account has been successfully created.",
+        title: "Account Created!",
+        description: "Please verify your email to continue.",
       });
 
-      router.push('/dashboard/brand');
+      router.push('/auth/verify-email');
     } catch (err: any) {
       console.error(err);
       toast({

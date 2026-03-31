@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -8,11 +7,11 @@ import {
   Bell, 
   Search, 
   Menu,
-  X,
   ChevronDown,
   LogOut,
   User,
-  Settings
+  Settings,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,28 +23,49 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { currentUser, userProfile, loading, signOut } = useAuth();
   const [role, setRole] = useState<'BRAND' | 'CREATOR'>('BRAND');
 
-  // Sync role state with URL for consistency in the mock
+  // Guard: Redirect if not logged in or not verified
   useEffect(() => {
-    if (pathname.includes('/dashboard/creator')) {
-      setRole('CREATOR');
-    } else if (pathname.includes('/dashboard/brand')) {
-      setRole('BRAND');
+    if (!loading) {
+      if (!currentUser) {
+        router.replace('/auth/login');
+      } else if (!currentUser.emailVerified) {
+        router.replace('/auth/verify-email');
+      } else if (userProfile) {
+        setRole(userProfile.role as 'BRAND' | 'CREATOR');
+      }
     }
-  }, [pathname]);
+  }, [currentUser, userProfile, loading, router]);
 
   const toggleRole = () => {
     const nextRole = role === 'BRAND' ? 'CREATOR' : 'BRAND';
     setRole(nextRole);
     router.push(`/dashboard/${nextRole.toLowerCase()}`);
   };
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push('/');
+  };
+
+  if (loading || (currentUser && !currentUser.emailVerified)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-slate-500 font-medium">Preparing your workspace...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/50">
@@ -93,10 +113,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </div>
                   <div className="hidden md:flex flex-col items-start">
                     <span className="text-xs font-bold leading-tight">
-                      {role === 'BRAND' ? 'Lumina Tech' : 'Sarah Chen'}
+                      {role === 'BRAND' ? (userProfile?.displayName || 'Lumina Tech') : (userProfile?.displayName || 'Sarah Chen')}
                     </span>
                     <span className="text-[10px] text-muted-foreground font-medium">
-                      {role === 'BRAND' ? 'Admin' : 'Pro Creator'}
+                      {role === 'BRAND' ? 'Brand Admin' : 'Verified Creator'}
                     </span>
                   </div>
                   <ChevronDown className="h-3 w-3 text-slate-400" />
@@ -112,7 +132,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <Settings className="mr-2 h-4 w-4" /> Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="rounded-lg py-2 text-red-600 hover:bg-red-50" onClick={() => router.push('/')}>
+                <DropdownMenuItem 
+                  className="rounded-lg py-2 text-red-600 hover:bg-red-50" 
+                  onClick={handleLogout}
+                >
                   <LogOut className="mr-2 h-4 w-4" /> Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>

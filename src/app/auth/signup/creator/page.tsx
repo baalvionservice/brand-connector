@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -26,7 +25,8 @@ import {
 } from 'lucide-react';
 import { 
   createUserWithEmailAndPassword,
-  updateProfile
+  updateProfile,
+  sendEmailVerification
 } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/firebase';
@@ -129,6 +129,9 @@ export default function CreatorSignupPage() {
       const user = userCredential.user;
 
       await updateProfile(user, { displayName: values.fullName });
+      
+      // Send verification email
+      await sendEmailVerification(user);
 
       const userProfileData = {
         id: user.uid,
@@ -174,11 +177,11 @@ export default function CreatorSignupPage() {
       });
 
       toast({
-        title: "Welcome to the spotlight!",
-        description: "Your creator profile has been created successfully.",
+        title: "Profile Created!",
+        description: "Please verify your email to access the marketplace.",
       });
 
-      router.push('/dashboard/creator');
+      router.push('/auth/verify-email');
     } catch (err: any) {
       console.error(err);
       toast({

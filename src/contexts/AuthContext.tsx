@@ -1,11 +1,10 @@
-
 'use client';
 
 import React, { createContext, useContext, useEffect, useReducer, ReactNode } from 'react';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { onIdTokenChanged, User as FirebaseUser, signOut as firebaseSignOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getDocument } from '@/lib/firestore';
-import { User, UserRole } from '@/types';
+import { User } from '@/types';
 
 interface AuthState {
   currentUser: FirebaseUser | null;
@@ -44,6 +43,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 
 interface AuthContextType extends AuthState {
   signOut: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,12 +51,22 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
+  const fetchProfile = async (uid: string) => {
+    try {
+      const profile = await getDocument<User>('users', uid);
+      dispatch({ type: 'SET_PROFILE', payload: profile });
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      dispatch({ type: 'SET_PROFILE', payload: null });
+    }
+  };
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    // onIdTokenChanged is better for tracking verification status changes
+    const unsubscribe = onIdTokenChanged(auth, async (user) => {
       dispatch({ type: 'SET_USER', payload: user });
       if (user) {
-        const profile = await getDocument<User>('users', user.uid);
-        dispatch({ type: 'SET_PROFILE', payload: profile });
+        await fetchProfile(user.uid);
       } else {
         dispatch({ type: 'SET_PROFILE', payload: null });
       }
@@ -67,11 +77,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOutAction = async () => {
-    await auth.signOut();
+    await firebaseSignOut(auth);
+  };
+
+  const refreshUser = async () => {
+    if (auth.currentUser) {
+      await auth.currentUser.reload();
+      const updatedUser = auth.currentUser;
+      dispatch({ type: 'SET_USER', payload: updatedUser });
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ ...state, signOut: signOutAction }}>
+    <AuthContext.Provider value={{ ...state, signOut: signOutAction, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
