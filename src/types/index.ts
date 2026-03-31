@@ -1,6 +1,8 @@
 
 export type UserRole = 'BRAND' | 'CREATOR' | 'ADMIN';
 
+export type BrandMemberRole = 'OWNER' | 'MANAGER' | 'REVIEWER' | 'VIEWER';
+
 export enum CampaignStatus {
   DRAFT = 'DRAFT',
   ACTIVE = 'ACTIVE',
@@ -67,6 +69,15 @@ export interface User {
   twoFactorEnabled?: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface BrandMember {
+  id: string;
+  userId: string;
+  email: string;
+  role: BrandMemberRole;
+  joinedAt: string;
+  lastActive?: string;
 }
 
 export interface Review {

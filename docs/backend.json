@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "UserProfile": {
@@ -26,6 +25,20 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "email", "role"]
+    },
+    "BrandMember": {
+      "title": "Brand Member",
+      "description": "A user who is part of a brand's team.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["OWNER", "MANAGER", "REVIEWER", "VIEWER"] },
+        "joinedAt": { "type": "string", "format": "date-time" },
+        "lastActive": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "email", "role", "joinedAt"]
     },
     "Review": {
       "title": "Review",
@@ -345,6 +358,10 @@
     "/brands/{brandId}": {
       "schema": "BrandProfile",
       "description": "Brand specific details."
+    },
+    "/brands/{brandId}/members/{memberId}": {
+      "schema": "BrandMember",
+      "description": "Team members for a brand."
     },
     "/campaigns/{campaignId}": {
       "schema": "Campaign",

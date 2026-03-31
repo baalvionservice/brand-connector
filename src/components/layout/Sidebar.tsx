@@ -19,7 +19,8 @@ import {
   ImageIcon,
   IndianRupee,
   Users,
-  LineChart
+  LineChart,
+  UserPlus
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -55,6 +56,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Find Creators', href: '/dashboard/brand/creators', icon: Users },
     { name: 'Matchmaking', href: '/dashboard/matchmaking', icon: Zap },
     { name: 'Deliverables', href: '/dashboard/brand/deliverables', icon: FileText },
+    { name: 'Team Hub', href: '/dashboard/brand/team', icon: UserPlus },
     { name: 'Wallet', href: '/dashboard/brand/wallet', icon: Wallet },
     { name: 'Messages', href: '/dashboard/brand/messages', icon: MessageSquare },
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
