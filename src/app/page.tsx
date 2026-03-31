@@ -11,6 +11,7 @@ import { HowItWorks } from '@/components/landing/HowItWorks';
 import { MatchingDemo } from '@/components/landing/MatchingDemo';
 import { Pricing } from '@/components/landing/Pricing';
 import { Testimonials } from '@/components/landing/Testimonials';
+import { CreatorShowcase } from '@/components/landing/CreatorShowcase';
 
 export default function LandingPage() {
   const features = [
@@ -187,6 +188,9 @@ export default function LandingPage() {
 
         {/* AI Matching Demo Section */}
         <MatchingDemo />
+
+        {/* Top Creators Showcase Section */}
+        <CreatorShowcase />
 
         {/* Features Section */}
         <section id="features" className="w-full py-24 md:py-32 bg-slate-50 overflow-hidden">
