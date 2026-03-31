@@ -37,7 +37,8 @@ import {
   Fingerprint,
   PieChart,
   Target,
-  TrendingUp
+  TrendingUp,
+  FileBox
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -84,6 +85,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'CRM Pipeline', href: '/admin/leads', icon: Target },
     { name: 'Sales Pipeline', href: '/admin/deals', icon: TrendingUp },
+    { name: 'Proposals', href: '/admin/proposals', icon: FileBox },
     { name: 'Brand Acquisition', href: '/admin/acquisition', icon: Search },
     { name: 'Outreach Manager', href: '/admin/outreach', icon: Megaphone },
     { name: 'Platform Analytics', href: '/admin/analytics', icon: PieChart },
