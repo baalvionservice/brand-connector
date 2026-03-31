@@ -226,6 +226,7 @@ export interface Campaign {
   targetAudience: string;
   niches: string[];
   budget: number;
+  escrowBalance?: number;
   startDate: string;
   endDate: string;
   status: CampaignStatus;
@@ -342,15 +343,19 @@ export interface TicketMessage {
 export interface Wallet {
   id: string;
   userId: string;
-  balance: number;
+  availableBalance: number;
+  escrowBalance: number;
   currency: string;
+  updatedAt: string;
 }
 
 export interface Transaction {
   id: string;
   walletId: string;
+  userId: string;
+  campaignId?: string;
   amount: number;
-  type: 'DEPOSIT' | 'WITHDRAWAL' | 'PAYMENT' | 'PAYOUT' | 'CREDIT' | 'DEBIT';
+  type: 'DEPOSIT' | 'WITHDRAWAL' | 'PAYMENT' | 'PAYOUT' | 'CREDIT' | 'DEBIT' | 'ESCROW_LOCK' | 'ESCROW_RELEASE' | 'FEE' | 'REFUND';
   status: TransactionStatus;
   description: string;
   createdAt: string;
