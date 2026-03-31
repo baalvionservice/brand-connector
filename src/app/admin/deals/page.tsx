@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useDealStore } from '@/store/useDealStore';
 import { useProposalStore } from '@/store/useProposalStore';
+import { useMatchingStore } from '@/store/useMatchingStore';
 import { PIPELINE_STAGES, Deal, DealStage } from '@/types/deal';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
@@ -41,6 +42,7 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { MatchingPanel } from '@/components/crm/MatchingPanel';
 import { 
   Select, 
   SelectContent, 
@@ -53,6 +55,7 @@ import { cn } from '@/lib/utils';
 export default function SalesPipelinePage() {
   const { fetchDeals, deals, loading, getDealsByStage, getInsights, selectDeal, selectedDeal, updateDeal, addNote } = useDealStore();
   const { createProposal, loading: propLoading } = useProposalStore();
+  const { clearMatches } = useMatchingStore();
   const { toast } = useToast();
   const router = useRouter();
   const insights = getInsights();
@@ -89,6 +92,11 @@ export default function SalesPipelinePage() {
       toast({ title: "Proposal Drafted", description: "Navigating to pricing workspace..." });
       router.push('/admin/proposals');
     }
+  };
+
+  const handleCloseDrawer = () => {
+    selectDeal(null);
+    clearMatches();
   };
 
   return (
@@ -217,7 +225,7 @@ export default function SalesPipelinePage() {
             <motion.div 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-[60]"
-              onClick={() => selectDeal(null)}
+              onClick={handleCloseDrawer}
             />
             <motion.aside
               initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
@@ -228,7 +236,7 @@ export default function SalesPipelinePage() {
                   <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase h-6 px-3">
                     Deal Workspace
                   </Badge>
-                  <Button variant="ghost" size="icon" className="rounded-full" onClick={() => selectDeal(null)}>
+                  <Button variant="ghost" size="icon" className="rounded-full" onClick={handleCloseDrawer}>
                     <X className="h-5 w-5" />
                   </Button>
                 </div>
@@ -278,7 +286,12 @@ export default function SalesPipelinePage() {
               </header>
 
               <ScrollArea className="flex-1">
-                <div className="p-8 space-y-8">
+                <div className="p-8 space-y-10">
+                  {/* AI MATCHING PANEL */}
+                  <MatchingPanel dealId={selectedDeal.id} />
+
+                  <Separator />
+
                   <section className="space-y-4">
                     <Button 
                       className="w-full h-12 rounded-xl font-black shadow-lg shadow-primary/20 uppercase text-xs tracking-widest"
