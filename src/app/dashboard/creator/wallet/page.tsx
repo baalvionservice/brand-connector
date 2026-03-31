@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -51,20 +52,12 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFirestore } from '@/firebase';
-import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, addDoc, doc, updateDoc, serverTimestamp, query, where, orderBy } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { TransactionHistory } from '@/components/payments/TransactionHistory';
 import { cn } from '@/lib/utils';
-
-// Mock Transaction Data
-const MOCK_TRANSACTIONS = [
-  { id: 'tx_1', date: '2024-07-15', campaign: 'AI Smart Home Review', amount: 45000, status: 'COMPLETED', type: 'CREDIT', brand: 'Lumina Tech' },
-  { id: 'tx_2', date: '2024-07-10', campaign: 'Withdrawal to Bank', amount: 25000, status: 'COMPLETED', type: 'DEBIT', bank: 'HDFC Bank ****4242' },
-  { id: 'tx_3', date: '2024-07-05', campaign: 'Sustainable Summer Reel', amount: 12500, status: 'PENDING', type: 'CREDIT', brand: 'EcoVibe' },
-  { id: 'tx_4', date: '2024-06-28', campaign: 'Night Recovery Launch', amount: 35000, status: 'COMPLETED', type: 'CREDIT', brand: 'Azure Skincare' },
-  { id: 'tx_5', date: '2024-06-20', campaign: 'Withdrawal to UPI', amount: 10000, status: 'COMPLETED', type: 'DEBIT', upi: 'sarah@okaxis' },
-];
 
 type PayoutStep = 'amount' | 'method' | 'confirm' | 'otp' | 'processing' | 'success';
 
@@ -79,6 +72,18 @@ export default function CreatorWalletPage() {
   const [payoutMethod, setPayoutMethod] = useState('upi');
   const [otpValue, setOtpValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 1. Fetch Transactions
+  const txQuery = useMemo(() => {
+    if (!userProfile?.id) return null;
+    return query(
+      collection(db, 'transactions'),
+      where('userId', '==', userProfile.id),
+      orderBy('createdAt', 'desc')
+    );
+  }, [db, userProfile?.id]);
+
+  const { data: transactions, loading: txLoading } = useCollection<any>(txQuery);
 
   const stats = {
     available: 62500,
@@ -115,7 +120,7 @@ export default function CreatorWalletPage() {
       userId: userProfile?.id || 'unknown',
       walletId: `wallet_${userProfile?.id || 'unknown'}`,
       amount: Number(amount),
-      type: 'DEBIT',
+      type: 'PAYOUT',
       status: 'PENDING',
       description: `Withdrawal via ${payoutMethod.toUpperCase()}`,
       payoutMethod: {
@@ -126,27 +131,18 @@ export default function CreatorWalletPage() {
     };
 
     try {
-      // 1. Create Transaction Record
-      const txRef = collection(db, 'transactions');
-      await addDoc(txRef, transactionData);
-
-      // 2. Update Wallet (In a real app, this would be a cloud function or atomic update)
+      await addDoc(collection(db, 'transactions'), transactionData);
+      
       const walletRef = doc(db, 'wallets', transactionData.walletId);
-      // We merge updates since wallets might not exist in the prototype mock
       updateDoc(walletRef, {
         availableBalance: stats.available - Number(amount),
         updatedAt: serverTimestamp()
-      }).catch(() => {
-        // Silently fail if wallet doc doesn't exist yet in mock
-      });
+      }).catch(() => {});
 
       setTimeout(() => {
         setCurrentStep('success');
         setIsSubmitting(false);
-        toast({
-          title: "Payout Successful",
-          description: "Your request has been registered.",
-        });
+        toast({ title: "Payout Successful", description: "Your request has been registered." });
       }, 2000);
     } catch (err: any) {
       errorEmitter.emitPermissionError(new FirestorePermissionError({
@@ -208,7 +204,7 @@ export default function CreatorWalletPage() {
                           <Input 
                             type="number" 
                             placeholder="5,000" 
-                            className="pl-12 h-16 rounded-2xl text-2xl font-black border-slate-100 bg-slate-50 focus-visible:ring-primary"
+                            className="h-16 pl-12 rounded-2xl text-2xl font-black border-slate-100 bg-slate-50 focus-visible:ring-primary"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                           />
@@ -437,98 +433,13 @@ export default function CreatorWalletPage() {
         </Card>
       </div>
 
-      {/* Transaction History */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-headline font-bold text-slate-900 flex items-center gap-2">
-            <History className="h-5 w-5 text-primary" />
-            Transaction History
-          </h2>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-white rounded-xl h-8 px-3 font-bold border-slate-200">
-              All Types
-            </Badge>
-            <Badge variant="outline" className="bg-white rounded-xl h-8 px-3 font-bold border-slate-200">
-              Last 30 Days
-            </Badge>
-          </div>
-        </div>
-
-        <Card className="border-none shadow-sm shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="hover:bg-transparent border-slate-50">
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400 pl-8">Date</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400">Details</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400">Type</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400">Amount</TableHead>
-                  <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400 text-right pr-8">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {MOCK_TRANSACTIONS.map((tx) => (
-                  <TableRow key={tx.id} className="group hover:bg-slate-50 transition-colors border-slate-50 h-20">
-                    <TableCell className="pl-8">
-                      <span className="text-sm font-bold text-slate-500">
-                        {new Date(tx.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-900">{tx.campaign}</span>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                          {tx.brand || tx.bank || tx.upi}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {tx.type === 'CREDIT' ? (
-                          <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center">
-                            <ArrowDownLeft className="h-4 w-4 text-emerald-600" />
-                          </div>
-                        ) : (
-                          <div className="h-8 w-8 rounded-full bg-orange-50 flex items-center justify-center">
-                            <ArrowUpRight className="h-4 w-4 text-orange-600" />
-                          </div>
-                        )}
-                        <span className={cn(
-                          "text-[10px] font-black uppercase",
-                          tx.type === 'CREDIT' ? "text-emerald-600" : "text-orange-600"
-                        )}>
-                          {tx.type}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className={cn(
-                        "text-lg font-black",
-                        tx.type === 'CREDIT' ? "text-emerald-600" : "text-slate-900"
-                      )}>
-                        {tx.type === 'CREDIT' ? '+' : '-'} ₹{tx.amount.toLocaleString()}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right pr-8">
-                      <Badge className={cn(
-                        "font-black text-[9px] uppercase border-none px-3 py-1 rounded-full",
-                        tx.status === 'COMPLETED' ? "bg-emerald-100 text-emerald-600" : "bg-orange-100 text-orange-600"
-                      )}>
-                        {tx.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-          <CardFooter className="bg-slate-50/50 p-6 flex justify-center border-t border-slate-50">
-            <Button variant="ghost" className="text-slate-400 font-bold text-xs hover:text-primary rounded-xl">
-              Load More History
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
+      {/* Shared Transaction History Component */}
+      <TransactionHistory 
+        data={transactions} 
+        loading={txLoading} 
+        title="Personal Earnings Ledger"
+        description="Comprehensive audit of campaign payouts, milestone releases, and platform settlements."
+      />
 
       {/* Financial Security Panel */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

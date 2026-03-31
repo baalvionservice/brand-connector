@@ -64,7 +64,12 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { useFirestore, useCollection } from '@/firebase';
+import { collection, query, where, orderBy } from 'firebase/firestore';
+import { TransactionHistory } from '@/components/payments/TransactionHistory';
 import { cn } from '@/lib/utils';
 
 // Mock Data for Spend Chart
@@ -77,38 +82,31 @@ const SPEND_DATA = [
   { month: 'Jul', amount: 185000 },
 ];
 
-// Mock Transactions
-const MOCK_TRANSACTIONS = [
-  { id: 'tx_101', date: '2024-07-20', campaign: 'AI Smart Home Review', creator: 'Sarah Chen', amount: 45000, type: 'ESCROW_LOCK', status: 'COMPLETED' },
-  { id: 'tx_102', date: '2024-07-18', campaign: 'AI Smart Home Review', creator: 'Sarah Chen', amount: 6750, type: 'FEE', status: 'COMPLETED' },
-  { id: 'tx_103', date: '2024-07-15', campaign: 'Sustainable Summer Reel', creator: 'Alex Rivers', amount: 12500, type: 'PAYOUT', status: 'COMPLETED' },
-  { id: 'tx_104', date: '2024-07-10', campaign: 'Global Fitness Drive', creator: 'Marcus Thorne', amount: 25000, type: 'REFUND', status: 'COMPLETED' },
-  { id: 'tx_105', date: '2024-07-05', campaign: 'N/A', creator: 'N/A', amount: 100000, type: 'DEPOSIT', status: 'COMPLETED' },
-];
-
-const CAMPAIGNS = ['AI Smart Home Review', 'Sustainable Summer Reel', 'Global Fitness Drive', 'Night Recovery Launch'];
-
 export default function BrandWalletPage() {
   const { toast } = useToast();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterCampaign, setFilterCampaign] = useState('all');
+  const { userProfile } = useAuth();
+  const db = useFirestore();
+  
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [depositAmount, setDepositAmount] = useState('');
+
+  // 1. Fetch Real-time Transactions
+  const txQuery = useMemo(() => {
+    if (!userProfile?.id) return null;
+    return query(
+      collection(db, 'transactions'),
+      where('userId', '==', userProfile.id),
+      orderBy('createdAt', 'desc')
+    );
+  }, [db, userProfile?.id]);
+
+  const { data: transactions, loading: txLoading } = useCollection<any>(txQuery);
 
   const stats = {
     totalSpent: 842500,
     escrowed: 125000,
     available: 45000,
   };
-
-  const filteredTransactions = useMemo(() => {
-    return MOCK_TRANSACTIONS.filter(tx => {
-      const matchesSearch = tx.campaign.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           tx.creator.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCampaign = filterCampaign === 'all' || tx.campaign === filterCampaign;
-      return matchesSearch && matchesCampaign;
-    });
-  }, [searchQuery, filterCampaign]);
 
   const handleDeposit = () => {
     if (!depositAmount || Number(depositAmount) <= 0) return;
@@ -118,17 +116,6 @@ export default function BrandWalletPage() {
     });
     setIsDepositOpen(false);
     setDepositAmount('');
-  };
-
-  const getTypeConfig = (type: string) => {
-    switch (type) {
-      case 'ESCROW_LOCK': return { label: 'Escrow Lock', color: 'bg-blue-100 text-blue-600', icon: ShieldCheck };
-      case 'PAYOUT': return { label: 'Payout', color: 'bg-emerald-100 text-emerald-600', icon: ArrowUpRight };
-      case 'REFUND': return { label: 'Refund', color: 'bg-orange-100 text-orange-600', icon: ArrowDownLeft };
-      case 'FEE': return { label: 'Platform Fee', color: 'bg-slate-100 text-slate-600', icon: Zap };
-      case 'DEPOSIT': return { label: 'Deposit', color: 'bg-primary/10 text-primary', icon: Plus };
-      default: return { label: type, color: 'bg-slate-100 text-slate-600', icon: FileText };
-    }
   };
 
   return (
@@ -147,7 +134,7 @@ export default function BrandWalletPage() {
           <Dialog open={isDepositOpen} onOpenChange={setIsDepositOpen}>
             <DialogTrigger asChild>
               <Button className="rounded-xl font-bold shadow-lg shadow-primary/20 h-11 px-6">
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="mr-2 h-4 w-4 mr-2" />
                 Add Funds
               </Button>
             </DialogTrigger>
@@ -245,7 +232,7 @@ export default function BrandWalletPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Spend Chart */}
-        <div className="lg:col-span-8 space-y-8">
+        <div className="lg:col-span-12 space-y-8">
           <Card className="border-none shadow-sm shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
             <CardHeader className="p-8 border-b bg-slate-50/50 flex flex-row items-center justify-between">
               <div>
@@ -298,187 +285,40 @@ export default function BrandWalletPage() {
             </CardContent>
           </Card>
 
-          {/* Transaction History */}
-          <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
-              <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                <History className="h-5 w-5 text-primary" />
-                Transaction History
-              </h2>
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="relative w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input 
-                    placeholder="Search creator or campaign..." 
-                    className="pl-10 h-10 rounded-xl bg-white border-slate-200"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                <Select value={filterCampaign} onValueChange={setFilterCampaign}>
-                  <SelectTrigger className="w-[200px] h-10 rounded-xl bg-white font-bold text-xs">
-                    <SelectValue placeholder="All Campaigns" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all" className="font-bold">All Campaigns</SelectItem>
-                    {CAMPAIGNS.map(c => <SelectItem key={c} value={c} className="font-bold">{c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+          {/* Shared Transaction History Component */}
+          <TransactionHistory 
+            data={transactions} 
+            loading={txLoading} 
+            title="Corporate Transaction Ledger"
+            description="Complete audit trail of deposits, escrow holds, and platform fees."
+          />
+        </div>
+      </div>
 
-            <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="hover:bg-transparent border-slate-50 h-16">
-                      <TableHead className="pl-8 font-black text-[10px] uppercase tracking-widest">Date</TableHead>
-                      <TableHead className="font-black text-[10px] uppercase tracking-widest">Transaction Details</TableHead>
-                      <TableHead className="font-black text-[10px] uppercase tracking-widest">Type</TableHead>
-                      <TableHead className="font-black text-[10px] uppercase tracking-widest">Amount</TableHead>
-                      <TableHead className="pr-8 text-right font-black text-[10px] uppercase tracking-widest">Invoice</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <AnimatePresence mode="popLayout">
-                      {filteredTransactions.map((tx, idx) => {
-                        const typeInfo = getTypeConfig(tx.type);
-                        return (
-                          <motion.tr
-                            key={tx.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.05 }}
-                            className="group border-slate-50 hover:bg-slate-50/50 transition-colors h-20"
-                          >
-                            <TableCell className="pl-8">
-                              <span className="text-sm font-bold text-slate-500">
-                                {new Date(tx.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <span className="font-bold text-slate-900 truncate max-w-[200px]">{tx.campaign}</span>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">
-                                  {tx.creator !== 'N/A' ? `Creator: ${tx.creator}` : 'Corporate Deposit'}
-                                </span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase border-none", typeInfo.color)}>
-                                <typeInfo.icon className="h-3 w-3 mr-1.5" />
-                                {typeInfo.label}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <span className={cn(
-                                "text-lg font-black",
-                                tx.type === 'REFUND' || tx.type === 'DEPOSIT' ? "text-emerald-600" : "text-slate-900"
-                              )}>
-                                {tx.type === 'REFUND' || tx.type === 'DEPOSIT' ? '+' : '-'} ₹{tx.amount.toLocaleString()}
-                              </span>
-                            </TableCell>
-                            <TableCell className="pr-8 text-right">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-9 w-9 rounded-xl text-slate-300 hover:text-primary hover:bg-primary/5 opacity-0 group-hover:opacity-100 transition-all"
-                                onClick={() => toast({ title: "Invoice Generating", description: `Statement for #${tx.id} is being prepared.` })}
-                              >
-                                <FileText className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </motion.tr>
-                        );
-                      })}
-                    </AnimatePresence>
-                  </TableBody>
-                </Table>
-              </CardContent>
-              <CardFooter className="bg-slate-50/50 p-6 flex justify-center border-t border-slate-50">
-                <Button variant="ghost" className="text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-primary">
-                  Load Full Statement
-                </Button>
-              </CardFooter>
-            </Card>
+      {/* Financial Security Panel */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="p-8 rounded-[2.5rem] bg-white border border-slate-100 flex items-start gap-6 shadow-sm">
+          <div className="h-14 w-14 rounded-2xl bg-primary/5 flex items-center justify-center shrink-0 border border-primary/10">
+            <ShieldCheck className="h-8 w-8 text-primary" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-lg font-bold">Escrow Protected</h3>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              Every campaign payment is secured in Baalvion Escrow before work starts. Capital is only released upon your final approval of assets.
+            </p>
           </div>
         </div>
-
-        {/* Sidebar panels */}
-        <aside className="lg:col-span-4 space-y-8">
-          <Card className="border-none shadow-xl shadow-primary/10 rounded-3xl overflow-hidden bg-slate-900 text-white relative">
-            <div className="absolute top-0 right-0 p-6 opacity-10">
-              <ShieldCheck className="h-16 w-16" />
-            </div>
-            <CardContent className="p-8 space-y-6">
-              <div className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10 backdrop-blur-md">
-                <ShieldCheck className="h-6 w-6 text-primary" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black">Escrow Guarantee</h3>
-                <p className="text-slate-400 text-xs leading-relaxed font-medium">
-                  Your funds are protected by Baalvion's secure escrow layer. They are only released once content meets your specific brief requirements.
-                </p>
-              </div>
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Active Holds</p>
-                  <p className="text-lg font-black">₹{stats.escrowed.toLocaleString()}</p>
-                </div>
-                <div className="flex -space-x-3">
-                  {[1, 2, 3].map(i => (
-                    <div key={i} className="h-8 w-8 rounded-full border-2 border-slate-900 bg-slate-800 flex items-center justify-center text-[10px] font-bold">
-                      C{i}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="border-b bg-slate-50/50 p-6">
-              <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Upcoming Payments
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-slate-50">
-                {[
-                  { title: 'Sarah Chen - Milestone 2', amount: 15000, date: 'Tomorrow' },
-                  { title: 'Alex Rivers - Full Payout', amount: 12500, date: 'Jul 24' },
-                ].map((item, i) => (
-                  <div key={i} className="p-5 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
-                    <div>
-                      <p className="text-xs font-bold text-slate-900">{item.title}</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase mt-0.5">{item.date}</p>
-                    </div>
-                    <span className="text-sm font-black text-slate-900">₹{item.amount.toLocaleString()}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-            <CardFooter className="p-4 bg-slate-50/30 border-t flex justify-center">
-              <Button variant="ghost" className="w-full text-[10px] font-black uppercase text-slate-400 hover:text-primary">
-                View Full Payout Schedule
-              </Button>
-            </CardFooter>
-          </Card>
-
-          <div className="p-6 rounded-3xl bg-white border border-dashed border-slate-300 flex flex-col items-center text-center space-y-3">
-            <div className="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center">
-              <FileText className="h-5 w-5 text-slate-400" />
-            </div>
-            <div>
-              <p className="text-xs font-black text-slate-900 uppercase">Need Tax Invoices?</p>
-              <p className="text-[10px] text-slate-500 font-medium mt-1">
-                Access your consolidated GST-compliant monthly invoices in the reports section.
-              </p>
-            </div>
-            <Button variant="link" className="text-xs font-bold text-primary h-auto p-0">Go to Reports</Button>
+        <div className="p-8 rounded-[2.5rem] bg-white border border-slate-100 flex items-start gap-6 shadow-sm">
+          <div className="h-14 w-14 rounded-2xl bg-orange-50 flex items-center justify-center shrink-0 border border-orange-100">
+            <Clock className="h-8 w-8 text-orange-500" />
           </div>
-        </aside>
+          <div className="space-y-2">
+            <h3 className="text-lg font-bold">GST Compliance</h3>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              Consolidated tax-compliant invoices are generated automatically for all platform spending and commission fees.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
