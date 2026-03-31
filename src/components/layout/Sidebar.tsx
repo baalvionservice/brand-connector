@@ -34,7 +34,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
   const creatorLinks = [
     { name: 'Dashboard', href: '/dashboard/creator', icon: LayoutDashboard },
     { name: 'Analytics', href: '/dashboard/creator/analytics', icon: BarChart3 },
-    { name: 'Find Campaigns', href: '/dashboard/discover', icon: Search },
+    { name: 'Find Campaigns', href: '/dashboard/creator/campaigns', icon: Search },
     { name: 'My Applications', href: '/dashboard/applications', icon: Briefcase },
     { name: 'Deliverables', href: '/dashboard/deliverables', icon: FileText },
     { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },
