@@ -1,15 +1,17 @@
 
 'use client';
 
-import React, { createContext, useContext, useEffect, useReducer, ReactNode } from 'react';
-import { onIdTokenChanged, User as FirebaseUser, signOut as firebaseSignOut } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { getDocument, queryDocuments } from '@/lib/firestore';
-import { User, CreatorProfile, BrandProfile, OnboardingStatus } from '@/types';
-import { setAuthCookies, clearAuthCookies } from '@/lib/auth-cookies';
-import { where, limit } from 'firebase/firestore';
+import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import { User } from '@/types';
+import { clearAuthCookies } from '@/lib/auth-cookies';
 
-// MOCK ADMIN USER FOR UNRESTRICTED ACCESS
+/**
+ * @fileOverview Baalvion Mock Auth Context
+ * 
+ * COMPLETELY DECOUPLED FROM FIREBASE AUTH to bypass API key errors.
+ * Provides a permanent Admin session by default.
+ */
+
 const MOCK_ADMIN_PROFILE: User = {
   id: 'admin_root',
   email: 'admin@baalvion.com',
@@ -23,22 +25,22 @@ const MOCK_ADMIN_PROFILE: User = {
 };
 
 interface AuthState {
-  currentUser: FirebaseUser | null;
+  currentUser: any;
   userProfile: User | null;
   loading: boolean;
   error: string | null;
 }
 
 type AuthAction =
-  | { type: 'SET_USER'; payload: FirebaseUser | null }
+  | { type: 'SET_USER'; payload: any }
   | { type: 'SET_PROFILE'; payload: User | null }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null };
 
 const initialState: AuthState = {
-  currentUser: { uid: 'mock_uid', email: 'admin@baalvion.com' } as any, // Mocked Auth User
-  userProfile: MOCK_ADMIN_PROFILE, // Default to Admin for access
-  loading: false, // Start directly
+  currentUser: { uid: 'mock_admin_uid', email: 'admin@baalvion.com', emailVerified: true },
+  userProfile: MOCK_ADMIN_PROFILE,
+  loading: false,
   error: null,
 };
 
@@ -65,23 +67,16 @@ interface AuthContextType extends AuthState {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(authReducer, initialState);
-
-  // Sync logic disabled for mock mode
-  const syncCookies = async (user: FirebaseUser | null, profile: User | null) => {};
-
-  useEffect(() => {
-    // In mock mode, we don't listen to actual Firebase Auth changes to prevent errors
-    // If you want to use real auth again, uncomment the standard implementation
-  }, []);
+  const [state] = useReducer(authReducer, initialState);
 
   const signOutAction = async () => {
     clearAuthCookies();
-    // Redirect to home in mock mode
-    window.location.href = '/';
+    window.location.href = '/auth/login';
   };
 
-  const refreshUser = async () => {};
+  const refreshUser = async () => {
+    // No-op in mock mode
+  };
 
   return (
     <AuthContext.Provider value={{ ...state, signOut: signOutAction, refreshUser }}>

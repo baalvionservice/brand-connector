@@ -12,9 +12,7 @@ import {
   Menu,
   ChevronDown,
   LogOut,
-  User,
   Settings,
-  Loader2,
   Zap,
   Briefcase,
   Wallet,
@@ -46,10 +44,8 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const { userProfile, loading, signOut } = useAuth();
+  const { userProfile, signOut } = useAuth();
   
-  // Use specialized real-time hook for notifications
   const { data: notifications } = useNotifications(userProfile?.id);
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -86,7 +82,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Desktop Sidebar */}
       <DashboardSidebar mockRole={role as any} onToggleRole={toggleRole} />
       
       <div className="md:pl-64 flex flex-col flex-1 pb-20 md:pb-0">
@@ -115,7 +110,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <div className="sm:hidden flex items-center gap-2">
               <div className="bg-primary p-1 rounded-lg">
-                <Zap className="h-4 w-4 text-white fill-current" />
+                <Zap className="h-4 w-4 text-white fill-current" aria-hidden="true" />
               </div>
               <span className="font-headline font-bold text-slate-900">Baalvion</span>
             </div>

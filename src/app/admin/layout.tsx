@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { DashboardSidebar } from '@/components/layout/Sidebar';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -12,8 +12,7 @@ import {
   ChevronDown,
   LogOut,
   Settings,
-  Zap,
-  Loader2
+  Zap
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,14 +29,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/use-realtime-data';
-import { cn } from '@/lib/utils';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { userProfile, loading, signOut } = useAuth();
+  const { userProfile, signOut } = useAuth();
 
-  // Use real-time hook for admin system alerts
   const { data: notifications } = useNotifications(userProfile?.id);
   const unreadCount = notifications.filter(n => !n.read).length;
 
