@@ -135,6 +135,25 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "userId", "subject", "message"]
+    },
+    "AuditLog": {
+      "title": "Audit Log",
+      "description": "An immutable record of administrative actions.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "adminId": { "type": "string" },
+        "adminName": { "type": "string" },
+        "actionType": { "type": "string" },
+        "entityId": { "type": "string" },
+        "entityType": { "type": "string" },
+        "oldValue": { "type": "object" },
+        "newValue": { "type": "object" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "isCritical": { "type": "boolean" },
+        "ipAddress": { "type": "string" }
+      },
+      "required": ["id", "adminId", "actionType", "timestamp"]
     }
   },
   "auth": {
@@ -164,6 +183,10 @@
     "/support_tickets/{ticketId}": {
       "schema": "SupportTicket",
       "description": "Customer support requests."
+    },
+    "/audit_logs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Administrative audit trail."
     }
   }
 }

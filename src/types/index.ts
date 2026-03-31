@@ -368,3 +368,17 @@ export interface Broadcast {
     opens: number;
   };
 }
+
+export interface AuditLog {
+  id: string;
+  adminId: string;
+  adminName: string;
+  actionType: string;
+  entityId: string;
+  entityType: string;
+  oldValue?: any;
+  newValue?: any;
+  timestamp: string;
+  isCritical: boolean;
+  ipAddress?: string;
+}

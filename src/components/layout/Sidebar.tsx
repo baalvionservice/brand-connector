@@ -82,6 +82,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Financial Control', href: '/admin/finance', icon: IndianRupee },
     { name: 'Plan & Tiers', href: '/admin/plans', icon: CreditCard },
     { name: 'Mediation Hub', href: '/admin/disputes', icon: Scale },
+    { name: 'Audit Log', href: '/admin/audit', icon: History },
     { name: 'Broadcast Center', href: '/admin/notifications', icon: Megaphone },
     { name: 'Support Center', href: '/admin/support', icon: LifeBuoy },
     { name: 'System Settings', href: '/admin/settings', icon: Settings },
