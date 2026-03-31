@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -20,15 +20,20 @@ import {
   CheckCircle2,
   Loader2,
   Sparkles,
-  Info
+  Info,
+  Users,
+  Search,
+  Plus
 } from 'lucide-react';
 import { useLeadStore } from '@/store/useLeadStore';
+import { useCreatorStore } from '@/store/useCreatorStore';
+import { useDealStore } from '@/store/useDealStore';
 import { LeadStatus } from '@/types/crm';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
@@ -40,22 +45,30 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 export function LeadDrawer() {
   const { 
     selectedLead, 
     selectedLeadNotes, 
-    detailsLoading, 
     selectLead, 
     updateLead, 
     addNote, 
     convertLead 
   } = useLeadStore();
+  const { selectedDeal } = useDealStore();
+  const { shortlisted, fetchShortlisted } = useCreatorStore();
   const { toast } = useToast();
   
   const [noteText, setNoteText] = useState('');
   const [isSubmittingNote, setIsSubmittingNote] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
+
+  useEffect(() => {
+    if (selectedDeal) {
+      fetchShortlisted(selectedDeal.id);
+    }
+  }, [selectedDeal]);
 
   const handleStatusChange = (status: LeadStatus) => {
     if (!selectedLead) return;
@@ -90,30 +103,25 @@ export function LeadDrawer() {
 
   if (!selectedLead) return null;
 
+  const currentShortlist = selectedDeal ? shortlisted[selectedDeal.id] || [] : [];
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
-      {/* Backdrop */}
       <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={() => selectLead(null)}
         className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm"
       />
 
-      {/* Drawer */}
       <motion.div 
-        initial={{ x: '100%' }}
-        animate={{ x: 0 }}
-        exit={{ x: '100%' }}
+        initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
         className="relative w-full max-w-lg bg-white h-full shadow-2xl flex flex-col border-l border-slate-100"
       >
-        {/* Header */}
         <header className="p-8 border-b bg-slate-50/50 flex flex-col gap-6 shrink-0">
           <div className="flex items-center justify-between">
             <Badge className="bg-primary/10 text-primary border-none font-black text-[10px] uppercase h-6 px-3">
-              CRM Detail View
+              Lead Workspace
             </Badge>
             <Button variant="ghost" size="icon" className="rounded-full hover:bg-white" onClick={() => selectLead(null)}>
               <X className="h-5 w-5" />
@@ -160,59 +168,55 @@ export function LeadDrawer() {
           </div>
         </header>
 
-        {/* Content */}
         <ScrollArea className="flex-1">
           <div className="p-8 space-y-10">
-            {/* Score Breakdown */}
-            {selectedLead.scoreBreakdown && (
-              <section className="space-y-4">
+            {/* Shortlisted Creators Section */}
+            <section className="space-y-4">
+              <div className="flex items-center justify-between">
                 <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2">
-                  <Sparkles className="h-3 w-3 text-primary" /> AI Score Breakdown
+                  <Users className="h-3 w-3 text-primary" /> Talent Shortlist
                 </h3>
-                <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-6">
-                  {[
-                    { label: 'Engagement', val: selectedLead.scoreBreakdown.engagement, max: 30 },
-                    { label: 'Completeness', val: selectedLead.scoreBreakdown.completeness, max: 20 },
-                    { label: 'Niche Value', val: selectedLead.scoreBreakdown.nicheValue, max: 30 },
-                    { label: 'Activity', val: selectedLead.scoreBreakdown.activity, max: 20 }
-                  ].map(item => (
-                    <div key={item.label} className="space-y-2">
-                      <div className="flex justify-between items-center text-[10px] font-bold">
-                        <span className="text-slate-500 uppercase">{item.label}</span>
-                        <span className="text-slate-900">{item.val} / {item.max}</span>
+                <Link href="/dashboard/brand/creators">
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black text-primary p-0 hover:bg-transparent">
+                    Add Talent <Plus className="h-3 w-3 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+              
+              {currentShortlist.length > 0 ? (
+                <div className="space-y-3">
+                  {currentShortlist.map((c) => (
+                    <div key={c.id} className="flex items-center gap-3 p-3 rounded-2xl border border-slate-50 bg-slate-50/30 group">
+                      <Avatar className="h-10 w-10 border shadow-sm">
+                        <AvatarImage src={c.avatar} />
+                        <AvatarFallback>{c.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-slate-900 truncate">{c.name}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{c.tier} • {(c.followers/1000).toFixed(0)}k</p>
                       </div>
-                      <Progress value={(item.val / item.max) * 100} className="h-1" />
+                      <Badge className="bg-primary/5 text-primary border-none font-bold text-[9px] uppercase">{c.engagementRate}% ER</Badge>
                     </div>
                   ))}
                 </div>
-              </section>
-            )}
-
-            {/* Info Section */}
-            <section className="space-y-4">
-              <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Contact & Reach</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                  <Mail className="h-4 w-4 text-slate-400" />
-                  <span className="text-sm font-bold text-slate-700">{selectedLead.email || 'No email provided'}</span>
+              ) : (
+                <div className="p-8 rounded-3xl border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-center">
+                  <Users className="h-8 w-8 text-slate-200 mb-2" />
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">No talent selected</p>
                 </div>
-                <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                  <Globe className="h-4 w-4 text-slate-400" />
-                  <a href={selectedLead.website} target="_blank" className="text-sm font-bold text-primary hover:underline truncate">{selectedLead.website || 'No website'}</a>
-                </div>
-              </div>
+              )}
             </section>
 
-            {/* Timeline/Notes Section */}
+            <Separator />
+
+            {/* Note Section */}
             <section className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2">
-                  <History className="h-3 w-3" /> Communication Logs
+                  <History className="h-3 w-3" /> Activity Log
                 </h3>
-                <Badge variant="secondary" className="bg-slate-50 text-slate-400 border-none font-bold text-[9px]">{selectedLeadNotes.length} Entries</Badge>
               </div>
 
-              {/* Add Note Form */}
               <form onSubmit={handleAddNote} className="relative">
                 <Textarea 
                   placeholder="Log an interaction..." 
@@ -223,21 +227,18 @@ export function LeadDrawer() {
                 <div className="absolute bottom-3 right-3">
                   <Button size="sm" type="submit" disabled={isSubmittingNote || !noteText.trim()} className="rounded-lg font-bold px-4 h-8">
                     {isSubmittingNote ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3 mr-1.5" />}
-                    Log
+                    Add Log
                   </Button>
                 </div>
               </form>
 
-              {/* Notes List */}
               <div className="space-y-4">
                 {selectedLeadNotes.map((note) => (
                   <div key={note.id} className="relative pl-6 last:after:hidden after:absolute after:left-0 after:top-2 after:bottom-0 after:w-px after:bg-slate-100">
                     <div className="absolute left-[-4px] top-1.5 h-2 w-2 rounded-full bg-primary/20 ring-4 ring-white" />
-                    <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm space-y-2">
-                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">
-                        {new Date(note.createdAt).toLocaleDateString()}
-                      </span>
-                      <p className="text-sm font-medium text-slate-600 leading-relaxed">{note.text}</p>
+                    <div className="p-4 rounded-2xl bg-white border border-slate-100 shadow-sm">
+                      <p className="text-[9px] font-black text-slate-400 uppercase mb-1">{new Date(note.createdAt).toLocaleDateString()}</p>
+                      <p className="text-sm text-slate-600 font-medium">{note.text}</p>
                     </div>
                   </div>
                 ))}
@@ -245,13 +246,6 @@ export function LeadDrawer() {
             </section>
           </div>
         </ScrollArea>
-
-        <footer className="p-6 border-t bg-slate-50/50 flex items-center justify-center gap-2">
-          <Clock className="h-3 w-3 text-slate-300" />
-          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-            Last Activity: {new Date(selectedLead.updatedAt).toLocaleDateString()}
-          </span>
-        </footer>
       </motion.div>
     </div>
   );
