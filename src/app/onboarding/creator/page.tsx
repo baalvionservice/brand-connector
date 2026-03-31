@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFirestore, useDoc } from '@/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { CreatorProfile, OnboardingStatus } from '@/types';
+import { setAuthCookies } from '@/lib/auth-cookies';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -90,6 +91,8 @@ export default function CreatorOnboardingPage() {
       await updateDoc(doc(db, 'creators', creatorId), updateData);
       
       if (isFinal) {
+        // Sync onboarded state to cookies for middleware
+        setAuthCookies({ onboarded: true });
         toast({ title: "Welcome Aboard!", description: "Your profile is now live in the marketplace." });
         router.push('/dashboard/creator');
       } else {

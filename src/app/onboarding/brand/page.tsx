@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFirestore, useDoc } from '@/firebase';
 import { doc, updateDoc, addDoc, collection } from 'firebase/firestore';
 import { BrandProfile, OnboardingStatus, CampaignStatus } from '@/types';
+import { setAuthCookies } from '@/lib/auth-cookies';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -108,6 +109,8 @@ export default function BrandOnboardingPage() {
       }
 
       if (isFinal) {
+        // Sync onboarded state to cookies for middleware
+        setAuthCookies({ onboarded: true });
         setShowConfetti(true);
         toast({ title: "Brand Verified!", description: "You're all set to discover creators." });
         setTimeout(() => router.push('/dashboard/brand'), 3000);

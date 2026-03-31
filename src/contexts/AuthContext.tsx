@@ -1,10 +1,12 @@
+
 'use client';
 
 import React, { createContext, useContext, useEffect, useReducer, ReactNode } from 'react';
 import { onIdTokenChanged, User as FirebaseUser, signOut as firebaseSignOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getDocument } from '@/lib/firestore';
-import { User } from '@/types';
+import { User, CreatorProfile, BrandProfile, OnboardingStatus } from '@/types';
+import { setAuthCookies, clearAuthCookies } from '@/lib/auth-cookies';
 
 interface AuthState {
   currentUser: FirebaseUser | null;
@@ -51,25 +53,46 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  const fetchProfile = async (uid: string) => {
-    try {
-      const profile = await getDocument<User>('users', uid);
-      dispatch({ type: 'SET_PROFILE', payload: profile });
-    } catch (err) {
-      console.error("Error fetching profile:", err);
-      dispatch({ type: 'SET_PROFILE', payload: null });
+  const syncCookies = async (user: FirebaseUser | null, profile: User | null) => {
+    if (user && profile) {
+      // Check onboarding status from the secondary profile
+      let isOnboarded = false;
+      try {
+        if (profile.role === 'CREATOR') {
+          const creator = await getDocument<CreatorProfile>('creators', `creator_${user.uid}`);
+          isOnboarded = creator?.onboardingStatus === OnboardingStatus.COMPLETED;
+        } else if (profile.role === 'BRAND') {
+          const brand = await getDocument<BrandProfile>('brands', `brand_${user.uid}`);
+          isOnboarded = brand?.onboardingStatus === OnboardingStatus.COMPLETED;
+        }
+      } catch (e) {
+        console.error("Cookie sync onboarding check failed", e);
+      }
+
+      setAuthCookies({
+        session: user.uid, // Using UID as session ID for prototype
+        role: profile.role,
+        verified: user.emailVerified,
+        onboarded: isOnboarded
+      });
+    } else if (!user) {
+      clearAuthCookies();
     }
   };
 
   useEffect(() => {
-    // onIdTokenChanged is essential for tracking verification status updates
     const unsubscribe = onIdTokenChanged(auth, async (user) => {
       dispatch({ type: 'SET_USER', payload: user });
+      
       if (user) {
-        await fetchProfile(user.uid);
+        const profile = await getDocument<User>('users', user.uid);
+        dispatch({ type: 'SET_PROFILE', payload: profile });
+        await syncCookies(user, profile);
       } else {
         dispatch({ type: 'SET_PROFILE', payload: null });
+        clearAuthCookies();
       }
+      
       dispatch({ type: 'SET_LOADING', payload: false });
     });
 
@@ -77,6 +100,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOutAction = async () => {
+    clearAuthCookies();
     await firebaseSignOut(auth);
   };
 
@@ -84,8 +108,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (auth.currentUser) {
       await auth.currentUser.reload();
       const updatedUser = auth.currentUser;
-      // Dispatching SET_USER will trigger any observers watching for verification changes
       dispatch({ type: 'SET_USER', payload: updatedUser });
+      // Re-sync cookies with updated verification status
+      if (state.userProfile) {
+        await syncCookies(updatedUser, state.userProfile);
+      }
     }
   };
 
