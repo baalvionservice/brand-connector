@@ -24,7 +24,8 @@ import {
   CreditCard,
   ShieldCheck,
   ShieldAlert,
-  History
+  History,
+  Scale
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -72,7 +73,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'User Directory', href: '/admin/users', icon: Users },
     { name: 'Verification Queue', href: '/admin/creators/verify', icon: ShieldCheck },
     { name: 'Moderation Flow', href: '/admin/campaigns', icon: ShieldAlert },
-    { name: 'Mediation Hub', href: '/admin/disputes', icon: Briefcase },
+    { name: 'Mediation Hub', href: '/admin/disputes', icon: Scale },
     { name: 'Audit Logs', href: '/admin/logs', icon: History },
     { name: 'System Config', href: '/admin/settings', icon: Settings },
   ];
