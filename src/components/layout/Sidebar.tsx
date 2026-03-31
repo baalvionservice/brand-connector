@@ -36,7 +36,8 @@ import {
   Activity,
   Fingerprint,
   PieChart,
-  Target
+  Target,
+  TrendingUp
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -82,7 +83,9 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
   const adminLinks = [
     { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'CRM Pipeline', href: '/admin/leads', icon: Target },
-    { name: 'Brand Acquisition', href: '/admin/acquisition', icon: Target },
+    { name: 'Sales Pipeline', href: '/admin/deals', icon: TrendingUp },
+    { name: 'Brand Acquisition', href: '/admin/acquisition', icon: Search },
+    { name: 'Outreach Manager', href: '/admin/outreach', icon: Megaphone },
     { name: 'Platform Analytics', href: '/admin/analytics', icon: PieChart },
     { name: 'User Directory', href: '/admin/users', icon: Users },
     { name: 'Verification Queue', href: '/admin/creators/verify', icon: ShieldCheck },
@@ -110,7 +113,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
             <div className="bg-primary p-1.5 rounded-lg mr-2">
               <Zap className="h-5 w-5 text-white fill-current" aria-hidden="true" />
             </div>
-            <span className="font-headline font-bold text-lg tracking-tight">Baalvion</span>
+            <span className="font-headline font-bold text-lg tracking-tight text-slate-900">Baalvion</span>
           </Link>
         </div>
         
