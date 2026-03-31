@@ -27,6 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/AuthContext';
+import { AIInsightsPanel } from '@/components/dashboard/creator/AIInsightsPanel';
 import Link from 'next/link';
 
 const STATS = [
@@ -99,22 +100,24 @@ export default function CreatorDashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <Link href="/dashboard/discover">
+          <Link href="/dashboard/creator/campaigns">
             <Button className="rounded-xl font-bold shadow-lg shadow-primary/20 h-11 px-6">
               <Plus className="h-4 w-4 mr-2" />
               Apply to Campaign
             </Button>
           </Link>
           <Link href="/dashboard/settings">
-            <Button variant="outline" className="rounded-xl font-bold bg-white h-11">
+            <Button variant="outline" className="rounded-xl font-bold bg-white h-11 border-slate-200">
               <User className="h-4 w-4 mr-2" />
               Update Profile
             </Button>
           </Link>
-          <Button variant="secondary" className="rounded-xl font-bold h-11">
-            <ArrowUpRight className="h-4 w-4 mr-2" />
-            Request Payout
-          </Button>
+          <Link href="/dashboard/creator/wallet">
+            <Button variant="secondary" className="rounded-xl font-bold h-11">
+              <ArrowUpRight className="h-4 w-4 mr-2" />
+              Request Payout
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -134,25 +137,25 @@ export default function CreatorDashboard() {
               <CardContent className="pb-8">
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-black">₹4,22,500</span>
-                  <Badge className="bg-emerald-500/20 text-emerald-400 border-none">+12.5%</Badge>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-none font-black text-[10px] tracking-widest">+12.5%</span>
                 </div>
                 <div className="mt-6 space-y-4">
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-slate-400">This Month</span>
-                    <span className="font-bold">₹42,500</span>
+                    <span className="text-slate-400 font-bold">This Month</span>
+                    <span className="font-black">₹42,500</span>
                   </div>
                   <Progress value={65} className="h-1 bg-slate-800" />
-                  <p className="text-[10px] text-slate-500 uppercase font-bold">Payout processing starts in 4 days</p>
+                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Payout processing starts in 4 days</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl p-6 flex flex-col justify-between">
+            <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl p-6 flex flex-col justify-between bg-white">
               <div>
                 <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-400 mb-4">Profile Readiness</CardTitle>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-2xl font-black">{completeness}%</span>
-                  <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
+                  <span className="text-3xl font-black">{completeness}%</span>
+                  <Star className="h-6 w-6 text-yellow-500 fill-yellow-500" />
                 </div>
                 <Progress value={completeness} className="h-2 bg-slate-100" />
               </div>
@@ -173,13 +176,13 @@ export default function CreatorDashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
               >
-                <Card className="border-none shadow-sm shadow-slate-200/50 rounded-2xl p-6">
+                <Card className="border-none shadow-sm shadow-slate-200/50 rounded-2xl p-6 bg-white">
                   <div className={`${stat.bg} ${stat.color} p-3 rounded-xl w-fit mb-4`}>
                     <stat.icon className="h-5 w-5" />
                   </div>
                   <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">{stat.label}</p>
                   <h3 className="text-2xl font-black mt-1">{stat.value}</h3>
-                  <p className="text-[10px] text-slate-400 font-medium mt-2">{stat.trend}</p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase mt-2 tracking-tighter">{stat.trend}</p>
                 </Card>
               </motion.div>
             ))}
@@ -189,7 +192,9 @@ export default function CreatorDashboard() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-headline font-bold text-slate-900">AI Matches For You</h2>
-              <Button variant="link" className="text-primary font-bold text-sm">View Discovery Feed <ChevronRight className="h-4 w-4 ml-1" /></Button>
+              <Link href="/dashboard/creator/campaigns">
+                <Button variant="link" className="text-primary font-bold text-sm">View Discovery Feed <ChevronRight className="h-4 w-4 ml-1" /></Button>
+              </Link>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -200,21 +205,21 @@ export default function CreatorDashboard() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.2 + (i * 0.1) }}
                 >
-                  <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden group hover:shadow-xl transition-all duration-300 h-full flex flex-col">
+                  <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden group hover:shadow-xl transition-all duration-300 h-full flex flex-col bg-white">
                     <CardContent className="p-6 flex-1">
                       <div className="flex items-start justify-between mb-4">
                         <Avatar className="h-12 w-12 rounded-2xl border border-slate-100">
                           <AvatarImage src={job.logo} />
                           <AvatarFallback>B</AvatarFallback>
                         </Avatar>
-                        <div className="bg-primary/5 px-2.5 py-1 rounded-full flex items-center gap-1">
+                        <div className="bg-primary/5 px-2.5 py-1 rounded-full flex items-center gap-1 border border-primary/10">
                           <Zap className="h-3 w-3 text-primary fill-primary" />
                           <span className="text-[10px] font-black text-primary">{job.match}%</span>
                         </div>
                       </div>
 
                       <div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{job.brand}</p>
+                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{job.brand}</p>
                         <h4 className="text-md font-bold text-slate-900 leading-tight mt-1 line-clamp-2">{job.title}</h4>
                       </div>
 
@@ -224,13 +229,13 @@ export default function CreatorDashboard() {
                       </div>
                     </CardContent>
 
-                    <CardFooter className="p-6 pt-0 border-t border-slate-50 mt-auto">
+                    <CardFooter className="p-6 pt-0 border-t border-slate-50 mt-auto bg-slate-50/30">
                       <div className="flex items-center justify-between w-full pt-4">
                         <div>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase">Budget</p>
+                          <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Budget</p>
                           <p className="text-sm font-black text-emerald-600">{job.budget}</p>
                         </div>
-                        <Button size="sm" className="rounded-xl font-bold text-xs h-9">
+                        <Button size="sm" className="rounded-xl font-bold text-[10px] uppercase h-8 px-4">
                           Apply
                         </Button>
                       </div>
@@ -245,9 +250,12 @@ export default function CreatorDashboard() {
         {/* Right Column - Sidebar Panels */}
         <div className="lg:col-span-4 space-y-8">
           
+          {/* NEW: AI Insights Panel */}
+          <AIInsightsPanel />
+
           {/* Activity Feed */}
-          <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden">
-            <CardHeader className="border-b bg-white/50">
+          <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden bg-white">
+            <CardHeader className="border-b bg-slate-50/50">
               <CardTitle className="text-lg font-bold">Recent Activity</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-6">
@@ -258,18 +266,18 @@ export default function CreatorDashboard() {
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-bold text-slate-900 leading-tight">{activity.title}</p>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{activity.time}</p>
+                    <p className="text-[10px] text-slate-400 font-black uppercase tracking-wider">{activity.time}</p>
                   </div>
                 </div>
               ))}
-              <Button variant="ghost" className="w-full text-slate-400 font-bold text-xs rounded-xl h-10 hover:text-primary">
+              <Button variant="ghost" className="w-full text-slate-400 font-bold text-[10px] uppercase tracking-widest rounded-xl h-10 hover:text-primary">
                 View All Activity
               </Button>
             </CardContent>
           </Card>
 
           {/* Schedule Summary */}
-          <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden">
+          <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden bg-white">
             <CardHeader className="bg-primary/5 border-b border-primary/10">
               <CardTitle className="text-sm font-bold flex items-center gap-2 text-primary">
                 <CalendarDays className="h-4 w-4" />
@@ -284,11 +292,11 @@ export default function CreatorDashboard() {
                 <div key={idx} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100">
                   <div className="space-y-0.5">
                     <p className="text-xs font-bold text-slate-900">{item.task}</p>
-                    <p className="text-[10px] text-slate-400">{item.brand}</p>
+                    <p className="text-[10px] text-slate-400 font-medium">{item.brand}</p>
                   </div>
                   <div className="text-right">
                     <p className={`text-[10px] font-black ${item.urgent ? 'text-red-500' : 'text-slate-500'}`}>{item.date}</p>
-                    {item.urgent && <Badge className="bg-red-100 text-red-600 text-[8px] h-4 py-0 px-1 border-none font-black uppercase">Urgent</Badge>}
+                    {item.urgent && <Badge className="bg-red-100 text-red-600 text-[8px] h-4 py-0 px-1 border-none font-black uppercase tracking-widest">Urgent</Badge>}
                   </div>
                 </div>
               ))}
@@ -300,10 +308,10 @@ export default function CreatorDashboard() {
             <CardContent className="p-8">
               <Star className="h-8 w-8 text-yellow-400 fill-yellow-400 mb-4" />
               <h3 className="text-xl font-headline font-bold mb-2">Join Baalvion Pro</h3>
-              <p className="text-white/80 text-xs mb-6 leading-relaxed">
+              <p className="text-white/80 text-xs mb-6 leading-relaxed font-medium">
                 Get priority matching, 0% payout fees, and detailed audience demographic insights.
               </p>
-              <Button size="sm" className="w-full bg-white text-primary hover:bg-indigo-50 font-bold rounded-xl transition-all shadow-lg h-11">
+              <Button size="sm" className="w-full bg-white text-primary hover:bg-indigo-50 font-black rounded-xl transition-all shadow-lg h-11 text-xs uppercase tracking-widest">
                 View Pro Plans
               </Button>
             </CardContent>
