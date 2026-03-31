@@ -25,3 +25,4 @@ export * from './DataTable';
 export * from './badges';
 export * from './loaders';
 export * from './skeletons';
+export * from './EmptyState';
