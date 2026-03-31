@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -21,7 +21,13 @@ import {
   Save,
   Users,
   Search,
-  Check
+  Check,
+  Calendar as CalendarIcon,
+  IndianRupee,
+  CreditCard,
+  Building2,
+  TrendingUp,
+  Clock
 } from 'lucide-react';
 import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
@@ -43,14 +49,20 @@ import {
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { CREATOR_NICHES, SOCIAL_PLATFORMS, COUNTRIES } from '@/constants';
+import { CREATOR_NICHES } from '@/constants';
+import { format } from "date-fns";
 
 // Step 1 Schema
 const campaignBasicsSchema = z.object({
@@ -77,8 +89,21 @@ const creatorRequirementsSchema = z.object({
   isExclusive: z.boolean(),
 });
 
+// Step 3 Schema
+const budgetTimelineSchema = z.object({
+  totalBudget: z.number().min(500, "Total budget must be at least ₹500"),
+  budgetPerCreator: z.array(z.number()).length(2),
+  paymentMethod: z.enum(["UPI", "CARD", "BANK"]),
+  startDate: z.date({ required_error: "Start date is required" }),
+  endDate: z.date({ required_error: "End date is required" }),
+  applicationDeadline: z.date({ required_error: "Application deadline is required" }),
+  submissionDeadline: z.date({ required_error: "Submission deadline is required" }),
+  postLiveDate: z.date({ required_error: "Post live date is required" }),
+});
+
 type CampaignBasicsValues = z.infer<typeof campaignBasicsSchema>;
 type CreatorRequirementsValues = z.infer<typeof creatorRequirementsSchema>;
+type BudgetTimelineValues = z.infer<typeof budgetTimelineSchema>;
 
 const STEPS = [
   { id: 1, title: 'Basics', icon: LayoutGrid },
@@ -138,6 +163,20 @@ export default function NewCampaignPage() {
       audienceGender: 'ALL',
       minPosts: 1,
       isExclusive: false,
+    },
+  });
+
+  const budgetForm = useForm<BudgetTimelineValues>({
+    resolver: zodResolver(budgetTimelineSchema),
+    defaultValues: {
+      totalBudget: 50000,
+      budgetPerCreator: [5000, 15000],
+      paymentMethod: 'UPI',
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+      applicationDeadline: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+      submissionDeadline: new Date(Date.now() + 1000 * 60 * 60 * 24 * 21),
+      postLiveDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 25),
     },
   });
 
@@ -201,6 +240,48 @@ export default function NewCampaignPage() {
       setIsSaving(false);
     }
   };
+
+  const onBudgetSubmit = async (values: BudgetTimelineValues) => {
+    if (!campaignId) return;
+    setIsSaving(true);
+
+    const updateData = {
+      budget: values.totalBudget,
+      minBudgetPerCreator: values.budgetPerCreator[0],
+      maxBudgetPerCreator: values.budgetPerCreator[1],
+      startDate: values.startDate.toISOString(),
+      endDate: values.endDate.toISOString(),
+      applicationDeadline: values.applicationDeadline.toISOString(),
+      submissionDeadline: values.submissionDeadline.toISOString(),
+      postLiveDate: values.postLiveDate.toISOString(),
+      updatedAt: new Date().toISOString(),
+      step: 3
+    };
+
+    try {
+      await updateDoc(doc(db, 'campaigns', campaignId), updateData);
+      toast({ title: "Budget & Schedule Saved", description: "Almost done! Review your campaign details." });
+      setCurrentStep(4);
+    } catch (err: any) {
+      errorEmitter.emitPermissionError(new FirestorePermissionError({
+        path: `/campaigns/${campaignId}`,
+        operation: 'update',
+        requestResourceData: updateData
+      }));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Mock Reach Calculator
+  const estimatedReach = useMemo(() => {
+    const budget = budgetForm.watch('totalBudget') || 0;
+    const tierMultiplier = requirementsForm.getValues('creatorTier') === 'MACRO' ? 8 : 12.5;
+    return {
+      reach: Math.round(budget * tierMultiplier),
+      engagement: Math.round(budget * tierMultiplier * 0.04)
+    };
+  }, [budgetForm.watch('totalBudget'), requirementsForm.watch('creatorTier')]);
 
   const progress = (currentStep / STEPS.length) * 100;
 
@@ -464,6 +545,133 @@ export default function NewCampaignPage() {
                 </Card>
               </motion.div>
             )}
+
+            {currentStep === 3 && (
+              <motion.div
+                key="step3"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+              >
+                <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
+                  <CardHeader className="p-8 border-b bg-slate-50/30">
+                    <CardTitle className="text-xl">Step 3: Budget & Timeline</CardTitle>
+                    <CardDescription>Allocate your investment and define key project milestones.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-8 space-y-10">
+                    <form id="budget-form" onSubmit={budgetForm.handleSubmit(onBudgetSubmit)} className="space-y-10">
+                      
+                      {/* Budget Allocation */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                          <Label className="font-bold text-slate-700">Total Campaign Budget (₹)</Label>
+                          <div className="relative">
+                            <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                            <Input 
+                              type="number"
+                              className="pl-12 h-14 rounded-2xl bg-slate-50 border-none text-2xl font-black text-primary"
+                              {...budgetForm.register('totalBudget', { valueAsNumber: true })}
+                            />
+                          </div>
+                          <p className="text-xs text-slate-400 font-medium">Market average for this niche: ₹45,000</p>
+                        </div>
+                        <div className="space-y-4">
+                          <Label className="font-bold text-slate-700">Budget Per Creator Range</Label>
+                          <div className="pt-4">
+                            <Slider 
+                              defaultValue={budgetForm.getValues('budgetPerCreator')}
+                              max={50000}
+                              step={500}
+                              onValueChange={(v) => budgetForm.setValue('budgetPerCreator', v)}
+                              className="mb-4"
+                            />
+                            <div className="flex justify-between items-center text-sm font-black text-slate-900">
+                              <span>₹{budgetForm.watch('budgetPerCreator')[0].toLocaleString()}</span>
+                              <span>₹{budgetForm.watch('budgetPerCreator')[1].toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Payment Method */}
+                      <div className="space-y-4">
+                        <Label className="font-bold text-slate-700">Payment Infrastructure</Label>
+                        <RadioGroup 
+                          defaultValue={budgetForm.getValues('paymentMethod')}
+                          onValueChange={(v: any) => budgetForm.setValue('paymentMethod', v)}
+                          className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+                        >
+                          {[
+                            { id: 'UPI', label: 'UPI ID', icon: Zap },
+                            { id: 'CARD', label: 'Credit Card', icon: CreditCard },
+                            { id: 'BANK', label: 'Bank Transfer', icon: Building2 },
+                          ].map((m) => (
+                            <div key={m.id}>
+                              <RadioGroupItem value={m.id} id={m.id} className="peer sr-only" />
+                              <Label htmlFor={m.id} className="flex items-center gap-3 p-4 rounded-xl border-2 border-slate-100 cursor-pointer peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5">
+                                <m.icon className="h-4 w-4 text-primary" />
+                                <span className="font-bold text-sm">{m.label}</span>
+                              </Label>
+                            </div>
+                          ))}
+                        </RadioGroup>
+                      </div>
+
+                      <Separator className="opacity-50" />
+
+                      {/* Scheduling Grid */}
+                      <div className="space-y-6">
+                        <h3 className="font-black text-slate-900 uppercase text-xs tracking-widest">Project Milestones</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          {[
+                            { id: 'startDate', label: 'Campaign Launch', icon: Zap },
+                            { id: 'endDate', label: 'Campaign End', icon: Clock },
+                            { id: 'applicationDeadline', label: 'Hiring Closes', icon: Users },
+                            { id: 'submissionDeadline', label: 'Submission Due', icon: Save },
+                            { id: 'postLiveDate', label: 'Content Live', icon: Globe },
+                          ].map((field) => (
+                            <div key={field.id} className="space-y-2">
+                              <Label className="font-bold text-slate-700 text-xs">{field.label}</Label>
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant={"outline"}
+                                    className={cn(
+                                      "w-full h-12 justify-start text-left font-bold rounded-xl bg-slate-50 border-none",
+                                      !budgetForm.watch(field.id as any) && "text-muted-foreground"
+                                    )}
+                                  >
+                                    <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+                                    {budgetForm.watch(field.id as any) ? format(budgetForm.watch(field.id as any), "PPP") : <span>Pick a date</span>}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0 rounded-2xl overflow-hidden border-none shadow-2xl" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={budgetForm.watch(field.id as any)}
+                                    onSelect={(date) => budgetForm.setValue(field.id as any, date as any)}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </form>
+                  </CardContent>
+                  <CardFooter className="p-8 border-t bg-slate-50/50 flex justify-between">
+                    <Button variant="ghost" onClick={() => setCurrentStep(2)} className="rounded-xl font-bold h-12">
+                      <ArrowLeft className="mr-2 h-4 w-4" /> Back to Audience
+                    </Button>
+                    <Button form="budget-form" disabled={isSaving} className="rounded-xl font-black px-10 h-12">
+                      {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Next: Review & Launch <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
 
@@ -471,15 +679,26 @@ export default function NewCampaignPage() {
         <div className="lg:col-span-4 space-y-6">
           <Card className="border-none shadow-xl shadow-primary/5 rounded-3xl overflow-hidden bg-slate-900 text-white">
             <CardContent className="p-8 space-y-6">
-              <div className="h-12 w-12 rounded-2xl bg-primary/20 flex items-center justify-center border border-primary/30">
-                <Zap className="h-6 w-6 text-primary" />
+              <div className="h-12 w-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                <TrendingUp className="h-6 w-6 text-emerald-400" />
               </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black">AI Strategy Check</h3>
-                <p className="text-slate-400 text-sm leading-relaxed font-medium">
-                  {currentStep === 1 
-                    ? "Complete Step 1 to unlock real-time optimization tips. Our AI will analyze your brief to ensure it's 'Creator-Friendly'." 
-                    : "Setting a 3% engagement rate or higher ensures you only work with creators who have real audience trust."
+              <div className="space-y-4">
+                <h3 className="text-xl font-black">Estimated Reach</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Potential Reach</p>
+                    <p className="text-2xl font-black text-white">{estimatedReach.reach.toLocaleString()}+</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Est. Engagement</p>
+                    <p className="text-2xl font-black text-emerald-400">{estimatedReach.engagement.toLocaleString()}+</p>
+                  </div>
+                </div>
+                <Progress value={85} className="h-1 bg-white/10" />
+                <p className="text-slate-400 text-xs leading-relaxed font-medium">
+                  {currentStep === 3 
+                    ? "Your budget allows for ~15 high-quality Micro creators. This is optimized for high conversion in your selected niche." 
+                    : "Complete Step 3 to see how your budget maps to market reach."
                   }
                 </p>
               </div>
@@ -488,13 +707,13 @@ export default function NewCampaignPage() {
 
           <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
             <CardHeader className="p-6 border-b bg-slate-50/50">
-              <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">Pro Tips</CardTitle>
+              <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400">Campaign Logistics</CardTitle>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               {[
-                { title: 'Exclusivity', desc: 'Adding an exclusivity clause typically increases creator rates by 20-30%.' },
-                { title: 'Nano Creators', desc: 'Nano creators often yield 2x higher ROI for hyper-local campaigns.' },
-                { title: 'Audience Fit', desc: 'Aligning age demographics correctly improves conversion rates by 45%.' },
+                { title: 'Escrow Security', desc: 'Funds are held securely and released only after your approval.' },
+                { title: 'Payment Window', desc: 'Creator payouts clear 48h after the post-live date validation.' },
+                { title: 'Scheduling Tip', desc: 'Allow at least 7 days between hiring and submission for best quality.' },
               ].map((item, i) => (
                 <div key={i} className="flex gap-3">
                   <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
