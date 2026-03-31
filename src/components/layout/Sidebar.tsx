@@ -71,8 +71,8 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'User Directory', href: '/admin/users', icon: Users },
     { name: 'Verification Queue', href: '/admin/creators/verify', icon: ShieldCheck },
-    { name: 'Marketplace Oversight', href: '/admin/campaigns', icon: Briefcase },
-    { name: 'Mediation Hub', href: '/admin/disputes', icon: ShieldAlert },
+    { name: 'Moderation Flow', href: '/admin/campaigns', icon: ShieldAlert },
+    { name: 'Mediation Hub', href: '/admin/disputes', icon: Briefcase },
     { name: 'Audit Logs', href: '/admin/logs', icon: History },
     { name: 'System Config', href: '/admin/settings', icon: Settings },
   ];

@@ -5,10 +5,12 @@ export type BrandMemberRole = 'OWNER' | 'MANAGER' | 'REVIEWER' | 'VIEWER';
 
 export enum CampaignStatus {
   DRAFT = 'DRAFT',
+  PENDING_REVIEW = 'PENDING_REVIEW',
   ACTIVE = 'ACTIVE',
   PAUSED = 'PAUSED',
   COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
+  REJECTED = 'REJECTED'
 }
 
 export enum ApplicationStatus {
@@ -228,6 +230,7 @@ export interface Campaign {
   audienceGender?: string;
   minPosts?: number;
   isExclusive?: boolean;
+  moderationNotes?: string;
   createdAt?: string;
   updatedAt?: string;
 }
