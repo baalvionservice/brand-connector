@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -8,6 +7,7 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ParticlesBackground } from '@/components/landing/ParticlesBackground';
 import { StatsBanner } from '@/components/landing/StatsBanner';
+import { HowItWorks } from '@/components/landing/HowItWorks';
 
 export default function LandingPage() {
   return (
@@ -23,6 +23,9 @@ export default function LandingPage() {
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
           <Link className="text-sm font-medium hover:text-primary transition-colors" href="#features">
             Features
+          </Link>
+          <Link className="text-sm font-medium hover:text-primary transition-colors" href="#how-it-works">
+            How It Works
           </Link>
           <Link href="/auth/login">
             <Button variant="ghost" size="sm">Login</Button>
@@ -130,6 +133,9 @@ export default function LandingPage() {
 
         {/* Stats Banner Section */}
         <StatsBanner />
+
+        {/* How It Works Section */}
+        <HowItWorks />
 
         {/* Features Section */}
         <section id="features" className="w-full py-24 md:py-32 bg-slate-50">
