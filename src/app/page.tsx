@@ -12,6 +12,7 @@ import { MatchingDemo } from '@/components/landing/MatchingDemo';
 import { Pricing } from '@/components/landing/Pricing';
 import { Testimonials } from '@/components/landing/Testimonials';
 import { CreatorShowcase } from '@/components/landing/CreatorShowcase';
+import { ActiveCampaigns } from '@/components/landing/ActiveCampaigns';
 
 export default function LandingPage() {
   const features = [
@@ -188,6 +189,9 @@ export default function LandingPage() {
 
         {/* AI Matching Demo Section */}
         <MatchingDemo />
+
+        {/* Active Campaigns Feed Section */}
+        <ActiveCampaigns />
 
         {/* Top Creators Showcase Section */}
         <CreatorShowcase />
