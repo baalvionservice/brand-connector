@@ -22,9 +22,11 @@ import {
   Building2,
   History,
   Zap,
-  Star
+  CreditCard,
+  Lock
 } from 'lucide-react';
 import { useProposalStore } from '@/store/useProposalStore';
+import { usePaymentStore } from '@/store/usePaymentStore';
 import { Proposal, Deliverable, CreatorTier, DeliverableType } from '@/types/proposal';
 import { useToast } from '@/hooks/use-toast';
 
@@ -42,16 +44,28 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 export default function ProposalsPage() {
   const { proposals, loading, fetchProposals, selectedProposal, selectProposal, updateProposal, sendProposal, approveProposal, rejectProposal } = useProposalStore();
+  const { createPayment, processPayment, payments, fetchPayments } = usePaymentStore();
   const { toast } = useToast();
   
   const [searchQuery, setSearchQuery] = useState('');
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<'upi' | 'card' | 'netbanking'>('card');
 
   useEffect(() => {
     fetchProposals();
+    fetchPayments();
   }, []);
 
   const handleUpdateDeliverable = (delId: string, updates: Partial<Deliverable>) => {
@@ -67,7 +81,7 @@ export default function ProposalsPage() {
       type: 'reel',
       quantity: 1,
       creatorTier: 'mid',
-      pricePerUnit: 0 // Backend will calculate
+      pricePerUnit: 0 
     };
     updateProposal(selectedProposal.id, { deliverables: [...selectedProposal.deliverables, newDel] });
   };
@@ -90,6 +104,22 @@ export default function ProposalsPage() {
     }
   };
 
+  const handlePay = async () => {
+    if (!selectedProposal) return;
+    
+    // 1. Create Payment Record
+    const payment = await createPayment(selectedProposal.id, selectedProposal.totalPrice, selectedProposal.companyName);
+    
+    if (payment) {
+      // 2. Process
+      await processPayment(payment.id, selectedMethod);
+      setIsPaymentModalOpen(false);
+      toast({ title: "Funds Secured!", description: "Escrow funding initialized." });
+    }
+  };
+
+  const currentPayment = selectedProposal ? payments.find(p => p.proposalId === selectedProposal.id) : null;
+
   const filteredProposals = proposals.filter(p => 
     p.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.id.toLowerCase().includes(searchQuery.toLowerCase())
@@ -97,7 +127,6 @@ export default function ProposalsPage() {
 
   return (
     <div className="space-y-8 pb-20">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight flex items-center gap-3">
@@ -106,20 +135,17 @@ export default function ProposalsPage() {
           </h1>
           <p className="text-slate-500 font-medium">Build, price, and finalize professional campaign contracts.</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder="Search proposals..." 
-              className="pl-10 h-11 rounded-xl bg-white border-slate-200"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+        <div className="relative w-64">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Input 
+            placeholder="Search proposals..." 
+            className="pl-10 h-11 rounded-xl bg-white border-slate-200"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
       </div>
 
-      {/* Proposal Ledger */}
       <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
         <CardContent className="p-0">
           <Table>
@@ -134,11 +160,7 @@ export default function ProposalsPage() {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-64 text-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary/30 mx-auto" />
-                  </TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan={5} className="h-64 text-center"><Loader2 className="animate-spin mx-auto h-8 w-8 text-primary/30" /></TableCell></TableRow>
               ) : filteredProposals.map((prop) => (
                 <TableRow key={prop.id} className="group border-slate-50 hover:bg-slate-50/50 transition-colors h-24">
                   <TableCell className="pl-8">
@@ -187,7 +209,6 @@ export default function ProposalsPage() {
         </CardContent>
       </Card>
 
-      {/* Proposal Editor Drawer */}
       <AnimatePresence>
         {selectedProposal && (
           <>
@@ -225,7 +246,30 @@ export default function ProposalsPage() {
 
               <ScrollArea className="flex-1">
                 <div className="p-8 space-y-10">
-                  {/* Deliverables Builder */}
+                  {/* Status Indicator for Payment */}
+                  {currentPayment && (
+                    <div className={cn(
+                      "p-6 rounded-[2rem] border-2 flex items-center justify-between",
+                      currentPayment.status === 'escrow' ? "bg-emerald-50 border-emerald-100" : "bg-orange-50 border-orange-100"
+                    )}>
+                      <div className="flex items-center gap-4">
+                        <div className={cn(
+                          "h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center",
+                          currentPayment.status === 'escrow' ? "text-emerald-600" : "text-orange-600"
+                        )}>
+                          {currentPayment.status === 'escrow' ? <ShieldCheck className="h-6 w-6" /> : <Clock className="h-6 w-6" />}
+                        </div>
+                        <div>
+                          <p className="text-sm font-black uppercase text-slate-900">{currentPayment.status === 'escrow' ? 'Funds Secured' : 'Processing'}</p>
+                          <p className="text-xs text-slate-500 font-medium">Transaction: {currentPayment.transactionId}</p>
+                        </div>
+                      </div>
+                      <Badge className={cn("bg-white border-none shadow-sm", currentPayment.status === 'escrow' ? "text-emerald-600" : "text-orange-600")}>
+                        VERIFIED
+                      </Badge>
+                    </div>
+                  )}
+
                   <section className="space-y-6">
                     <div className="flex items-center justify-between">
                       <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2">
@@ -286,7 +330,6 @@ export default function ProposalsPage() {
                     </div>
                   </section>
 
-                  {/* Pricing Summary */}
                   <section className="space-y-6">
                     <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2">
                       <IndianRupee className="h-3 w-3" /> Pricing Engine Recap
@@ -313,17 +356,77 @@ export default function ProposalsPage() {
               <footer className="p-8 border-t bg-slate-50/50 flex items-center gap-3 shrink-0">
                 <Button variant="ghost" className="rounded-xl font-bold h-12 px-6" onClick={() => handleStatusAction('reject')}>Reject</Button>
                 <div className="flex-1" />
-                <Button variant="outline" className="rounded-xl font-bold h-12 px-8 bg-white border-slate-200" onClick={() => handleStatusAction('approve')}>
-                  Simulate Client Approval
-                </Button>
-                <Button className="rounded-xl font-black h-12 px-10 shadow-xl shadow-primary/20" onClick={() => handleStatusAction('send')}>
-                  <Send className="h-4 w-4 mr-2" /> Dispatch Proposal
-                </Button>
+                
+                {selectedProposal.status === 'approved' && !currentPayment ? (
+                  <Button 
+                    className="rounded-xl font-black h-12 px-10 shadow-xl bg-emerald-500 hover:bg-emerald-600 text-white"
+                    onClick={() => setIsPaymentModalOpen(true)}
+                  >
+                    <CreditCard className="h-4 w-4 mr-2" /> Pay Now & Fund Escrow
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="outline" className="rounded-xl font-bold h-12 px-8 bg-white border-slate-200" onClick={() => handleStatusAction('approve')}>
+                      Simulate Client Approval
+                    </Button>
+                    <Button className="rounded-xl font-black h-12 px-10 shadow-xl shadow-primary/20" onClick={() => handleStatusAction('send')}>
+                      <Send className="h-4 w-4 mr-2" /> Dispatch Proposal
+                    </Button>
+                  </>
+                )}
               </footer>
             </motion.aside>
           </>
         )}
       </AnimatePresence>
+
+      {/* PAYMENT MODAL (Simulated Checkout) */}
+      <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
+        <DialogContent className="rounded-[2.5rem] p-10 max-w-lg border-none shadow-2xl">
+          <DialogHeader>
+            <div className="h-12 w-12 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4">
+              <ShieldCheck className="h-6 w-6 text-emerald-600" />
+            </div>
+            <DialogTitle className="text-2xl font-black">Checkout</DialogTitle>
+            <DialogDescription>Securely fund the campaign escrow for {selectedProposal?.companyName}</DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-6">
+            <div className="p-6 rounded-[2rem] bg-slate-50 border border-slate-100 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total to Secure</p>
+                <p className="text-3xl font-black text-slate-900">₹{selectedProposal?.totalPrice.toLocaleString()}</p>
+              </div>
+              <Lock className="h-8 w-8 text-slate-200" />
+            </div>
+
+            <div className="space-y-3">
+              <Label className="font-bold text-slate-700">Payment Method</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {['card', 'upi', 'netbanking'].map((m) => (
+                  <Button
+                    key={m}
+                    variant="outline"
+                    className={cn(
+                      "rounded-xl h-12 font-bold uppercase text-[10px] transition-all",
+                      selectedMethod === m ? "bg-primary text-white border-transparent" : "bg-white text-slate-400"
+                    )}
+                    onClick={() => setSelectedMethod(m as any)}
+                  >
+                    {m}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={handlePay} className="w-full h-14 rounded-2xl text-lg font-black bg-slate-900 hover:bg-slate-800 text-white shadow-xl">
+              Pay & Secure Funds
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
