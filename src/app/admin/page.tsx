@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect } from 'react';
@@ -25,7 +24,8 @@ import {
   RefreshCcw,
   LayoutDashboard,
   ShieldAlert,
-  Download
+  Download,
+  Loader2
 } from 'lucide-react';
 import { 
   AreaChart, 
@@ -49,6 +49,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { PlatformHealthMonitor } from '@/components/admin/PlatformHealth';
 
 // Mock Aggregated Data
 const REVENUE_TRENDS = [
@@ -95,7 +96,7 @@ export default function AdminDashboardPage() {
     { label: 'Total Users', value: '11,440', trend: '+840 this mo', icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
   ];
 
-  if (loading || userProfile?.role !== 'ADMIN') {
+  if (loading || (userProfile && userProfile?.role !== 'ADMIN')) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -125,6 +126,11 @@ export default function AdminDashboardPage() {
             <Sparkles className="h-4 w-4 mr-2" /> AI Platform Health
           </Button>
         </div>
+      </div>
+
+      {/* NEW: Platform Health Score Monitor */}
+      <div className="max-w-[1600px] mx-auto">
+        <PlatformHealthMonitor />
       </div>
 
       {/* Critical Alerts Row */}
