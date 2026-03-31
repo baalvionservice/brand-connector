@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Rocket, ShieldCheck, Zap, ArrowRight, BarChart3, Star, Users } from 'lucide-react';
+import { Rocket, ShieldCheck, Zap, ArrowRight, BarChart3, Star, Users, Cpu, UserCheck, Globe } from 'lucide-react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ParticlesBackground } from '@/components/landing/ParticlesBackground';
@@ -10,6 +10,45 @@ import { StatsBanner } from '@/components/landing/StatsBanner';
 import { HowItWorks } from '@/components/landing/HowItWorks';
 
 export default function LandingPage() {
+  const features = [
+    {
+      title: "AI Matching Engine",
+      desc: "Our proprietary algorithm finds the perfect creators for your specific brand objectives and audience demographics.",
+      icon: Cpu,
+      color: "bg-purple-100 text-purple-600"
+    },
+    {
+      title: "Escrow Payments",
+      desc: "Funds are held in escrow and released only when deliverables are approved. Total security for both parties.",
+      icon: ShieldCheck,
+      color: "bg-green-100 text-green-600"
+    },
+    {
+      title: "Deep Analytics",
+      desc: "Track ROI, engagement rates, and campaign performance in real-time with deep data integration and reporting.",
+      icon: BarChart3,
+      color: "bg-blue-100 text-blue-600"
+    },
+    {
+      title: "Creator Verification",
+      desc: "We vet every creator to ensure a high-quality community of real people with verified performance statistics.",
+      icon: UserCheck,
+      color: "bg-orange-100 text-orange-600"
+    },
+    {
+      title: "Multi-Currency",
+      desc: "Support for global campaigns with automatic currency conversion and localized payment methods worldwide.",
+      icon: Globe,
+      color: "bg-indigo-100 text-indigo-600"
+    },
+    {
+      title: "Community Hub",
+      desc: "Connect with other creators and brands in our exclusive forum to share insights and marketing best practices.",
+      icon: Users,
+      color: "bg-yellow-100 text-yellow-600"
+    }
+  ];
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Navbar */}
@@ -138,60 +177,43 @@ export default function LandingPage() {
         <HowItWorks />
 
         {/* Features Section */}
-        <section id="features" className="w-full py-24 md:py-32 bg-slate-50">
+        <section id="features" className="w-full py-24 md:py-32 bg-slate-50 overflow-hidden">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center mb-16">
-              <h2 className="text-3xl font-headline font-bold tracking-tighter md:text-5xl">Everything You Need to Scale</h2>
-              <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                Powerful tools built for both sides of the marketplace, powered by advanced matching algorithms.
-              </p>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
+                <h2 className="text-3xl font-headline font-bold tracking-tighter md:text-5xl">Everything You Need to Scale</h2>
+                <p className="max-w-[900px] text-muted-foreground mt-4 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                  Powerful tools built for both sides of the marketplace, powered by advanced matching algorithms and secure infrastructure.
+                </p>
+              </motion.div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[
-                {
-                  title: "AI-Powered Matching",
-                  desc: "Our proprietary algorithm finds the perfect creators for your specific brand objectives and audience.",
-                  icon: Zap,
-                  color: "bg-purple-100 text-purple-600"
-                },
-                {
-                  title: "Secure Payments",
-                  desc: "Funds are held in escrow and released only when deliverables are approved. Total peace of mind.",
-                  icon: ShieldCheck,
-                  color: "bg-green-100 text-green-600"
-                },
-                {
-                  title: "Insightful Analytics",
-                  desc: "Track ROI, engagement rates, and campaign performance in real-time with deep data integration.",
-                  icon: BarChart3,
-                  color: "bg-blue-100 text-blue-600"
-                },
-                {
-                  title: "Seamless Workflow",
-                  desc: "From initial pitch to final deliverable, manage every step of the campaign within one unified platform.",
-                  icon: Users,
-                  color: "bg-orange-100 text-orange-600"
-                },
-                {
-                  title: "Verified Profiles",
-                  desc: "We vet every brand and creator to ensure a high-quality community of real people and businesses.",
-                  icon: Star,
-                  color: "bg-yellow-100 text-yellow-600"
-                },
-                {
-                  title: "Real-time Chat",
-                  desc: "Direct communication between brands and creators ensures alignment on vision and requirements.",
-                  icon: Rocket,
-                  color: "bg-red-100 text-red-600"
-                }
-              ].map((feature, i) => (
-                <div key={i} className="group relative bg-background p-8 rounded-2xl border transition-all hover:shadow-lg hover:-translate-y-1">
-                  <div className={`mb-4 w-12 h-12 flex items-center justify-center rounded-xl ${feature.color}`}>
-                    <feature.icon className="h-6 w-6" />
+              {features.map((feature, i) => (
+                <motion.div 
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
+                  className="group relative bg-background p-8 rounded-2xl border transition-all hover:shadow-xl hover:border-primary/20"
+                >
+                  <div className={`mb-6 w-14 h-14 flex items-center justify-center rounded-2xl ${feature.color} group-hover:scale-110 transition-transform duration-300`}>
+                    <feature.icon className="h-7 w-7" />
                   </div>
-                  <h3 className="text-xl font-headline font-bold mb-2">{feature.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{feature.desc}</p>
-                </div>
+                  <h3 className="text-xl font-headline font-bold mb-3">{feature.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed mb-6">
+                    {feature.desc}
+                  </p>
+                  <Link href="#" className="inline-flex items-center text-sm font-bold text-primary hover:underline group/link">
+                    Learn More <ArrowRight className="ml-1 h-4 w-4 group-hover/link:translate-x-1 transition-transform" />
+                  </Link>
+                </motion.div>
               ))}
             </div>
           </div>
