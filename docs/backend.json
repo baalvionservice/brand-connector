@@ -12,6 +12,8 @@
         "displayName": { "type": "string" },
         "photoURL": { "type": "string" },
         "phone": { "type": "string" },
+        "status": { "type": "string", "enum": ["ACTIVE", "SUSPENDED", "PENDING"] },
+        "isVerified": { "type": "boolean" },
         "notificationPreferences": {
           "type": "object",
           "properties": {
@@ -26,68 +28,6 @@
         "updatedAt": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "email", "role"]
-    },
-    "BrandMember": {
-      "title": "Brand Member",
-      "description": "A user who is part of a brand's team.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "email": { "type": "string" },
-        "role": { "type": "string", "enum": ["OWNER", "MANAGER", "REVIEWER", "VIEWER"] },
-        "joinedAt": { "type": "string", "format": "date-time" },
-        "lastActive": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "userId", "email", "role", "joinedAt"]
-    },
-    "Review": {
-      "title": "Review",
-      "description": "Feedback left by a brand for a creator after a campaign.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "creatorId": { "type": "string" },
-        "brandId": { "type": "string" },
-        "brandName": { "type": "string" },
-        "brandLogo": { "type": "string" },
-        "campaignId": { "type": "string" },
-        "campaignTitle": { "type": "string" },
-        "rating": { "type": "number", "minimum": 1, "maximum": 5 },
-        "comment": { "type": "string" },
-        "response": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "creatorId", "brandId", "rating", "comment", "createdAt"]
-    },
-    "Conversation": {
-      "title": "Conversation",
-      "description": "A chat session between two or more participants.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "participantIds": { "type": "array", "items": { "type": "string" } },
-        "lastMessage": { "type": "string" },
-        "lastSenderId": { "type": "string" },
-        "updatedAt": { "type": "string", "format": "date-time" },
-        "unreadCounts": { "type": "object" }
-      },
-      "required": ["id", "participantIds", "updatedAt"]
-    },
-    "Message": {
-      "title": "Message",
-      "description": "An individual message within a conversation.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "conversationId": { "type": "string" },
-        "senderId": { "type": "string" },
-        "text": { "type": "string" },
-        "attachmentUrl": { "type": "string" },
-        "attachmentType": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "conversationId", "senderId", "createdAt"]
     },
     "CreatorProfile": {
       "title": "Creator Profile",
@@ -107,6 +47,8 @@
         "rating": { "type": "number" },
         "visibility": { "type": "string", "enum": ["PUBLIC", "PRIVATE"] },
         "isVerified": { "type": "boolean" },
+        "verificationStatus": { "type": "string", "enum": ["UNVERIFIED", "PENDING", "VERIFIED", "FLAGGED"] },
+        "authenticityScore": { "type": "number" },
         "privacySettings": {
           "type": "object",
           "properties": {
@@ -124,27 +66,6 @@
         "portfolioSamples": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["id", "userId", "username"]
-    },
-    "PortfolioItem": {
-      "title": "Portfolio Item",
-      "description": "A single piece of work in a creator's portfolio.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "mediaUrl": { "type": "string" },
-        "mediaType": { "type": "string", "enum": ["IMAGE", "VIDEO"] },
-        "platform": { "type": "string" },
-        "campaignType": { "type": "string" },
-        "results": { "type": "string" },
-        "isPublic": { "type": "boolean" },
-        "isFeatured": { "type": "boolean" },
-        "order": { "type": "number" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "userId", "title", "mediaUrl", "mediaType"]
     },
     "BrandProfile": {
       "title": "Brand Profile",
@@ -171,169 +92,6 @@
         "billingMethod": { "type": "object" }
       },
       "required": ["id", "userId", "companyName"]
-    },
-    "Campaign": {
-      "title": "Campaign",
-      "description": "A marketing campaign created by a brand.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "brandId": { "type": "string" },
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "objectives": { "type": "array", "items": { "type": "string" } },
-        "targetAudience": { "type": "string" },
-        "niches": { "type": "array", "items": { "type": "string" } },
-        "budget": { "type": "number" },
-        "minBudgetPerCreator": { "type": "number" },
-        "maxBudgetPerCreator": { "type": "number" },
-        "startDate": { "type": "string", "format": "date-time" },
-        "endDate": { "type": "string", "format": "date-time" },
-        "applicationDeadline": { "type": "string", "format": "date-time" },
-        "submissionDeadline": { "type": "string", "format": "date-time" },
-        "postLiveDate": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["DRAFT", "ACTIVE", "PAUSED", "COMPLETED", "CANCELLED"] },
-        "requirements": { "type": "array", "items": { "type": "string" } },
-        "deliverablesCount": { "type": "number" },
-        "deliverables": { "type": "array", "items": { "type": "object" } },
-        "dos": { "type": "array", "items": { "type": "string" } },
-        "donts": { "type": "array", "items": { "type": "string" } },
-        "hashtags": { "type": "array", "items": { "type": "string" } },
-        "handles": { "type": "array", "items": { "type": "string" } },
-        "links": { "type": "array", "items": { "type": "string" } },
-        "mandatoryMentions": { "type": "string" },
-        "creatorTier": { "type": "string", "enum": ["NANO", "MICRO", "MID", "MACRO"] },
-        "minFollowers": { "type": "number" },
-        "maxFollowers": { "type": "number" },
-        "minEngagementRate": { "type": "number" },
-        "targetLocations": { "type": "array", "items": { "type": "string" } },
-        "languages": { "type": "array", "items": { "type": "string" } },
-        "audienceAgeMin": { "type": "number" },
-        "audienceAgeMax": { "type": "number" },
-        "audienceGender": { "type": "string" },
-        "minPosts": { "type": "number" },
-        "isExclusive": { "type": "boolean" },
-        "sourceCampaignId": { "type": "string" },
-        "sourceCampaignTitle": { "type": "string" }
-      },
-      "required": ["id", "brandId", "title", "status"]
-    },
-    "Invite": {
-      "title": "Invite",
-      "description": "A direct invitation from a brand to a creator.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "campaignId": { "type": "string" },
-        "creatorId": { "type": "string" },
-        "brandId": { "type": "string" },
-        "message": { "type": "string" },
-        "budgetOffer": { "type": "number" },
-        "status": { "type": "string", "enum": ["SENT", "OPENED", "ACCEPTED", "DECLINED"] },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "campaignId", "creatorId", "brandId", "status", "createdAt"]
-    },
-    "Application": {
-      "title": "Application",
-      "description": "A proposal submitted by a creator for a campaign.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "campaignId": { "type": "string" },
-        "creatorId": { "type": "string" },
-        "status": { "type": "string", "enum": ["PENDING", "REVIEWING", "ACCEPTED", "REJECTED"] },
-        "pitch": { "type": "string" },
-        "proposedBudget": { "type": "number" },
-        "proposedTimeline": { "type": "string" },
-        "sampleUrls": { "type": "array", "items": { "type": "string" } },
-        "appliedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "campaignId", "creatorId", "status"]
-    },
-    "Deliverable": {
-      "title": "Deliverable",
-      "description": "An asset submitted by a creator for a campaign.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "applicationId": { "type": "string" },
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "status": { "type": "string", "enum": ["PENDING", "SUBMITTED", "REVISION_REQUESTED", "APPROVED"] },
-        "submissionUrl": { "type": "string" },
-        "feedback": { "type": "string" },
-        "submittedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "applicationId", "title", "status"]
-    },
-    "Dispute": {
-      "title": "Dispute",
-      "description": "A formal disagreement between a creator and a brand regarding a campaign.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "campaignId": { "type": "string" },
-        "creatorId": { "type": "string" },
-        "brandId": { "type": "string" },
-        "deliverableId": { "type": "string" },
-        "reason": { "type": "string" },
-        "category": { "type": "string", "enum": ["UNFAIR_REJECTION", "PAYMENT_ISSUE", "SCOPE_CREEP", "OTHER"] },
-        "evidenceUrls": { "type": "array", "items": { "type": "string" } },
-        "proposedResolution": { "type": "string" },
-        "status": { "type": "string", "enum": ["FILED", "UNDER_REVIEW", "ADMIN_DECISION", "RESOLVED"] },
-        "adminNotes": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "campaignId", "creatorId", "brandId", "reason", "status", "createdAt"]
-    },
-    "Wallet": {
-      "title": "Wallet",
-      "description": "Financial balance for a user.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "availableBalance": { "type": "number" },
-        "pendingBalance": { "type": "number" },
-        "currency": { "type": "string" }
-      },
-      "required": ["id", "userId", "availableBalance"]
-    },
-    "Transaction": {
-      "title": "Transaction",
-      "description": "A financial movement.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "walletId": { "type": "string" },
-        "userId": { "type": "string" },
-        "amount": { "type": "number" },
-        "type": { "type": "string", "enum": ["CREDIT", "DEBIT"] },
-        "status": { "type": "string", "enum": ["PENDING", "COMPLETED", "FAILED"] },
-        "description": { "type": "string" },
-        "payoutMethod": { "type": "object" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "walletId", "amount", "type", "status"]
-    },
-    "Notification": {
-      "title": "Notification",
-      "description": "An in-app alert for a user.",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "userId": { "type": "string" },
-        "title": { "type": "string" },
-        "message": { "type": "string" },
-        "type": { "type": "string", "enum": ["CAMPAIGN", "PAYMENT", "MESSAGE", "SYSTEM"] },
-        "read": { "type": "boolean" },
-        "link": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["id", "userId", "title", "type", "read"]
     }
   },
   "auth": {
@@ -344,61 +102,13 @@
       "schema": "UserProfile",
       "description": "User profiles and roles."
     },
-    "/reviews/{reviewId}": {
-      "schema": "Review",
-      "description": "Brand reviews for creators."
-    },
-    "/conversations/{conversationId}": {
-      "schema": "Conversation",
-      "description": "Chat conversations metadata."
-    },
-    "/conversations/{conversationId}/messages/{messageId}": {
-      "schema": "Message",
-      "description": "Individual chat messages."
-    },
     "/creators/{creatorId}": {
       "schema": "CreatorProfile",
       "description": "Creator specific details."
     },
-    "/portfolioItems/{itemId}": {
-      "schema": "PortfolioItem",
-      "description": "Structured samples of a creator's work."
-    },
     "/brands/{brandId}": {
       "schema": "BrandProfile",
       "description": "Brand specific details."
-    },
-    "/brands/{brandId}/members/{memberId}": {
-      "schema": "BrandMember",
-      "description": "Team members for a brand."
-    },
-    "/campaigns/{campaignId}": {
-      "schema": "Campaign",
-      "description": "Brand campaigns."
-    },
-    "/invites/{inviteId}": {
-      "schema": "Invite",
-      "description": "Direct campaign invitations."
-    },
-    "/applications/{applicationId}": {
-      "schema": "Application",
-      "description": "Proposals submitted by creators."
-    },
-    "/deliverables/{deliverableId}": {
-      "schema": "Deliverable",
-      "description": "Submission assets for campaigns."
-    },
-    "/disputes/{disputeId}": {
-      "schema": "Dispute",
-      "description": "Mediation records for disputes."
-    },
-    "/wallets/{walletId}": {
-      "schema": "Wallet",
-      "description": "User wallet balances."
-    },
-    "/transactions/{transactionId}": {
-      "schema": "Transaction",
-      "description": "Ledger of all financial transactions."
     },
     "/notifications/{notificationId}": {
       "schema": "Notification",

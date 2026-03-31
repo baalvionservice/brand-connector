@@ -60,6 +60,8 @@ export interface User {
   displayName: string;
   photoURL?: string;
   phone?: string;
+  status?: 'ACTIVE' | 'SUSPENDED' | 'PENDING';
+  isVerified?: boolean;
   notificationPreferences?: {
     campaigns: boolean;
     payments: boolean;
@@ -116,6 +118,8 @@ export interface CreatorProfile {
   rating: number;
   visibility?: 'PUBLIC' | 'PRIVATE';
   isVerified?: boolean;
+  verificationStatus?: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'FLAGGED';
+  authenticityScore?: number;
   privacySettings?: {
     canMessage: 'anyone' | 'verified' | 'invited';
     canSeeRates: 'anyone' | 'verified';
