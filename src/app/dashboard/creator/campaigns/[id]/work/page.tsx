@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -20,8 +21,10 @@ import {
   Info,
   Check,
   Download,
-  ShieldAlert
+  ShieldAlert,
+  AlertTriangle
 } from 'lucide-react';
+import Link from 'next/link';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -51,7 +54,7 @@ const MOCK_ACTIVE_CAMPAIGN = {
   budget: '₹45,000',
   briefSummary: 'Create a detailed YouTube review focusing on the energy-saving AI automation features. High aesthetic lifestyle shots required.',
   deliverables: [
-    { id: 'del_1', title: 'Main YouTube Video (Draft)', status: 'PENDING' },
+    { id: 'del_1', title: 'Main YouTube Video (Draft)', status: 'REVISION_REQUESTED' },
     { id: 'del_2', title: 'Teaser Reel', status: 'APPROVED' },
     { id: 'del_3', title: 'Community Post Assets', status: 'PENDING' }
   ]
@@ -101,7 +104,7 @@ export default function CreatorCampaignWorkspace() {
     switch (status) {
       case 'APPROVED': return <Badge className="bg-emerald-100 text-emerald-600 border-none">Approved</Badge>;
       case 'SUBMITTED': return <Badge className="bg-blue-100 text-blue-600 border-none">In Review</Badge>;
-      case 'REVISION_REQUESTED': return <Badge className="bg-orange-100 text-orange-600 border-none">Revision</Badge>;
+      case 'REVISION_REQUESTED': return <Badge className="bg-orange-100 text-orange-600 border-none">Revision Requested</Badge>;
       default: return <Badge variant="outline" className="text-slate-400">Pending</Badge>;
     }
   };
@@ -297,6 +300,25 @@ export default function CreatorCampaignWorkspace() {
                         onChange={(e) => setSubmissionNotes(e.target.value)}
                       />
                     </div>
+
+                    {selectedDeliverable.status === 'REVISION_REQUESTED' && (
+                      <div className="p-6 rounded-[2rem] bg-orange-50 border border-orange-100 flex flex-col sm:flex-row items-center justify-between gap-6">
+                        <div className="flex gap-4">
+                          <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
+                            <AlertTriangle className="h-5 w-5 text-orange-500" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-orange-900">Unfair Rejection?</p>
+                            <p className="text-xs text-orange-700 font-medium">If the brand is asking for work outside the original brief, you can file a dispute.</p>
+                          </div>
+                        </div>
+                        <Link href={`/dashboard/creator/campaigns/${params.id}/dispute?deliverableId=${selectedDeliverable.id}`}>
+                          <Button variant="outline" className="rounded-xl font-bold bg-white border-orange-200 text-orange-600 hover:bg-orange-100">
+                            File Dispute
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
 
                     <div className="flex items-center gap-3 p-4 rounded-2xl bg-blue-50 border border-blue-100">
                       <AlertCircle className="h-5 w-5 text-blue-500 shrink-0" />

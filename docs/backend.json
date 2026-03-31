@@ -192,6 +192,27 @@
       },
       "required": ["id", "applicationId", "title", "status"]
     },
+    "Dispute": {
+      "title": "Dispute",
+      "description": "A formal disagreement between a creator and a brand regarding a campaign.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "campaignId": { "type": "string" },
+        "creatorId": { "type": "string" },
+        "brandId": { "type": "string" },
+        "deliverableId": { "type": "string" },
+        "reason": { "type": "string" },
+        "category": { "type": "string", "enum": ["UNFAIR_REJECTION", "PAYMENT_ISSUE", "SCOPE_CREEP", "OTHER"] },
+        "evidenceUrls": { "type": "array", "items": { "type": "string" } },
+        "proposedResolution": { "type": "string" },
+        "status": { "type": "string", "enum": ["FILED", "UNDER_REVIEW", "ADMIN_DECISION", "RESOLVED"] },
+        "adminNotes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "campaignId", "creatorId", "brandId", "reason", "status", "createdAt"]
+    },
     "Wallet": {
       "title": "Wallet",
       "description": "Financial balance for a user.",
@@ -282,6 +303,10 @@
     "/deliverables/{deliverableId}": {
       "schema": "Deliverable",
       "description": "Submission assets for campaigns."
+    },
+    "/disputes/{disputeId}": {
+      "schema": "Dispute",
+      "description": "Mediation records for disputes."
     },
     "/wallets/{walletId}": {
       "schema": "Wallet",

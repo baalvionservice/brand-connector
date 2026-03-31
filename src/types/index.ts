@@ -24,6 +24,13 @@ export enum DeliverableStatus {
   APPROVED = 'APPROVED'
 }
 
+export enum DisputeStatus {
+  FILED = 'FILED',
+  UNDER_REVIEW = 'UNDER_REVIEW',
+  ADMIN_DECISION = 'ADMIN_DECISION',
+  RESOLVED = 'RESOLVED'
+}
+
 export enum TransactionStatus {
   PENDING = 'PENDING',
   COMPLETED = 'COMPLETED',
@@ -171,6 +178,22 @@ export interface Deliverable {
   submissionUrl?: string;
   feedback?: string;
   submittedAt?: string;
+}
+
+export interface Dispute {
+  id: string;
+  campaignId: string;
+  creatorId: string;
+  brandId: string;
+  deliverableId?: string;
+  reason: string;
+  category: 'UNFAIR_REJECTION' | 'PAYMENT_ISSUE' | 'SCOPE_CREEP' | 'OTHER';
+  evidenceUrls: string[];
+  proposedResolution: string;
+  status: DisputeStatus;
+  adminNotes?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Wallet {
