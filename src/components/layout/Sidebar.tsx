@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -17,7 +16,8 @@ import {
   ArrowLeftRight,
   BarChart3,
   ImageIcon,
-  IndianRupee
+  IndianRupee,
+  Users
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -49,6 +49,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
   const brandLinks = [
     { name: 'Dashboard', href: '/dashboard/brand', icon: LayoutDashboard },
     { name: 'My Campaigns', href: '/dashboard/brand/campaigns', icon: Briefcase },
+    { name: 'Find Creators', href: '/dashboard/brand/creators', icon: Users },
     { name: 'Matchmaking', href: '/dashboard/matchmaking', icon: Zap },
     { name: 'Deliverables', href: '/dashboard/deliverables', icon: FileText },
     { name: 'Wallet', href: '/dashboard/wallet', icon: Wallet },
