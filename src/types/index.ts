@@ -57,7 +57,7 @@ export enum OnboardingStatus {
 }
 
 export type SupportCategory = 'TECHNICAL' | 'BILLING' | 'CAMPAIGN' | 'OTHER';
-export type SupportPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+export type SupportPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URENT';
 export type SupportStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
 
 export interface User {
@@ -111,6 +111,19 @@ export interface PackageDeal {
   deliverables: string[];
 }
 
+export interface AuthenticityReport {
+  score: number;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  flags: string[];
+  breakdown: {
+    growth: number;
+    engagement: number;
+    ratio: number;
+    maturity: number;
+    geo: number;
+  };
+}
+
 export interface CreatorProfile {
   id: string;
   userId: string;
@@ -127,6 +140,7 @@ export interface CreatorProfile {
   isVerified?: boolean;
   verificationStatus?: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'FLAGGED';
   authenticityScore?: number;
+  authenticityReport?: AuthenticityReport;
   privacySettings?: {
     canMessage: 'anyone' | 'verified' | 'invited';
     canSeeRates: 'anyone' | 'verified';
