@@ -1,0 +1,93 @@
+
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Core user identity and role information.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["BRAND", "CREATOR", "ADMIN"] },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email", "role"]
+    },
+    "CreatorProfile": {
+      "title": "Creator Profile",
+      "description": "Detailed profile for creative talent.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "bio": { "type": "string" },
+        "niches": { "type": "array", "items": { "type": "string" } },
+        "portfolioLinks": { "type": "array", "items": { "type": "string" } },
+        "socialStats": { "type": "object" },
+        "location": { "type": "string" },
+        "rating": { "type": "number" }
+      },
+      "required": ["id", "userId"]
+    },
+    "BrandProfile": {
+      "title": "Brand Profile",
+      "description": "Detailed profile for brands creating campaigns.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "companyName": { "type": "string" },
+        "industry": { "type": "string" },
+        "website": { "type": "string" },
+        "brandGuidelines": { "type": "string" },
+        "logoUrl": { "type": "string" }
+      },
+      "required": ["id", "userId", "companyName"]
+    },
+    "Campaign": {
+      "title": "Campaign",
+      "description": "A marketing campaign created by a brand.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "brandId": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "objectives": { "type": "array", "items": { "type": "string" } },
+        "targetAudience": { "type": "string" },
+        "niches": { "type": "array", "items": { "type": "string" } },
+        "budget": { "type": "number" },
+        "startDate": { "type": "string", "format": "date-time" },
+        "endDate": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["DRAFT", "ACTIVE", "PAUSED", "COMPLETED", "CANCELLED"] },
+        "requirements": { "type": "array", "items": { "type": "string" } },
+        "deliverablesCount": { "type": "number" }
+      },
+      "required": ["id", "brandId", "title", "status"]
+    }
+  },
+  "auth": {
+    "providers": ["email", "google"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles and roles."
+    },
+    "/creators/{creatorId}": {
+      "schema": "CreatorProfile",
+      "description": "Creator specific details."
+    },
+    "/brands/{brandId}": {
+      "schema": "BrandProfile",
+      "description": "Brand specific details."
+    },
+    "/campaigns/{campaignId}": {
+      "schema": "Campaign",
+      "description": "Brand campaigns."
+    }
+  }
+}
