@@ -44,6 +44,7 @@ export async function generateAndAttachInvoice(
     const docPdf = new jsPDF();
     const isBrandInvoice = tx.type === 'ESCROW_LOCK' || tx.type === 'DEPOSIT';
     const isCreatorPayout = tx.type === 'ESCROW_RELEASE' || tx.type === 'PAYOUT';
+    const isRefund = tx.type === 'REFUND';
 
     // 1. Header Branded Rect
     docPdf.setFillColor(108, 58, 232); // Baalvion Primary Purple
@@ -56,7 +57,7 @@ export async function generateAndAttachInvoice(
     
     docPdf.setFontSize(10);
     docPdf.setFont('helvetica', 'normal');
-    docPdf.text(isBrandInvoice ? 'TAX INVOICE' : 'PAYOUT ADVICE', 20, 30);
+    docPdf.text(isBrandInvoice ? 'TAX INVOICE' : isRefund ? 'REFUND CREDIT NOTE' : 'PAYOUT ADVICE', 20, 30);
 
     // 2. Metadata Section
     docPdf.setTextColor(100, 116, 139);
@@ -69,7 +70,7 @@ export async function generateAndAttachInvoice(
     docPdf.setTextColor(30, 41, 59);
     docPdf.setFontSize(12);
     docPdf.setFont('helvetica', 'bold');
-    docPdf.text('Bill To:', 20, 55);
+    docPdf.text(isRefund ? 'Customer:' : 'Bill To:', 20, 55);
     docPdf.setFont('helvetica', 'normal');
     docPdf.setFontSize(10);
     docPdf.text(context.userName, 20, 62);
@@ -103,6 +104,11 @@ export async function generateAndAttachInvoice(
         ['TDS Deduction (10%)', `- INR ${tds.toLocaleString()}`],
         ['Total Payout Authorized', `INR ${(tx.amount - tds).toLocaleString()}`],
       ];
+    } else if (isRefund) {
+      tableData = [
+        ['Escrow Reversal', `INR ${tx.amount.toLocaleString()}`],
+        ['Reason', tx.description],
+      ];
     } else {
       tableData = [
         [tx.description, `INR ${tx.amount.toLocaleString()}`]
@@ -125,7 +131,7 @@ export async function generateAndAttachInvoice(
     docPdf.setFontSize(8);
     docPdf.setTextColor(148, 163, 184);
     docPdf.text(
-      'This is a computer-generated document. No signature is required. Baalvion Connect acts as an escrow intermediary between brands and creative talent.',
+      'This is a computer-generated document. No signature is required. Baalvion Connect acts as an escrow intermediary. Refunded funds are credited to the available wallet balance.',
       20,
       finalY,
       { maxWidth: 170 }
