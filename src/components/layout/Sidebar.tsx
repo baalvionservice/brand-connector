@@ -82,6 +82,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
   const adminLinks = [
     { name: 'Admin Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'CRM Pipeline', href: '/admin/leads', icon: Target },
+    { name: 'Brand Acquisition', href: '/admin/acquisition', icon: Target },
     { name: 'Platform Analytics', href: '/admin/analytics', icon: PieChart },
     { name: 'User Directory', href: '/admin/users', icon: Users },
     { name: 'Verification Queue', href: '/admin/creators/verify', icon: ShieldCheck },
