@@ -11,6 +11,7 @@
         "role": { "type": "string", "enum": ["BRAND", "CREATOR", "ADMIN"] },
         "displayName": { "type": "string" },
         "photoURL": { "type": "string" },
+        "phone": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
@@ -42,6 +43,8 @@
         "companyName": { "type": "string" },
         "industry": { "type": "string" },
         "website": { "type": "string" },
+        "teamSize": { "type": "string" },
+        "plan": { "type": "string", "enum": ["STARTER", "GROWTH", "ENTERPRISE"] },
         "brandGuidelines": { "type": "string" },
         "logoUrl": { "type": "string" }
       },
