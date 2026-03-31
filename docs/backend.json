@@ -93,21 +93,27 @@
       },
       "required": ["id", "userId", "companyName"]
     },
-    "FlaggedContent": {
-      "title": "Flagged Content",
-      "description": "Submissions flagged for manual safety review.",
+    "Broadcast": {
+      "title": "Broadcast",
+      "description": "A mass notification job sent by administrators.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "deliverableId": { "type": "string" },
-        "campaignId": { "type": "string" },
-        "creatorId": { "type": "string" },
-        "brandId": { "type": "string" },
-        "reason": { "type": "string" },
-        "flagType": { "type": "string", "enum": ["USER_REPORT", "AUTO_KEYWORD", "AI_DETECTION"] },
-        "riskFactor": { "type": "number" },
-        "status": { "type": "string", "enum": ["PENDING", "CLEARED", "REMOVED"] },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "cta": { "type": "string" },
+        "audience": { "type": "string", "enum": ["ALL", "BRANDS", "CREATORS", "NICHE", "PLAN"] },
+        "audienceValue": { "type": "string" },
+        "type": { "type": "string", "enum": ["IN_APP", "EMAIL", "BOTH"] },
+        "status": { "type": "string", "enum": ["SENT", "SCHEDULED"] },
+        "sentAt": { "type": "string", "format": "date-time" },
+        "stats": {
+          "type": "object",
+          "properties": {
+            "recipients": { "type": "number" },
+            "opens": { "type": "number" }
+          }
+        }
       }
     }
   },
@@ -131,9 +137,9 @@
       "schema": "Notification",
       "description": "In-app user alerts."
     },
-    "/flagged_content/{flagId}": {
-      "schema": "FlaggedContent",
-      "description": "Moderation review queue items."
+    "/broadcasts/{broadcastId}": {
+      "schema": "Broadcast",
+      "description": "Mass announcement history."
     }
   }
 }

@@ -326,31 +326,18 @@ export interface Notification {
   createdAt: string;
 }
 
-export interface MatchScore {
-  campaignId: string;
-  creatorId: string;
-  score: number;
-  reasoning: string;
-}
-
-export interface Conversation {
+export interface Broadcast {
   id: string;
-  participantIds: string[];
-  lastMessage?: string;
-  lastSenderId?: string;
-  updatedAt: string;
-  unreadCounts?: Record<string, number>;
-  campaignId?: string;
-  campaignTitle?: string;
-  importantBy?: Record<string, boolean>;
-}
-
-export interface Message {
-  id: string;
-  conversationId: string;
-  senderId: string;
-  text: string;
-  attachmentUrl?: string;
-  attachmentType?: string;
-  createdAt: string;
+  title: string;
+  body: string;
+  cta?: string;
+  audience: 'ALL' | 'BRANDS' | 'CREATORS' | 'NICHE' | 'PLAN';
+  audienceValue?: string;
+  type: 'IN_APP' | 'EMAIL' | 'BOTH';
+  status: 'SENT' | 'SCHEDULED';
+  sentAt: string;
+  stats: {
+    recipients: number;
+    opens: number;
+  };
 }

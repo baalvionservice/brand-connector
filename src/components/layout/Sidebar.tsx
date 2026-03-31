@@ -25,7 +25,8 @@ import {
   ShieldCheck,
   ShieldAlert,
   History,
-  Scale
+  Scale,
+  Megaphone
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -77,6 +78,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Moderation Flow', href: '/admin/campaigns', icon: ShieldAlert },
     { name: 'Financial Control', href: '/admin/finance', icon: IndianRupee },
     { name: 'Mediation Hub', href: '/admin/disputes', icon: Scale },
+    { name: 'Broadcast Center', href: '/admin/notifications', icon: Megaphone },
     { name: 'System Settings', href: '/admin/settings', icon: Settings },
   ];
 
