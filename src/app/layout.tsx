@@ -1,7 +1,8 @@
 
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
+import { Toaster as HotToaster } from 'react-hot-toast';
 import { generateMetadata } from '@/lib/seo';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { FirebaseClientProvider } from '@/firebase';
@@ -64,7 +65,8 @@ export default function RootLayout({
         <FirebaseClientProvider>
           <AuthProvider>
             {children}
-            <Toaster />
+            <ShadcnToaster />
+            <HotToaster position="top-right" reverseOrder={false} />
           </AuthProvider>
         </FirebaseClientProvider>
       </body>
