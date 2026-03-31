@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { generateMetadata } from '@/lib/seo';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 export const metadata: Metadata = generateMetadata();
 
@@ -58,8 +59,10 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased bg-background text-foreground min-h-screen">
-        {children}
-        <Toaster />
+        <AuthProvider>
+          {children}
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );
