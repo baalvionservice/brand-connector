@@ -42,6 +42,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { hasAccess } from '@/lib/billing';
 
 interface SidebarProps {
   mockRole?: 'BRAND' | 'CREATOR' | 'ADMIN';
@@ -53,6 +54,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
   const { userProfile, signOut } = useAuth();
 
   const currentRole = userProfile?.role || mockRole || 'BRAND';
+  const userPlan = userProfile?.role === 'BRAND' ? (userProfile as any).plan || 'STARTER' : 'STARTER';
 
   const creatorLinks = [
     { name: 'Dashboard', href: '/dashboard/creator', icon: LayoutDashboard, id: 'sidebar-dashboard' },
@@ -73,7 +75,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'My Campaigns', href: '/dashboard/brand/campaigns', icon: Briefcase, id: 'sidebar-campaigns' },
     { name: 'Find Creators', href: '/dashboard/brand/creators', icon: Users, id: 'sidebar-creators' },
     { name: 'Deliverables', href: '/dashboard/brand/deliverables', icon: FileText, id: 'sidebar-deliverables' },
-    { name: 'Team Hub', href: '/dashboard/brand/team', icon: UserPlus, id: 'sidebar-team' },
+    { name: 'Team Hub', href: '/dashboard/brand/team', icon: UserPlus, id: 'sidebar-team', feature: 'TEAM_MANAGEMENT' as const },
     { name: 'Tax & Compliance', href: '/dashboard/brand/tax', icon: FileBadge, id: 'sidebar-tax' },
     { name: 'Billing & Plans', href: '/dashboard/brand/billing', icon: CreditCard, id: 'sidebar-billing' },
     { name: 'Wallet', href: '/dashboard/brand/wallet', icon: Wallet, id: 'sidebar-wallet' },
@@ -106,7 +108,15 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
     { name: 'Global Settings', href: '/admin/settings', icon: Settings },
   ];
 
-  const links = currentRole === 'ADMIN' ? adminLinks : currentRole === 'BRAND' ? brandLinks : creatorLinks;
+  const rawLinks = currentRole === 'ADMIN' ? adminLinks : currentRole === 'BRAND' ? brandLinks : creatorLinks;
+  
+  // Filter links based on plan feature gating
+  const links = rawLinks.filter(link => {
+    if (currentRole === 'BRAND' && 'feature' in link) {
+      return hasAccess(userPlan, link.feature as any);
+    }
+    return true;
+  });
 
   return (
     <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 border-r bg-white shadow-sm z-30" aria-label="Main Navigation">
@@ -178,7 +188,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
                   {currentRole === 'ADMIN' ? 'Admin Access' : userProfile?.displayName || 'User'}
                 </p>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter truncate">
-                  {currentRole === 'ADMIN' ? 'Platform Root' : currentRole === 'BRAND' ? 'Enterprise' : 'Verified Pro'}
+                  {currentRole === 'ADMIN' ? 'Platform Root' : currentRole === 'BRAND' ? `${userPlan} Plan` : 'Verified Pro'}
                 </p>
               </div>
               <button 
