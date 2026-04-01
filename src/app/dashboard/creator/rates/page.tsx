@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -149,223 +148,225 @@ export default function RateCardBuilderPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h1 className="text-3xl font-headline font-bold text-slate-900 tracking-tight">Rate Card Builder</h1>
-          <p className="text-slate-500 mt-1">Define your commercial value across platforms and create enticing package deals.</p>
+    <>
+      <div className="max-w-6xl mx-auto space-y-8 pb-20">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div>
+            <h1 className="text-3xl font-headline font-bold text-slate-900 tracking-tight">Rate Card Builder</h1>
+            <p className="text-slate-500 mt-1">Define your commercial value across platforms and create enticing package deals.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" className="rounded-xl font-bold bg-white" onClick={() => setIsPreviewOpen(true)}>
+              <Eye className="mr-2 h-4 w-4" /> Preview Brand View
+            </Button>
+            <Button 
+              disabled={isSaving}
+              onClick={handleSave}
+              className="rounded-xl font-bold px-8 shadow-lg shadow-primary/20 h-11"
+            >
+              {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Save Rate Card
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-xl font-bold bg-white" onClick={() => setIsPreviewOpen(true)}>
-            <Eye className="mr-2 h-4 w-4" /> Preview Brand View
-          </Button>
-          <Button 
-            disabled={isSaving}
-            onClick={handleSave}
-            className="rounded-xl font-bold px-8 shadow-lg shadow-primary/20 h-11"
-          >
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            Save Rate Card
-          </Button>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* Main Pricing Table */}
-        <div className="lg:col-span-8 space-y-8">
-          <Card className="border-none shadow-sm shadow-slate-200/50 rounded-[2rem] overflow-hidden bg-white">
-            <CardHeader className="p-8 border-b bg-slate-50/50">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl">Standard Base Rates</CardTitle>
-                  <CardDescription>Your starting price for individual content units.</CardDescription>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Main Pricing Table */}
+          <div className="lg:col-span-8 space-y-8">
+            <Card className="border-none shadow-sm shadow-slate-200/50 rounded-[2rem] overflow-hidden bg-white">
+              <CardHeader className="p-8 border-b bg-slate-50/50">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-xl">Standard Base Rates</CardTitle>
+                    <CardDescription>Your starting price for individual content units.</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] font-black text-primary bg-primary/5 px-3 py-1 rounded-full uppercase tracking-widest border border-primary/10">
+                    <Sparkles className="h-3 w-3" /> AI Market Pricing Active
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-black text-primary bg-primary/5 px-3 py-1 rounded-full uppercase tracking-widest border border-primary/10">
-                  <Sparkles className="h-3 w-3" /> AI Market Pricing Active
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="hover:bg-transparent border-slate-100">
-                    <TableHead className="w-[200px] pl-8 h-14 font-black text-[10px] uppercase tracking-widest text-slate-400">Platform</TableHead>
-                    {CONTENT_TYPES.map(type => (
-                      <TableHead key={type.id} className="font-black text-[10px] uppercase tracking-widest text-slate-400 text-center">{type.name}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {PLATFORMS.map((platform) => (
-                    <TableRow key={platform.id} className="border-slate-50 hover:bg-slate-50/30 transition-colors">
-                      <TableCell className="pl-8 py-6">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center">
-                            <platform.icon className={cn("h-5 w-5", platform.color)} />
-                          </div>
-                          <span className="font-bold text-slate-900">{platform.name}</span>
-                        </div>
-                      </TableCell>
-                      {CONTENT_TYPES.map(type => {
-                        const key = `${platform.id}_${type.id}`;
-                        return (
-                          <TableCell key={type.id} className="text-center px-4">
-                            <div className="relative group">
-                              <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-300 group-focus-within:text-primary transition-colors" />
-                              <Input 
-                                value={baseRates[key] ? baseRates[key].toLocaleString() : ''}
-                                onChange={(e) => handleRateChange(platform.id, type.id, e.target.value)}
-                                placeholder="0"
-                                className="h-11 pl-8 text-center rounded-xl bg-slate-50/50 border-transparent hover:border-slate-200 focus:bg-white focus:border-primary transition-all font-bold"
-                              />
-                            </div>
-                          </TableCell>
-                        );
-                      })}
+              </CardHeader>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent border-slate-100">
+                      <TableHead className="w-[200px] pl-8 h-14 font-black text-[10px] uppercase tracking-widest text-slate-400">Platform</TableHead>
+                      {CONTENT_TYPES.map(type => (
+                        <TableHead key={type.id} className="font-black text-[10px] uppercase tracking-widest text-slate-400 text-center">{type.name}</TableHead>
+                      ))}
                     </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {PLATFORMS.map((platform) => (
+                      <TableRow key={platform.id} className="border-slate-50 hover:bg-slate-50/30 transition-colors">
+                        <TableCell className="pl-8 py-6">
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center">
+                              <platform.icon className={cn("h-5 w-5", platform.color)} />
+                            </div>
+                            <span className="font-bold text-slate-900">{platform.name}</span>
+                          </div>
+                        </TableCell>
+                        {CONTENT_TYPES.map(type => {
+                          const key = `${platform.id}_${type.id}`;
+                          return (
+                            <TableCell key={type.id} className="text-center px-4">
+                              <div className="relative group">
+                                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-300 group-focus-within:text-primary transition-colors" />
+                                <Input 
+                                  value={baseRates[key] ? baseRates[key].toLocaleString() : ''}
+                                  onChange={(e) => handleRateChange(platform.id, type.id, e.target.value)}
+                                  placeholder="0"
+                                  className="h-11 pl-8 text-center rounded-xl bg-slate-50/50 border-transparent hover:border-slate-200 focus:bg-white focus:border-primary transition-all font-bold"
+                                />
+                              </div>
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+              <CardFooter className="p-6 bg-slate-50/30 border-t flex justify-center">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                  <Info className="h-3.5 w-3.5" /> These are base rates. You can always negotiate during application.
+                </p>
+              </CardFooter>
+            </Card>
+
+            {/* Package Deals Section */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Package className="h-5 w-5 text-primary" />
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Package Deals</h2>
+                </div>
+                <Button variant="secondary" className="rounded-xl font-bold h-10 px-6 gap-2" onClick={addPackage}>
+                  <PlusCircle className="h-4 w-4" /> Add Package
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <AnimatePresence mode="popLayout">
+                  {packages.map((pkg, idx) => (
+                    <motion.div
+                      key={pkg.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ delay: idx * 0.05 }}
+                      layout
+                    >
+                      <Card className="border-none shadow-sm hover:shadow-md transition-shadow rounded-[2rem] overflow-hidden bg-white ring-1 ring-slate-100">
+                        <CardContent className="p-8 space-y-6">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 space-y-4">
+                              <div className="space-y-1">
+                                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Package Name</Label>
+                                <Input 
+                                  value={pkg.title}
+                                  onChange={(e) => updatePackage(pkg.id, { title: e.target.value })}
+                                  className="h-11 rounded-xl bg-slate-50 border-none font-bold text-lg focus-visible:ring-primary"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</Label>
+                                <Input 
+                                  value={pkg.description}
+                                  onChange={(e) => updatePackage(pkg.id, { description: e.target.value })}
+                                  className="h-11 rounded-xl bg-slate-50 border-none text-sm text-slate-500 font-medium"
+                                />
+                              </div>
+                            </div>
+                            <Button variant="ghost" size="icon" className="text-slate-300 hover:text-red-500 rounded-full" onClick={() => removePackage(pkg.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          <Separator className="opacity-50" />
+
+                          <div className="flex items-end gap-4">
+                            <div className="flex-1 space-y-1">
+                              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Package Price</Label>
+                              <div className="relative group">
+                                <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary" />
+                                <Input 
+                                  value={pkg.price.toLocaleString()}
+                                  onChange={(e) => updatePackage(pkg.id, { price: parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0 })}
+                                  className="h-12 pl-10 rounded-xl bg-primary/5 border-none text-xl font-black text-primary"
+                                />
+                              </div>
+                            </div>
+                            <Badge className="h-6 bg-emerald-100 text-emerald-600 border-none font-black text-[9px] uppercase tracking-tighter self-center mt-6">
+                              Best Value
+                            </Badge>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
                   ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-            <CardFooter className="p-6 bg-slate-50/30 border-t flex justify-center">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                <Info className="h-3.5 w-3.5" /> These are base rates. You can always negotiate during application.
-              </p>
-            </CardFooter>
-          </Card>
-
-          {/* Package Deals Section */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <Package className="h-5 w-5 text-primary" />
-                </div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Package Deals</h2>
+                </AnimatePresence>
               </div>
-              <Button variant="secondary" className="rounded-xl font-bold h-10 px-6 gap-2" onClick={addPackage}>
-                <PlusCircle className="h-4 w-4" /> Add Package
-              </Button>
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <AnimatePresence mode="popLayout">
-                {packages.map((pkg, idx) => (
-                  <motion.div
-                    key={pkg.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ delay: idx * 0.05 }}
-                    layout
-                  >
-                    <Card className="border-none shadow-sm hover:shadow-md transition-shadow rounded-[2rem] overflow-hidden bg-white ring-1 ring-slate-100">
-                      <CardContent className="p-8 space-y-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 space-y-4">
-                            <div className="space-y-1">
-                              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Package Name</Label>
-                              <Input 
-                                value={pkg.title}
-                                onChange={(e) => updatePackage(pkg.id, { title: e.target.value })}
-                                className="h-11 rounded-xl bg-slate-50 border-none font-bold text-lg focus-visible:ring-primary"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</Label>
-                              <Input 
-                                value={pkg.description}
-                                onChange={(e) => updatePackage(pkg.id, { description: e.target.value })}
-                                className="h-11 rounded-xl bg-slate-50 border-none text-sm text-slate-500 font-medium"
-                              />
-                            </div>
-                          </div>
-                          <Button variant="ghost" size="icon" className="text-slate-300 hover:text-red-500 rounded-full" onClick={() => removePackage(pkg.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+          {/* Right Column: Insights & Quick Tips */}
+          <aside className="lg:col-span-4 space-y-8">
+            <Card className="border-none shadow-xl shadow-primary/10 rounded-3xl overflow-hidden bg-gradient-to-br from-primary to-indigo-700 text-white">
+              <CardContent className="p-8 space-y-6">
+                <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-md">
+                  <Sparkles className="h-6 w-6 text-yellow-300 fill-yellow-300" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xl font-black">AI Insights: Pricing</h3>
+                  <p className="text-white/80 text-sm leading-relaxed font-medium">
+                    Creators in your niche with similar reach typically charge <strong>₹12,500 - ₹18,000</strong> for high-quality Instagram Reels. 
+                  </p>
+                </div>
+                <div className="p-4 rounded-2xl bg-white/10 border border-white/10">
+                  <p className="text-xs font-bold leading-relaxed">
+                    Tip: Offering a "3-Post Bundle" at a 15% discount can increase your average booking value by 2.4x.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
 
-                        <Separator className="opacity-50" />
-
-                        <div className="flex items-end gap-4">
-                          <div className="flex-1 space-y-1">
-                            <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Package Price</Label>
-                            <div className="relative group">
-                              <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary" />
-                              <Input 
-                                value={pkg.price.toLocaleString()}
-                                onChange={(e) => updatePackage(pkg.id, { price: parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0 })}
-                                className="h-12 pl-10 rounded-xl bg-primary/5 border-none text-xl font-black text-primary"
-                              />
-                            </div>
-                          </div>
-                          <Badge className="h-6 bg-emerald-100 text-emerald-600 border-none font-black text-[9px] uppercase tracking-tighter self-center mt-6">
-                            Best Value
-                          </Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+            <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden bg-white">
+              <CardHeader className="border-b bg-slate-50/50">
+                <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-400">Pricing Checklist</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-4">
+                {[
+                  { label: 'Set at least 3 platform rates', checked: Object.keys(baseRates).length >= 3 },
+                  { label: 'Create 1 high-value package', checked: packages.length >= 1 },
+                  { label: 'Link YouTube for long-form rates', checked: true },
+                  { label: 'Market comparison audit', checked: true },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-600">{item.label}</span>
+                    {item.checked ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <div className="h-4 w-4 rounded-full border-2 border-slate-100" />}
+                  </div>
                 ))}
-              </AnimatePresence>
+              </CardContent>
+            </Card>
+
+            <div className="p-6 rounded-3xl bg-white border border-dashed border-slate-300 flex flex-col items-center text-center space-y-3">
+              <div className="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center">
+                <ShieldCheck className="h-5 w-5 text-emerald-500" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-slate-900 uppercase">Live Pricing Sync</p>
+                <p className="text-[10px] text-slate-500 font-medium mt-1">
+                  All changes made here are instantly pushed to the public pricing page and brand upgrade workflows.
+                </p>
+              </div>
             </div>
-          </div>
+          </aside>
         </div>
-
-        {/* Right Column: Insights & Quick Tips */}
-        <aside className="lg:col-span-4 space-y-8">
-          <Card className="border-none shadow-xl shadow-primary/10 rounded-3xl overflow-hidden bg-gradient-to-br from-primary to-indigo-700 text-white">
-            <CardContent className="p-8 space-y-6">
-              <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center backdrop-blur-md">
-                <Sparkles className="h-6 w-6 text-yellow-300 fill-yellow-300" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-black">AI Insights: Pricing</h3>
-                <p className="text-white/80 text-sm leading-relaxed font-medium">
-                  Creators in your niche with similar reach typically charge <strong>₹12,500 - ₹18,000</strong> for high-quality Instagram Reels. 
-                </p>
-              </div>
-              <div className="p-4 rounded-2xl bg-white/10 border border-white/10">
-                <p className="text-xs font-bold leading-relaxed">
-                  Tip: Offering a "3-Post Bundle" at a 15% discount can increase your average booking value by 2.4x.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden bg-white">
-            <CardHeader className="border-b bg-slate-50/50">
-              <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-400">Pricing Checklist</CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-4">
-              {[
-                { label: 'Set at least 3 platform rates', checked: Object.keys(baseRates).length >= 3 },
-                { label: 'Create 1 high-value package', checked: packages.length >= 1 },
-                { label: 'Link YouTube for long-form rates', checked: true },
-                { label: 'Market comparison audit', checked: true },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-600">{item.label}</span>
-                  {item.checked ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <div className="h-4 w-4 rounded-full border-2 border-slate-100" />}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <div className="p-6 rounded-3xl bg-white border border-dashed border-slate-300 flex flex-col items-center text-center space-y-3">
-            <div className="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center">
-              <ShieldCheck className="h-5 w-5 text-emerald-500" />
-            </div>
-            <div>
-              <p className="text-xs font-black text-slate-900 uppercase">Live Pricing Sync</p>
-              <p className="text-[10px] text-slate-500 font-medium mt-1">
-                All changes made here are instantly pushed to the public pricing page and brand upgrade workflows.
-              </p>
-            </div>
-          </div>
-        </aside>
       </div>
 
       {/* Preview Dialog */}
@@ -450,6 +451,6 @@ export default function RateCardBuilderPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

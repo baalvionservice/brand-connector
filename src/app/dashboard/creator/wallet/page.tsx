@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -94,7 +93,7 @@ export default function CreatorWalletPage() {
 
   // Find most recent pending payout for tracker
   const activePayout = useMemo(() => {
-    return transactions.find(tx => tx.type === 'PAYOUT' && tx.status === 'PENDING');
+    return (transactions || []).find(tx => tx.type === 'PAYOUT' && tx.status === 'PENDING');
   }, [transactions]);
 
   const stats = {
@@ -471,7 +470,7 @@ export default function CreatorWalletPage() {
           <CardContent className="pb-8">
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-black text-slate-900">₹{stats.pending.toLocaleString()}</span>
-              <div className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
+              <div className="h-2 w-2 rounded-full bg-orange-50 animate-pulse" />
             </div>
             <div className="mt-6 flex flex-col gap-3">
               <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-400 tracking-widest">
