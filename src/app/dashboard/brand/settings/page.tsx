@@ -151,7 +151,7 @@ export default function BrandSettingsPage() {
 
       <Tabs defaultValue="profile" onValueChange={setActiveTab} className="w-full">
         <TabsList className="w-full justify-start h-auto p-1 bg-slate-100/50 rounded-2xl border mb-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
-          <TabsTrigger value="profile" className="rounded-xl py-2.5 px-6 font-bold flex gap-2"><Building2 className="h-4 w-4" /> Company Profile</TabsTrigger>
+          <TabsTrigger value="profile" className="rounded-xl py-2.5 px-6 font-bold flex gap-2"><Globe className="h-4 w-4" /> General</TabsTrigger>
           <TabsTrigger value="verification" className="rounded-xl py-2.5 px-6 font-bold flex gap-2"><ShieldCheck className="h-4 w-4" /> Verification</TabsTrigger>
           <TabsTrigger value="payment" className="rounded-xl py-2.5 px-6 font-bold flex gap-2"><CreditCard className="h-4 w-4" /> Billing & GST</TabsTrigger>
           <TabsTrigger value="defaults" className="rounded-xl py-2.5 px-6 font-bold flex gap-2"><FileText className="h-4 w-4" /> Campaign Defaults</TabsTrigger>

@@ -410,7 +410,7 @@ export default function ProposalsPage() {
                 </div>
                 <div>
                   <DialogTitle className="text-2xl font-black">Checkout</DialogTitle>
-                  <DialogDescription className="font-medium">Securely fund the campaign escrow for {selectedProposal?.companyName}</DialogDescription>
+                  <DialogDescription className="font-medium text-slate-500">Securely fund the campaign escrow for {selectedProposal?.companyName}</DialogDescription>
                 </div>
               </div>
             </DialogHeader>

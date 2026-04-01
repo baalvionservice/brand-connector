@@ -56,7 +56,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-64">
+                <SheetContent side="left" className="p-0 w-64 border-none shadow-2xl">
                   <DashboardSidebar mockRole="ADMIN" />
                 </SheetContent>
               </Sheet>

@@ -265,7 +265,7 @@ export default function BrandAcquisitionPage() {
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400 text-center">Handle</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400 text-center">Platform</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400 text-center">Reach</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400 text-center">Propensity</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-center">Propensity</TableHead>
                     <TableHead className="pr-8 text-right font-black text-[10px] uppercase tracking-widest text-slate-400">Intel</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -422,7 +422,7 @@ export default function BrandAcquisitionPage() {
                     <p className="text-[10px] font-bold text-slate-400 uppercase">System Intelligence View</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setDetailLead(null)}><X className="h-5 w-5" /></Button>
+                <button className="rounded-full p-2 hover:bg-slate-100" onClick={() => setDetailLead(null)}><X className="h-5 w-5" /></button>
               </div>
 
               <ScrollArea className="flex-1 p-8">
