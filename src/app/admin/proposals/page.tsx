@@ -24,7 +24,8 @@ import {
   Zap,
   CreditCard,
   Lock,
-  Rocket
+  Rocket,
+  ShieldCheck
 } from 'lucide-react';
 import { useProposalStore } from '@/store/useProposalStore';
 import { usePaymentStore } from '@/store/usePaymentStore';

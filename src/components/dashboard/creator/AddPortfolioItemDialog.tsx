@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useRef } from 'react';
@@ -58,7 +59,7 @@ export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemD
   const db = useFirestore();
   const storage = useStorage();
   const { toast } = useToast();
-  fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);

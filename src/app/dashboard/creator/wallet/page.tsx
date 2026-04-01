@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -227,7 +228,10 @@ export default function CreatorWalletPage() {
                       ].map((m) => (
                         <div key={m.id}>
                           <RadioGroupItem value={m.id} id={m.id} className="peer sr-only" />
-                          <Label htmlFor={m.id} className="flex items-center justify-between p-5 rounded-2xl border-2 border-slate-50 bg-white cursor-pointer transition-all hover:bg-slate-50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5">
+                          <Label htmlFor={m.id} className={cn(
+                            "flex items-center justify-between p-5 rounded-2xl border-2 border-slate-50 bg-white cursor-pointer transition-all hover:bg-slate-50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5",
+                            payoutMethod === m.id && "border-primary bg-primary/5 shadow-md"
+                          )}>
                             <div className="flex items-center gap-4">
                               <div className={cn("h-12 w-12 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0", m.color)}>
                                 <m.icon className="h-6 w-6" />
