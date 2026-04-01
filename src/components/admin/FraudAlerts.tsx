@@ -137,7 +137,7 @@ export function FraudAlerts() {
     });
   }, [alerts, searchQuery, typeFilter]);
 
-  const handleAction = async (action: 'RESOLVE' | 'DISMISS' | 'PAUSE_PAYOUT' | 'SUSPEND', feedback?: string) => {
+  const handleAction = async (action: 'RESOLVE' | 'DISMISS' | 'PAUSE_PAYOUT' | 'SUSPEND') => {
     if (!selectedAlert || isProcessing) return;
     setIsProcessing(true);
 

@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import { 
   Select, 
   SelectContent, 
@@ -110,6 +111,7 @@ export default function AdminPlanConfigPage() {
   };
 
   const handleSave = async () => {
+    if (!activePlan) return;
     setIsSaving(true);
     const planRef = doc(db, 'system_plans', activeTier);
     
@@ -128,7 +130,7 @@ export default function AdminPlanConfigPage() {
     } catch (err: any) {
       errorEmitter.emitPermissionError(new FirestorePermissionError({
         path: planRef.path,
-        operation: 'update',
+        operation: 'write',
         requestResourceData: activePlan
       }));
     } finally {
@@ -306,7 +308,7 @@ export default function AdminPlanConfigPage() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-slate-50">
-                {changeHistory.slice(0, 5).map((log) => (
+                {changeHistory.slice(0, 5).map((log: any) => (
                   <div key={log.id} className="p-5 flex items-start gap-4 hover:bg-slate-50/50 transition-colors">
                     <div className="h-8 w-8 rounded-lg bg-primary/5 text-primary flex items-center justify-center shrink-0">
                       <Zap className="h-4 w-4" />
