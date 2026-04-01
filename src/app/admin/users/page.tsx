@@ -390,7 +390,7 @@ export default function UserManagementPage() {
             <Button 
               variant="outline" 
               size="sm" 
-              className="rounded-xl h-9 w-9 p-0" 
+              className="rounded-xl h-9 w-9 p-0 bg-white border-slate-200" 
               disabled={page === 1}
               onClick={() => setPage(page - 1)}
             >
@@ -412,7 +412,7 @@ export default function UserManagementPage() {
             <Button 
               variant="outline" 
               size="sm" 
-              className="rounded-xl h-9 w-9 p-0" 
+              className="rounded-xl h-9 w-9 p-0 bg-white border-slate-200" 
               disabled={page === totalPages || totalPages === 0}
               onClick={() => setPage(page + 1)}
             >

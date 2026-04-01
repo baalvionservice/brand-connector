@@ -1,4 +1,3 @@
-
 'use client';
 
 import React from 'react';
@@ -9,20 +8,21 @@ import {
   Filter, 
   Activity, 
   RefreshCcw, 
-  ChevronRight,
-  ShieldCheck,
-  Zap,
-  Loader2,
-  FileText,
-  AlertTriangle,
-  History,
-  TrendingUp,
-  Fingerprint
+  ChevronRight, 
+  ShieldCheck, 
+  Zap, 
+  Loader2, 
+  FileText, 
+  AlertTriangle, 
+  History, 
+  TrendingUp, 
+  Fingerprint 
 } from 'lucide-react';
 import { FraudAlerts } from '@/components/admin/FraudAlerts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
 export default function FraudDetectionDashboard() {
@@ -66,7 +66,7 @@ export default function FraudDetectionDashboard() {
             transition={{ delay: i * 0.1 }}
           >
             <Card className="border-none shadow-sm rounded-2xl p-6 bg-white group hover:shadow-md transition-shadow">
-              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-4", stat.bg, stat.color)}>
+              <div className={cn("h-12 w-12 rounded-xl flex items-center justify-center mb-4 transition-colors", stat.bg, stat.color)}>
                 <stat.icon className="h-6 w-6" />
               </div>
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
