@@ -171,7 +171,7 @@ export default function BrandSettingsPage() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
                   <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
-                    <CardHeader className="p-8 border-b bg-slate-50/50">
+                    <CardHeader className="p-8 border-b bg-slate-50/50 p-8">
                       <CardTitle className="text-xl">Platform Identity</CardTitle>
                       <CardDescription>Core branding and contact information.</CardDescription>
                     </CardHeader>

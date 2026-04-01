@@ -19,6 +19,7 @@ import {
   Loader2,
   Package,
   PlusCircle,
+  ShieldCheck,
   LayoutGrid
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -351,6 +352,18 @@ export default function RateCardBuilderPage() {
               ))}
             </CardContent>
           </Card>
+
+          <div className="p-6 rounded-3xl bg-white border border-dashed border-slate-300 flex flex-col items-center text-center space-y-3">
+            <div className="h-10 w-10 rounded-full bg-slate-50 flex items-center justify-center">
+              <ShieldCheck className="h-5 w-5 text-emerald-500" />
+            </div>
+            <div>
+              <p className="text-xs font-black text-slate-900 uppercase">Live Pricing Sync</p>
+              <p className="text-[10px] text-slate-500 font-medium mt-1">
+                All changes made here are instantly pushed to the public pricing page and brand upgrade workflows.
+              </p>
+            </div>
+          </div>
         </aside>
       </div>
 

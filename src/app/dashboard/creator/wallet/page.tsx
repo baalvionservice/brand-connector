@@ -13,18 +13,18 @@ import {
   History, 
   Plus, 
   ShieldCheck, 
-  Loader2,
-  ChevronRight,
-  MoreHorizontal,
-  Download,
-  Building2,
-  Zap,
-  Check,
-  Smartphone,
-  Globe,
-  ArrowRight,
-  ArrowLeft,
-  Activity
+  Loader2, 
+  ChevronRight, 
+  MoreHorizontal, 
+  Download, 
+  Building2, 
+  Zap, 
+  Check, 
+  Smartphone, 
+  Globe, 
+  ArrowRight, 
+  ArrowLeft, 
+  Activity 
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
@@ -58,7 +58,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, query, where, orderBy, limit } from 'firebase/firestore';
 import { TransactionHistory } from '@/components/payments/TransactionHistory';
 import { requestPayout, getPayoutStep } from '@/lib/payouts';
@@ -328,7 +328,7 @@ export default function CreatorWalletPage() {
                       <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-10 w-10 text-primary" />
                     </div>
                     <div className="space-y-2">
-                      h3 className="text-2xl font-black">Securing Funds</h3>
+                      <h3 className="text-2xl font-black">Securing Funds</h3>
                       <p className="text-sm text-slate-500 max-w-xs mx-auto">Verifying transaction integrity and communicating with the payment gateway.</p>
                     </div>
                   </motion.div>

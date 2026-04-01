@@ -165,7 +165,7 @@ export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemD
             <div className="aspect-[4/5] rounded-3xl border-2 border-dashed border-slate-200 bg-white flex flex-col items-center justify-center relative overflow-hidden group">
               {mediaUrl ? (
                 <>
-                  <img src={mediaUrl} className="absolute inset-0 w-full h-full object-cover" />
+                  <img src={mediaUrl} className="absolute inset-0 w-full h-full object-cover" alt="Preview" />
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <Button variant="secondary" size="sm" className="rounded-xl font-bold" onClick={() => fileInputRef.current?.click()}>
                       Change Media

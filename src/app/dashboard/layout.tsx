@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -178,7 +177,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </div>
                   <div className="hidden md:flex flex-col items-start">
                     <span className="text-xs font-bold leading-tight">
-                      {userProfile?.displayName || 'Mock Admin'}
+                      {userProfile?.displayName || 'User'}
                     </span>
                     <span className="text-[10px] text-muted-foreground font-medium">
                       {role} Access
