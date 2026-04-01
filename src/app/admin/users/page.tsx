@@ -252,7 +252,7 @@ export default function UserManagementPage() {
                 <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400">User Identity</TableHead>
                 <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400">Account Role</TableHead>
                 <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400 text-center">Status</TableHead>
-                <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400 text-center">Verification</TableHead>
+                <TableHead className="font-black text-[10px] uppercase tracking-widest text-center">Verification</TableHead>
                 <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400">Joined Date</TableHead>
                 <TableHead className="pr-8 text-right font-black text-[10px] uppercase tracking-widest text-slate-400">Management</TableHead>
               </TableRow>

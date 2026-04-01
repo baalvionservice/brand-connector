@@ -508,7 +508,7 @@ export default function CreatorWalletPage() {
 
       {/* Shared Transaction History Component */}
       <TransactionHistory 
-        data={transactions} 
+        data={transactions || []} 
         loading={txLoading} 
         title="Personal Earnings Ledger"
         description="Comprehensive audit of campaign payouts, milestone releases, and platform settlements."
