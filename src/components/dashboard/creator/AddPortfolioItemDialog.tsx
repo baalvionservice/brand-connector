@@ -12,7 +12,9 @@ import {
   Globe, 
   TrendingUp, 
   Zap,
-  Check
+  Check,
+  PlusCircle,
+  Star
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirestore, useStorage } from '@/firebase';
@@ -43,7 +45,9 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { SOCIAL_PLATFORMS } from '@/constants';
+import { cn } from '@/lib/utils';
 
 interface AddPortfolioItemDialogProps {
   open: boolean;
