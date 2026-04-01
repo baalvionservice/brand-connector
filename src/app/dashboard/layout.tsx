@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -46,6 +45,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { userProfile, signOut } = useAuth();
   const { notifications, fetchNotifications, unreadCount, markRead } = useNotificationStore();
 
@@ -53,7 +53,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     fetchNotifications();
   }, []);
 
-  const [role, setRole] = useState<'BRAND' | 'CREATOR' | 'ADMIN'>('ADMIN');
+  const [role, setRole] = useState<'BRAND' | 'CREATOR' | 'ADMIN'>('BRAND');
 
   useEffect(() => {
     if (userProfile) {
@@ -135,7 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <Link href="/dashboard/notifications" className="text-[10px] font-bold text-primary hover:underline">View All</Link>
                 </div>
                 <ScrollArea className="max-h-[400px]">
-                  {notifications.length > 0 ? (
+                  {(notifications || []).length > 0 ? (
                     <div className="divide-y divide-slate-50">
                       {notifications.map((n) => (
                         <button

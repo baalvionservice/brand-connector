@@ -169,7 +169,7 @@ export function EarningsForecast() {
             </h4>
             
             <div className="space-y-4">
-              {opportunities.map((op, i) => (
+              {(opportunities || []).map((op, i) => (
                 <motion.div 
                   key={op.id}
                   initial={{ opacity: 0, x: 20 }}

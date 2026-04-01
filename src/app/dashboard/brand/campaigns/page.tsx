@@ -83,7 +83,7 @@ export default function BrandCampaignsPage() {
   const { data: campaigns, loading } = useCollection<Campaign>(campaignsQuery);
 
   const filteredCampaigns = useMemo(() => {
-    return campaigns.filter(c => {
+    return (campaigns || []).filter(c => {
       const matchesSearch = c.title.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = activeTab === 'ALL' || c.status === activeTab;
       return matchesSearch && matchesStatus;

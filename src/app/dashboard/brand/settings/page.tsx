@@ -45,7 +45,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -167,8 +166,7 @@ export default function BrandSettingsPage() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            {/* GENERAL SETTINGS */}
-            <TabsContent value="general" className="space-y-6">
+            <TabsContent value="profile" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
                   <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
@@ -227,7 +225,6 @@ export default function BrandSettingsPage() {
                             ))}
                           </SelectContent>
                         </Select>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Platform conversion uses mock daily rates.</p>
                       </div>
 
                       <div className="space-y-2">
@@ -280,7 +277,6 @@ export default function BrandSettingsPage() {
               </div>
             </TabsContent>
 
-            {/* VERIFICATION */}
             <TabsContent value="verification" className="space-y-6">
               <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white max-w-3xl">
                 <CardHeader className="p-8 border-b bg-slate-50/50">
@@ -305,110 +301,10 @@ export default function BrandSettingsPage() {
                       <Upload className="h-4 w-4 mr-2" /> Upload
                     </Button>
                   </div>
-
-                  <div className="flex items-center justify-between p-6 rounded-2xl border-2 border-slate-100 bg-slate-50/50">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 rounded-xl bg-white flex items-center justify-center shadow-sm">
-                        <Building2 className="h-6 w-6 text-slate-400" />
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-900">GST Registration Copy</p>
-                        <p className="text-xs text-slate-400 font-medium uppercase tracking-tighter">Optional Document</p>
-                      </div>
-                    </div>
-                    <Button variant="outline" className="rounded-lg h-9 font-bold bg-white border-slate-200">
-                      <Upload className="h-4 w-4 mr-2" /> Upload
-                    </Button>
-                  </div>
-
-                  <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex gap-4">
-                    <Info className="h-6 w-6 text-blue-500 shrink-0" />
-                    <p className="text-sm text-blue-700 font-medium leading-relaxed">
-                      Verification usually takes 48-72 business hours. Our team will review your legal documents to ensure marketplace integrity.
-                    </p>
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            {/* PAYMENT & GST */}
-            <TabsContent value="payment" className="space-y-6">
-              <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white max-w-3xl">
-                <CardHeader className="p-8 border-b bg-slate-50/50">
-                  <CardTitle className="text-xl">Billing & Fiscal Details</CardTitle>
-                  <CardDescription>Required for automated invoice generation and tax compliance.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-8 space-y-8">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="font-bold text-slate-700">GSTIN / Tax ID</Label>
-                      <Input 
-                        value={gstNumber} 
-                        onChange={(e) => setGstNumber(e.target.value)} 
-                        placeholder="e.g. 22AAAAA0000A1Z5" 
-                        className="h-12 rounded-xl bg-slate-50 border-none font-bold uppercase" 
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="font-bold text-slate-700">Billing Address</Label>
-                      <Textarea 
-                        value={billingAddress} 
-                        onChange={(e) => setBillingAddress(e.target.value)} 
-                        placeholder="Enter full corporate address for invoices..." 
-                        className="min-h-[100px] rounded-xl bg-slate-50 border-none p-4" 
-                      />
-                    </div>
-                  </div>
-
-                  <Separator />
-
-                  <div className="space-y-4">
-                    <Label className="font-bold text-slate-700">Primary Payment Card</Label>
-                    <div className="p-6 rounded-2xl border-2 border-slate-100 bg-white flex items-center justify-between group hover:border-primary/20 transition-all">
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-14 rounded-lg bg-slate-900 flex items-center justify-center text-white shrink-0">
-                          <CreditCard className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <p className="font-black text-slate-900">{brand?.billingMethod?.brand} •••• {brand?.billingMethod?.last4}</p>
-                          <Badge className="bg-emerald-100 text-emerald-600 border-none text-[8px] h-4 font-black">ACTIVE</Badge>
-                        </div>
-                      </div>
-                      <Button variant="ghost" className="rounded-lg font-bold text-primary text-xs uppercase tracking-widest">Change</Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* CAMPAIGN DEFAULTS */}
-            <TabsContent value="defaults" className="space-y-6">
-              <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white max-w-3xl">
-                <CardHeader className="p-8 border-b bg-slate-50/50">
-                  <CardTitle className="text-xl">Standard Brief Template</CardTitle>
-                  <CardDescription>Common requirements that will pre-fill every new campaign draft.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-8 space-y-6">
-                  <div className="space-y-2">
-                    <Label className="font-bold text-slate-700">Standard Guidelines</Label>
-                    <Textarea 
-                      value={defaultTemplate} 
-                      onChange={(e) => setDefaultTemplate(e.target.value)} 
-                      placeholder="e.g. Always mention the product link in bio. Must use #Ad." 
-                      className="min-h-[200px] rounded-2xl p-6 bg-slate-50 border-none resize-none"
-                    />
-                  </div>
-                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-start gap-3">
-                    <Zap className="h-5 w-5 text-primary mt-0.5" />
-                    <p className="text-xs text-primary font-medium leading-relaxed">
-                      Setting a default template saves up to 5 minutes per campaign launch. You can still customize these details for each project.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* NOTIFICATIONS */}
             <TabsContent value="notifications" className="space-y-6">
               <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white max-w-3xl">
                 <CardHeader className="border-b bg-slate-50/50 p-8">
@@ -437,52 +333,6 @@ export default function BrandSettingsPage() {
                       </div>
                     ))}
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* API ACCESS */}
-            <TabsContent value="api" className="space-y-6">
-              <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white max-w-3xl">
-                <CardHeader className="p-8 border-b bg-slate-50/50">
-                  <div className="flex items-center gap-3">
-                    <Zap className="h-6 w-6 text-primary fill-primary/10" />
-                    <CardTitle className="text-xl">Developer & API Access</CardTitle>
-                  </div>
-                  <CardDescription className="mt-2">Integrate Baalvion with your CRM or marketing stack.</CardDescription>
-                </CardHeader>
-                <CardContent className="p-8 space-y-8">
-                  {brand?.plan === 'ENTERPRISE' ? (
-                    <div className="space-y-6">
-                      <div className="space-y-4">
-                        <Label className="text-xs font-black uppercase text-slate-400 tracking-widest">Secret API Keys</Label>
-                        <div className="relative group">
-                          <Input readOnly value="bv_live_492837492837492837" type="password" className="h-12 rounded-xl bg-slate-50 border-none font-mono" />
-                          <Button variant="ghost" size="icon" className="absolute right-2 top-2 rounded-lg"><Plus className="h-4 w-4" /></Button>
-                        </div>
-                      </div>
-                      <div className="p-6 rounded-2xl border-2 border-dashed border-slate-200 text-center space-y-2">
-                        <p className="font-bold text-slate-900">Add Webhook Endpoint</p>
-                        <p className="text-xs text-slate-400 font-medium">Receive real-time events for campaign milestones.</p>
-                        <Button variant="outline" className="mt-4 rounded-xl font-bold border-slate-200">Configure Webhooks</Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-center space-y-6">
-                      <div className="h-20 w-20 rounded-[2.5rem] bg-slate-50 flex items-center justify-center">
-                        <Lock className="h-10 w-10 text-slate-200" />
-                      </div>
-                      <div className="space-y-2">
-                        <h4 className="text-xl font-black">Enterprise Feature</h4>
-                        <p className="text-slate-500 max-w-xs mx-auto text-sm font-medium">
-                          API access and programmatic campaign management are reserved for Enterprise partners.
-                        </p>
-                      </div>
-                      <Button className="rounded-xl font-bold h-12 px-8 shadow-lg shadow-primary/20">
-                        Upgrade to Enterprise
-                      </Button>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </TabsContent>

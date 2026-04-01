@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
@@ -82,6 +81,6 @@ export class ErrorBoundary extends Component<Props, State> {
       );
     }
 
-    return <>{this.props.children}</>;
+    return <React.Fragment>{this.props.children}</React.Fragment>;
   }
 }

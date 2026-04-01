@@ -1,7 +1,6 @@
-
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DashboardSidebar } from '@/components/layout/Sidebar';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -36,7 +35,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { userProfile, signOut } = useAuth();
 
   const { data: notifications } = useNotifications(userProfile?.id);
-  const unreadCount = notifications?.filter(n => !n.read).length || 0;
+  const unreadCount = (notifications || []).filter(n => !n.read).length;
 
   const handleLogout = async () => {
     await signOut();
@@ -84,7 +83,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <Bell className="h-5 w-5 text-slate-600" />
                     {unreadCount > 0 && (
                       <span className="absolute top-2 right-2 h-4 w-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white font-bold">
-                        {unreadCount}
+                        {unreadCount > 9 ? '9+' : unreadCount}
                       </span>
                     )}
                   </Button>
