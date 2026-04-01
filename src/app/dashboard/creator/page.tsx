@@ -149,7 +149,7 @@ export default function CreatorDashboard() {
               <CardContent className="pb-8">
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-black">₹4,22,500</span>
-                  <Badge className="bg-emerald-500/20 text-emerald-400 border-none font-black text-[10px] tracking-widest">+12.5%</span>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-none font-black text-[10px] tracking-widest">+12.5%</Badge>
                 </div>
                 <div className="mt-6 space-y-4">
                   <div className="flex justify-between items-center text-sm">

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -206,7 +205,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <main className="flex-1 p-4 md:p-8 max-w-[1600px] mx-auto w-full">
           <ErrorBoundary>
-            {children}
+            <div className="w-full h-full">
+              {children}
+            </div>
           </ErrorBoundary>
         </main>
       </div>
