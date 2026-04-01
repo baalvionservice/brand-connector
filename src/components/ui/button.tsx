@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -42,27 +43,29 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, loading = false, disabled, children, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
-    
-    // When asChild is true, we must only pass a single child to Slot.
-    // We disable the internal loader in asChild mode to prevent breaking the Slot contract.
+    if (asChild) {
+      return (
+        <Slot
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          {...(props as any)}
+        >
+          {children}
+        </Slot>
+      )
+    }
+
     return (
-      <Comp
+      <button
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={disabled || loading}
         aria-busy={loading || undefined}
         {...props}
       >
-        {asChild ? (
-          children
-        ) : (
-          <>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
-            {children}
-          </>
-        )}
-      </Comp>
+        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+        {children}
+      </button>
     )
   }
 )

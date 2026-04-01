@@ -352,7 +352,7 @@ export default function RateCardBuilderPage() {
               ))}
             </CardContent>
           </Card>
-        </div>
+        </aside>
       </div>
 
       {/* Preview Dialog */}
@@ -368,7 +368,6 @@ export default function RateCardBuilderPage() {
                 <p className="text-slate-500 font-medium">Verified creator rates for @{creator?.username || 'user'}</p>
               </div>
 
-              {/* Brand-view Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {PLATFORMS.map(platform => {
                   const platformRates = Object.entries(baseRates)
@@ -398,7 +397,6 @@ export default function RateCardBuilderPage() {
                 })}
               </div>
 
-              {/* Brand-view Packages */}
               {packages.length > 0 && (
                 <div className="space-y-6">
                   <h3 className="text-xl font-black text-slate-900 uppercase tracking-tighter flex items-center gap-2">
