@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -264,7 +263,7 @@ export default function BrandAcquisitionPage() {
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400">Company</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400 text-center">Handle</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400 text-center">Platform</TableHead>
-                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-slate-400 text-center">Reach</TableHead>
+                    <TableHead className="font-black text-[10px] uppercase tracking-widest text-center">Reach</TableHead>
                     <TableHead className="font-black text-[10px] uppercase tracking-widest text-center">Propensity</TableHead>
                     <TableHead className="pr-8 text-right font-black text-[10px] uppercase tracking-widest text-slate-400">Intel</TableHead>
                   </TableRow>

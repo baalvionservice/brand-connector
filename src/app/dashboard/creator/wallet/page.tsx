@@ -103,8 +103,8 @@ export default function CreatorWalletPage() {
   };
 
   const handleNextStep = () => {
+    const val = Number(amount);
     if (currentStep === 'amount') {
-      const val = Number(amount);
       if (isNaN(val) || val < 500) {
         return toast({ variant: 'destructive', title: 'Invalid Amount', description: 'Minimum withdrawal is ₹500.' });
       }
