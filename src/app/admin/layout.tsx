@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -35,7 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { userProfile, signOut } = useAuth();
 
   const { data: notifications } = useNotifications(userProfile?.id);
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications?.filter(n => !n.read).length || 0;
 
   const handleLogout = async () => {
     await signOut();
@@ -94,7 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <h3 className="text-xs font-black uppercase tracking-widest text-slate-900">System Alerts</h3>
                 </div>
                 <ScrollArea className="max-h-[400px]">
-                  {notifications.length > 0 ? (
+                  {notifications && notifications.length > 0 ? (
                     <div className="divide-y divide-slate-50">
                       {notifications.map((n) => (
                         <div key={n.id} className="w-full p-4 flex gap-3 text-left">

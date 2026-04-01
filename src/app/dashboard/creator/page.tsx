@@ -1,3 +1,4 @@
+
 'use client';
 
 import React from 'react';
@@ -43,7 +44,7 @@ const AI_MATCHES = [
     id: '1',
     brand: 'Lumina Tech',
     logo: 'https://picsum.photos/seed/brand1/100/100',
-    title: 'AI Smart Home Review',
+    title: 'AI Smart Home Ecosystem Review',
     budget: '₹12,000',
     match: 98,
     platform: 'Instagram',
