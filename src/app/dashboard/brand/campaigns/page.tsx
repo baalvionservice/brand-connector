@@ -23,7 +23,8 @@ import {
   Calendar,
   Zap,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Briefcase
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
