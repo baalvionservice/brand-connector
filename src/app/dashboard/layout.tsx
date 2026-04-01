@@ -122,7 +122,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100">
                     <Bell className="h-5 w-5 text-slate-600" />
                     {unreadCount() > 0 && (
-                      <span className="absolute top-2 right-2 h-4 w-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white font-bold">
+                      <span className="absolute top-2 right-2 h-4 w-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white font-bold animate-in zoom-in">
                         {unreadCount()}
                       </span>
                     )}
