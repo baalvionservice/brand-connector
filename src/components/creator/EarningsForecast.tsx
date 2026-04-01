@@ -15,7 +15,9 @@ import {
   IndianRupee,
   Briefcase,
   ChevronRight,
-  Target
+  Target,
+  ShieldCheck,
+  ArrowRight
 } from 'lucide-react';
 import CountUp from 'react-countup';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';

@@ -123,12 +123,12 @@ export default function CreatorDashboard() {
         </div>
       </div>
 
-      {/* NEW: Operational Deadline Reminders */}
+      {/* Operational Deadline Reminders */}
       <section>
         <DeadlineReminders />
       </section>
 
-      {/* NEW: Earnings Forecast Section */}
+      {/* Earnings Forecast Section */}
       <section className="space-y-6">
         <EarningsForecast />
       </section>
