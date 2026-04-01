@@ -201,7 +201,7 @@ export default function CreatorWalletPage() {
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center">Minimum withdrawal ₹500</p>
                       </div>
                       <Button onClick={handleNextStep} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20">
-                        Continue <ArrowRight className="ml-2 h-5 w-5" />
+                        Continue <ArrowRight className="ml-2 h-4 w-4" />
                       </Button>
                     </div>
                   </motion.div>
@@ -328,7 +328,7 @@ export default function CreatorWalletPage() {
                       <ShieldCheck className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-10 w-10 text-primary" />
                     </div>
                     <div className="space-y-2">
-                      <h3 className="text-2xl font-black">Securing Funds</h3>
+                      h3 className="text-2xl font-black">Securing Funds</h3>
                       <p className="text-sm text-slate-500 max-w-xs mx-auto">Verifying transaction integrity and communicating with the payment gateway.</p>
                     </div>
                   </motion.div>
@@ -450,7 +450,7 @@ export default function CreatorWalletPage() {
           <CardContent className="pb-8">
             <div className="flex items-baseline gap-2">
               <span className="text-5xl font-black">₹{stats.available.toLocaleString()}</span>
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-none font-black text-[10px] tracking-widest">+15%</span>
+              <Badge className="bg-emerald-500/20 text-emerald-400 border-none font-black text-[10px] tracking-widest">+15%</Badge>
             </div>
             <p className="text-xs text-slate-500 font-bold mt-4 flex items-center gap-2 uppercase tracking-tighter">
               <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
@@ -538,4 +538,3 @@ export default function CreatorWalletPage() {
     </div>
   );
 }
-
