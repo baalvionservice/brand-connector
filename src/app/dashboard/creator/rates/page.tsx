@@ -369,7 +369,6 @@ export default function RateCardBuilderPage() {
         </div>
       </div>
 
-      {/* Preview Dialog */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className="max-w-4xl rounded-[3rem] p-0 overflow-hidden border-none shadow-2xl">
           <div className="bg-slate-50 p-12 overflow-y-auto max-h-[90vh]">

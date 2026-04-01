@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -25,7 +24,8 @@ import {
   Eye,
   CheckCircle2,
   AlertCircle,
-  Info
+  Info,
+  Sparkles
 } from 'lucide-react';
 import { collection, query, orderBy, doc, updateDoc, addDoc, where, limit } from 'firebase/firestore';
 import { useFirestore, useCollection } from '@/firebase';

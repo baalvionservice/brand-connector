@@ -204,7 +204,8 @@ export default function ProposalsPage() {
                       "px-3 py-1 rounded-full text-[10px] font-black uppercase border-none shadow-sm",
                       prop.status === 'approved' ? "bg-emerald-100 text-emerald-600" :
                       prop.status === 'sent' ? "bg-blue-100 text-blue-600" :
-                      prop.status === 'rejected' ? "bg-red-100 text-red-600" : "bg-slate-100 text-slate-500"
+                      prop.status === 'rejected' ? "bg-red-100 text-red-600" :
+                      "bg-slate-100 text-slate-500"
                     )}>
                       {prop.status}
                     </Badge>
