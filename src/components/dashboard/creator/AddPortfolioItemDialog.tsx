@@ -13,7 +13,9 @@ import {
   Zap,
   Check,
   PlusCircle,
-  Star
+  Star,
+  Edit2,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirestore, useStorage } from '@/firebase';
@@ -167,10 +169,7 @@ export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemD
                 <>
                   <img src={mediaUrl} className="absolute inset-0 w-full h-full object-cover" alt="Preview" />
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                    <Button size="icon" variant="secondary" className="rounded-full h-10 w-10">
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="destructive" className="rounded-full h-10 w-10" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
+                    <Button size="icon" variant="secondary" className="rounded-full h-10 w-10" onClick={() => setMediaUrl('')}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>

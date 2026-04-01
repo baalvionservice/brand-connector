@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Wallet, 
@@ -249,7 +249,7 @@ export default function CreatorWalletPage() {
                       ))}
                     </RadioGroup>
                     <Button onClick={handleNextStep} className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20">
-                      Confirm Method <ArrowRight className="ml-2 h-5 w-5" />
+                      Confirm Method <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </motion.div>
                 )}

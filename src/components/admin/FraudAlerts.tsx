@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldAlert, 
@@ -119,6 +119,11 @@ export function FraudAlerts() {
   const [isAuditOpen, setIsAuditOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [feedbackNote, setFeedbackNote] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // 1. Fetch Alerts (using mock for now, ready for Firestore)
   const alerts = MOCK_ALERTS;
@@ -248,7 +253,9 @@ export function FraudAlerts() {
                         <div>
                           <p className="font-bold text-slate-900">{alert.userName}</p>
                           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">
-                            {new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(alert.createdAt).toLocaleDateString()}
+                            {mounted ? (
+                              <>{new Date(alert.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(alert.createdAt).toLocaleDateString()}</>
+                            ) : '...'}
                           </p>
                         </div>
                       </div>
