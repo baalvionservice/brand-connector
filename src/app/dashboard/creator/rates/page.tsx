@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -129,7 +130,7 @@ export default function RateCardBuilderPage() {
       await updateDoc(doc(db, 'creators', creatorId), updateData);
       toast({ title: "Rate card saved", description: "Your profile pricing has been updated." });
     } catch (err: any) {
-      errorEmitter.emitPermissionError(new FirestorePermissionError({
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: `/creators/${creatorId}`,
         operation: 'update',
         requestResourceData: updateData

@@ -23,7 +23,8 @@ import {
   MoreHorizontal,
   ArrowRight,
   ShieldCheck,
-  Plus
+  Plus,
+  Info
 } from 'lucide-react';
 import { useAcquisitionStore } from '@/store/useAcquisitionStore';
 import { ScraperPlatform, ScrapedLead } from '@/types/acquisition';
@@ -33,6 +34,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
 import { 
   Select, 
   SelectContent, 

@@ -60,7 +60,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFirestore, useCollection } from '@/firebase';
+import { useFirestore, useCollection, useDoc } from '@/firebase';
 import { collection, query, where, orderBy } from 'firebase/firestore';
 import { TransactionHistory } from '@/components/payments/TransactionHistory';
 import { requestPayout, getPayoutStep } from '@/lib/payouts';

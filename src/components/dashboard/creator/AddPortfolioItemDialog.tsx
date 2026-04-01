@@ -131,7 +131,7 @@ export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemD
       toast({ title: "Sample added!", description: "It's now visible on your profile." });
       resetAndClose();
     } catch (err: any) {
-      errorEmitter.emitPermissionError(new FirestorePermissionError({
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: '/portfolioItems',
         operation: 'create',
         requestResourceData: itemData

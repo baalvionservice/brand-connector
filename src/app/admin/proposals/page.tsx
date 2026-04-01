@@ -402,14 +402,20 @@ export default function ProposalsPage() {
 
       <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
         <DialogContent className="rounded-[2.5rem] p-10 max-w-lg border-none shadow-2xl">
-          <DialogHeader>
-            <div className="h-12 w-12 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4">
-              <ShieldCheck className="h-6 w-6 text-emerald-600" />
-            </div>
-            <DialogTitle className="text-2xl font-black">Checkout</DialogTitle>
-            <DialogDescription>Securely fund the campaign escrow for {selectedProposal?.companyName}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-6 py-6">
+          <div className="bg-slate-50 p-8 border-b">
+            <DialogHeader>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="h-12 w-12 rounded-2xl bg-emerald-50 flex items-center justify-center">
+                  <ShieldCheck className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div>
+                  <DialogTitle className="text-2xl font-black">Checkout</DialogTitle>
+                  <DialogDescription className="font-medium">Securely fund the campaign escrow for {selectedProposal?.companyName}</DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+          </div>
+          <div className="space-y-6 py-6 p-8">
             <div className="p-6 rounded-[2rem] bg-slate-50 border border-slate-100 flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total to Secure</p>
@@ -436,7 +442,7 @@ export default function ProposalsPage() {
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="p-8 border-t bg-slate-50">
             <Button onClick={handlePay} className="w-full h-14 rounded-2xl text-lg font-black bg-slate-900 hover:bg-slate-800 text-white shadow-xl">
               Pay & Secure Funds
             </Button>

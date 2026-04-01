@@ -102,7 +102,7 @@ export default function BrandCampaignsPage() {
       status: newStatus,
       updatedAt: new Date().toISOString()
     }).catch(async (err) => {
-      errorEmitter.emitPermissionError(new FirestorePermissionError({
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: `/campaigns/${id}`,
         operation: 'update',
         requestResourceData: { status: newStatus }
