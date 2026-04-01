@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -28,7 +27,8 @@ import {
   Star,
   FileCheck,
   ChevronRight,
-  IndianRupee
+  IndianRupee,
+  Users
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirestore, useDoc } from '@/firebase';
@@ -202,7 +202,7 @@ export default function BrandSettingsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <Label className="font-bold text-slate-700">Company Legal Name</Label>
-                          <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="h-12 rounded-xl bg-slate-50 border-none" />
+                          <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="h-12 rounded-xl bg-slate-50 border-none font-bold" />
                         </div>
                         <div className="space-y-2">
                           <Label className="font-bold text-slate-700">Official Website</Label>
@@ -412,8 +412,8 @@ export default function BrandSettingsPage() {
             <TabsContent value="notifications" className="space-y-6">
               <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white max-w-3xl">
                 <CardHeader className="p-8 border-b bg-slate-50/50">
-                  <CardTitle className="text-xl">Communication Preferences</CardTitle>
-                  <CardDescription>Control how and when we send you updates.</CardDescription>
+                  <CardTitle className="text-xl">Push & Email Alerts</CardTitle>
+                  <CardDescription>Granular control over how we communicate with you.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="divide-y divide-slate-50">
