@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirestore, useDoc } from '@/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, setDoc } from 'firebase/firestore';
 import { BrandProfile } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -167,14 +167,14 @@ export default function BrandSettingsPage() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            {/* COMPANY PROFILE */}
-            <TabsContent value="profile" className="space-y-6">
+            {/* GENERAL SETTINGS */}
+            <TabsContent value="general" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-6">
                   <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
                     <CardHeader className="p-8 border-b bg-slate-50/50">
-                      <CardTitle className="text-xl">Brand Identity</CardTitle>
-                      <CardDescription>Public information that creators see when browsing your campaigns.</CardDescription>
+                      <CardTitle className="text-xl">Platform Identity</CardTitle>
+                      <CardDescription>Core branding and contact information.</CardDescription>
                     </CardHeader>
                     <CardContent className="p-8 space-y-8">
                       <div className="flex flex-col md:flex-row items-center gap-8">
@@ -411,7 +411,7 @@ export default function BrandSettingsPage() {
             {/* NOTIFICATIONS */}
             <TabsContent value="notifications" className="space-y-6">
               <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white max-w-3xl">
-                <CardHeader className="p-8 border-b bg-slate-50/50">
+                <CardHeader className="border-b bg-slate-50/50 p-8">
                   <CardTitle className="text-xl">Push & Email Alerts</CardTitle>
                   <CardDescription>Granular control over how we communicate with you.</CardDescription>
                 </CardHeader>

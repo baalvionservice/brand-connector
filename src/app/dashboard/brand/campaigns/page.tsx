@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -232,7 +231,7 @@ function CampaignManagementCard({ campaign, index, onStatusUpdate, onDuplicate }
       case 'DRAFT': return { label: 'Draft', color: 'bg-slate-100 text-slate-600', icon: FileText };
       case 'PAUSED': return { label: 'Paused', color: 'bg-orange-100 text-orange-600', icon: Pause };
       case 'COMPLETED': return { label: 'Finished', color: 'bg-blue-100 text-blue-600', icon: CheckCircle2 };
-      default: return { label: status, color: 'bg-slate-100 text-slate-600', icon: Zap };
+      default: return { label: status, color: 'bg-slate-100 text-slate-500', icon: Zap };
     }
   };
 
