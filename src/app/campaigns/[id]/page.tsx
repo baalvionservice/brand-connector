@@ -6,19 +6,19 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  CheckCircle2, 
-  Zap, 
-  Calendar, 
-  IndianRupee, 
-  Clock, 
-  Target, 
-  Info, 
-  ShieldCheck, 
-  FileText, 
-  Users, 
-  ThumbsUp, 
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Zap,
+  Calendar,
+  IndianRupee,
+  Clock,
+  Target,
+  Info,
+  ShieldCheck,
+  FileText,
+  Users,
+  ThumbsUp,
   ThumbsDown,
   ChevronRight,
   Send,
@@ -58,12 +58,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { CampaignHealthMonitor } from '@/components/campaigns/HealthMonitor';
+import { cn } from '@/lib/utils';
 
 export default function CampaignDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
 
   // 1. Fetch Real-time Campaign Data
@@ -79,13 +80,13 @@ export default function CampaignDetailPage() {
 
   // 2. Check for existing application
   const applicationsQuery = useMemo(() => {
-    if (!userProfile?.id || !params.id) return null;
+    if (!currentUser?.id || !params.id) return null;
     return query(
-      collection(db, 'applications'),
+      collection(db!, 'applications'),
       where('campaignId', '==', params.id as string),
-      where('creatorId', '==', userProfile.id)
+      where('creatorId', '==', currentUser.id)
     );
-  }, [db, userProfile?.id, params.id]);
+  }, [db!, currentUser?.id, params.id]);
 
   const { data: userApplications, loading: appsLoading } = useCollection<any>(applicationsQuery);
 
@@ -110,12 +111,12 @@ export default function CampaignDetailPage() {
   };
 
   const handleApplySubmit = async () => {
-    if (!userProfile || !campaign) return;
+    if (!currentUser || !campaign) return;
     setIsSaving(true);
-    
+
     const applicationData = {
       campaignId: campaign.id,
-      creatorId: userProfile.id,
+      creatorId: currentUser.id,
       status: ApplicationStatus.PENDING,
       pitch,
       proposedBudget: Number(proposedRate.replace(/[^0-9]/g, '')),
@@ -124,7 +125,7 @@ export default function CampaignDetailPage() {
     };
 
     try {
-      await addDoc(collection(db, 'applications'), applicationData);
+      await addDoc(collection(db!, 'applications'), applicationData);
       setIsApplied(true);
       toast({
         title: "Application Sent!",
@@ -169,7 +170,7 @@ export default function CampaignDetailPage() {
     );
   }
 
-  const isBrandOwner = userProfile?.role === 'BRAND' && campaign.brandId === `brand_${userProfile.id}`;
+  const isBrandOwner = currentUser?.role === 'BRAND' && campaign.brandId === `brand_${currentUser.id}`;
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
@@ -200,10 +201,10 @@ export default function CampaignDetailPage() {
       </div>
 
       <main className="container mt-8 px-4 md:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 max-w-7xl mx-auto">
-        
+
         {/* Left Column */}
         <div className="lg:col-span-8 space-y-8">
-          
+
           {isBrandOwner && (
             <section>
               <CampaignHealthMonitor campaignId={campaign.id} />
@@ -277,7 +278,7 @@ export default function CampaignDetailPage() {
           </Card>
 
           {/* Application UI */}
-          {userProfile?.role === 'CREATOR' && !isApplied && (
+          {currentUser?.role === 'CREATOR' && !isApplied && (
             <Card className="border-none shadow-xl shadow-primary/10 rounded-[2rem] overflow-hidden bg-white ring-1 ring-primary/20">
               <CardHeader className="p-8 md:p-10 border-b bg-primary/5">
                 <div className="flex items-center justify-between">
@@ -294,7 +295,7 @@ export default function CampaignDetailPage() {
               <CardContent className="p-8 md:p-10 space-y-8">
                 <div className="space-y-4">
                   <Label className="font-bold">Your Creative Pitch</Label>
-                  <Textarea 
+                  <Textarea
                     placeholder="Share your vision for this campaign..."
                     className="min-h-[180px] rounded-2xl p-6 bg-slate-50 border-slate-200 focus-visible:ring-primary text-md"
                     value={pitch}
@@ -304,8 +305,8 @@ export default function CampaignDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4">
                     <Label className="font-bold">Proposed Rate (₹)</Label>
-                    <Input 
-                      placeholder="e.g. 15,000" 
+                    <Input
+                      placeholder="e.g. 15,000"
                       className="h-12 rounded-xl bg-slate-50 border-slate-200 font-bold"
                       value={proposedRate}
                       onChange={(e) => setProposedRate(e.target.value)}
@@ -313,15 +314,15 @@ export default function CampaignDetailPage() {
                   </div>
                   <div className="space-y-4">
                     <Label className="font-bold">Timeline</Label>
-                    <Input 
-                      placeholder="e.g. 10 days" 
+                    <Input
+                      placeholder="e.g. 10 days"
                       className="h-12 rounded-xl bg-slate-50 border-slate-200 font-bold"
                       value={timeline}
                       onChange={(e) => setTimeline(e.target.value)}
                     />
                   </div>
                 </div>
-                <Button 
+                <Button
                   disabled={!pitch || !proposedRate || !timeline || isSubmitting}
                   onClick={handleApplySubmit}
                   className="w-full h-14 rounded-2xl font-black text-lg shadow-xl shadow-primary/20"

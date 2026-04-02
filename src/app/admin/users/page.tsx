@@ -2,21 +2,21 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Users, 
-  Search, 
-  Filter, 
-  Download, 
-  MoreHorizontal, 
-  CheckCircle2, 
-  XCircle, 
-  ShieldAlert, 
-  ShieldCheck, 
-  Mail, 
-  Calendar, 
-  Eye, 
-  Trash2, 
-  ArrowUpRight, 
+import {
+  Users,
+  Search,
+  Filter,
+  Download,
+  MoreHorizontal,
+  CheckCircle2,
+  XCircle,
+  ShieldAlert,
+  ShieldCheck,
+  Mail,
+  Calendar,
+  Eye,
+  Trash2,
+  ArrowUpRight,
   Loader2,
   ChevronLeft,
   ChevronRight,
@@ -38,29 +38,29 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel
 } from '@/components/ui/dropdown-menu';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
@@ -69,7 +69,7 @@ type UserStatus = 'ACTIVE' | 'SUSPENDED' | 'PENDING';
 export default function UserManagementPage() {
   const db = useFirestore();
   const { toast } = useToast();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -78,15 +78,18 @@ export default function UserManagementPage() {
   const pageSize = 50;
 
   // 1. Fetch Users
-  const { data: users, loading } = useCollection<any>(
-    query(collection(db, 'users'), orderBy('createdAt', 'desc'))
-  );
+  const userQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'users'), orderBy('createdAt', 'desc'));
+  }, [db]);
+
+  const { data: users, loading } = useCollection<any>(userQuery);
 
   const filteredUsers = useMemo(() => {
     return users.filter(u => {
-      const matchesSearch = u.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           u.id.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = u.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.id.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
       const matchesStatus = statusFilter === 'ALL' || (u.status || 'ACTIVE') === statusFilter;
       return matchesSearch && matchesRole && matchesStatus;
@@ -101,7 +104,7 @@ export default function UserManagementPage() {
   const totalPages = Math.ceil(filteredUsers.length / pageSize);
 
   const handleUpdateStatus = async (userId: string, newStatus: UserStatus) => {
-    const userRef = doc(db, 'users', userId);
+    const userRef = doc(db!, 'users', userId);
     updateDoc(userRef, { status: newStatus, updatedAt: new Date().toISOString() })
       .then(() => toast({ title: `User ${newStatus.toLowerCase()}` }))
       .catch(async (err) => {
@@ -114,7 +117,7 @@ export default function UserManagementPage() {
   };
 
   const handlePromoteAdmin = async (userId: string) => {
-    const userRef = doc(db, 'users', userId);
+    const userRef = doc(db!, 'users', userId);
     updateDoc(userRef, { role: 'ADMIN', updatedAt: new Date().toISOString() })
       .then(() => toast({ title: "User promoted to Admin" }))
       .catch(() => toast({ variant: 'destructive', title: 'Promotion failed' }));
@@ -122,7 +125,7 @@ export default function UserManagementPage() {
 
   const handleDeleteUser = async (userId: string) => {
     try {
-      await deleteDoc(doc(db, 'users', userId));
+      await deleteDoc(doc(db!, 'users', userId));
       toast({ title: "User permanently removed" });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Deletion failed' });
@@ -130,9 +133,9 @@ export default function UserManagementPage() {
   };
 
   const handleBulkStatus = async (status: UserStatus) => {
-    const batch = writeBatch(db);
+    const batch = writeBatch(db!);
     selectedIds.forEach(id => {
-      batch.update(doc(db, 'users', id), { status, updatedAt: new Date().toISOString() });
+      batch.update(doc(db!, 'users', id), { status, updatedAt: new Date().toISOString() });
     });
     await batch.commit();
     toast({ title: `Bulk ${status.toLowerCase()} applied to ${selectedIds.length} users.` });
@@ -141,10 +144,10 @@ export default function UserManagementPage() {
 
   const exportCSV = () => {
     const headers = "ID,Name,Email,Role,Status,Joined\n";
-    const rows = filteredUsers.map(u => 
+    const rows = filteredUsers.map(u =>
       `${u.id},${u.displayName},${u.email},${u.role},${u.status || 'ACTIVE'},${u.createdAt}`
     ).join("\n");
-    
+
     const blob = new Blob([headers + rows], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -185,14 +188,14 @@ export default function UserManagementPage() {
         <div className="flex flex-col md:flex-row items-center gap-4 flex-1">
           <div className="relative w-full lg:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder="Search by name, email, or ID..." 
+            <Input
+              placeholder="Search by name, email, or ID..."
               className="pl-10 h-11 rounded-xl bg-slate-50 border-none focus-visible:ring-primary"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          
+
           <div className="flex items-center gap-3 w-full md:w-auto">
             <Select value={roleFilter} onValueChange={setRoleFilter}>
               <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-none font-bold text-xs min-w-[140px]">
@@ -222,9 +225,9 @@ export default function UserManagementPage() {
 
         <AnimatePresence>
           {selectedIds.length > 0 && (
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }} 
-              animate={{ opacity: 1, x: 0 }} 
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               className="flex items-center gap-2 bg-primary/5 p-1 rounded-xl border border-primary/10"
             >
@@ -244,7 +247,7 @@ export default function UserManagementPage() {
             <TableHeader>
               <TableRow className="hover:bg-transparent border-slate-100 h-16">
                 <TableHead className="w-12 pl-8">
-                  <Checkbox 
+                  <Checkbox
                     checked={selectedIds.length === paginatedUsers.length && paginatedUsers.length > 0}
                     onCheckedChange={toggleSelectAll}
                   />
@@ -268,7 +271,7 @@ export default function UserManagementPage() {
                 paginatedUsers.map((user, idx) => (
                   <TableRow key={user.id} className="group border-slate-50 hover:bg-slate-50/50 transition-colors h-24">
                     <TableCell className="pl-8">
-                      <Checkbox 
+                      <Checkbox
                         checked={selectedIds.includes(user.id)}
                         onCheckedChange={() => toggleSelect(user.id)}
                       />
@@ -289,8 +292,8 @@ export default function UserManagementPage() {
                       <Badge className={cn(
                         "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border-none",
                         user.role === 'ADMIN' ? "bg-slate-900 text-white" :
-                        user.role === 'BRAND' ? "bg-primary/10 text-primary" :
-                        "bg-orange-100 text-orange-600"
+                          user.role === 'BRAND' ? "bg-primary/10 text-primary" :
+                            "bg-orange-100 text-orange-600"
                       )}>
                         {user.role}
                       </Badge>
@@ -299,8 +302,8 @@ export default function UserManagementPage() {
                       <Badge className={cn(
                         "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border-none",
                         (user.status || 'ACTIVE') === 'ACTIVE' ? "bg-emerald-100 text-emerald-600" :
-                        (user.status || 'ACTIVE') === 'SUSPENDED' ? "bg-red-100 text-red-600" :
-                        "bg-orange-100 text-orange-600"
+                          (user.status || 'ACTIVE') === 'SUSPENDED' ? "bg-red-100 text-red-600" :
+                            "bg-orange-100 text-orange-600"
                       )}>
                         {user.status || 'ACTIVE'}
                       </Badge>
@@ -380,17 +383,17 @@ export default function UserManagementPage() {
             </TableBody>
           </Table>
         </CardContent>
-        
+
         {/* Pagination Footer */}
         <CardFooter className="p-6 border-t bg-slate-50/30 flex items-center justify-between">
           <p className="text-xs font-bold text-slate-400">
             Showing <span className="text-slate-900">{Math.min(filteredUsers.length, page * pageSize)}</span> of <span className="text-slate-900">{filteredUsers.length}</span> total users
           </p>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="rounded-xl h-9 w-9 p-0 bg-white border-slate-200" 
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl h-9 w-9 p-0 bg-white border-slate-200"
               disabled={page === 1}
               onClick={() => setPage(page - 1)}
             >
@@ -398,10 +401,10 @@ export default function UserManagementPage() {
             </Button>
             <div className="flex items-center gap-1">
               {[...Array(Math.min(5, totalPages))].map((_, i) => (
-                <Button 
-                  key={i} 
-                  variant={page === i + 1 ? 'default' : 'ghost'} 
-                  size="sm" 
+                <Button
+                  key={i}
+                  variant={page === i + 1 ? 'primary' : 'ghost'}
+                  size="sm"
                   className="rounded-xl h-9 w-9 p-0 font-bold"
                   onClick={() => setPage(i + 1)}
                 >
@@ -409,10 +412,10 @@ export default function UserManagementPage() {
                 </Button>
               ))}
             </div>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="rounded-xl h-9 w-9 p-0 bg-white border-slate-200" 
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl h-9 w-9 p-0 bg-white border-slate-200"
               disabled={page === totalPages || totalPages === 0}
               onClick={() => setPage(page + 1)}
             >

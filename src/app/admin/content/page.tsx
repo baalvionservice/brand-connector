@@ -3,19 +3,19 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ShieldAlert, 
-  Search, 
-  Filter, 
-  CheckCircle2, 
-  XCircle, 
-  AlertTriangle, 
-  Eye, 
-  Loader2, 
-  Zap, 
-  Clock, 
-  UserX, 
-  ShieldCheck, 
+import {
+  ShieldAlert,
+  Search,
+  Filter,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Eye,
+  Loader2,
+  Zap,
+  Clock,
+  UserX,
+  ShieldCheck,
   MoreVertical,
   ExternalLink,
   MessageSquare,
@@ -37,28 +37,28 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -66,7 +66,7 @@ import { cn } from '@/lib/utils';
 export default function AdminContentModerationPage() {
   const db = useFirestore();
   const { toast } = useToast();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -74,14 +74,16 @@ export default function AdminContentModerationPage() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   // 1. Fetch Flagged Content
-  const { data: flaggedItems, loading } = useCollection<FlaggedContent>(
-    query(collection(db, 'flagged_content'), where('status', '==', 'PENDING'), orderBy('createdAt', 'desc'))
-  );
+  const flaggedContentQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'flagged_content'), where('status', '==', 'PENDING'), orderBy('createdAt', 'desc'));
+  }, [db]);
+  const { data: flaggedItems, loading } = useCollection<FlaggedContent>(flaggedContentQuery);
 
   const filteredItems = useMemo(() => {
     return flaggedItems.filter(item => {
-      const matchesSearch = item.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           item.reason.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.reason.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = typeFilter === 'all' || item.flagType === typeFilter;
       return matchesSearch && matchesType;
     });
@@ -91,9 +93,9 @@ export default function AdminContentModerationPage() {
     if (!selectedItem || isProcessing) return;
     setIsProcessing(true);
 
-    const flagRef = doc(db, 'flagged_content', selectedItem.id);
-    const deliverableRef = doc(db, 'deliverables', selectedItem.deliverableId);
-    const userRef = doc(db, 'users', selectedItem.creatorId);
+    const flagRef = doc(db!, 'flagged_content', selectedItem.id);
+    const deliverableRef = doc(db!, 'deliverables', selectedItem.deliverableId);
+    const userRef = doc(db!, 'users', selectedItem.creatorId);
 
     try {
       if (action === 'CLEAR') {
@@ -102,8 +104,8 @@ export default function AdminContentModerationPage() {
       } else if (action === 'REMOVE') {
         await updateDoc(flagRef, { status: 'REMOVED' });
         await updateDoc(deliverableRef, { status: DeliverableStatus.REMOVED });
-        
-        await addDoc(collection(db, 'notifications'), {
+
+        await addDoc(collection(db!, 'notifications'), {
           userId: selectedItem.creatorId,
           title: 'Content Removed ⚠️',
           message: `Your deliverable for campaign #${selectedItem.campaignId} was removed due to policy violations.`,
@@ -113,7 +115,7 @@ export default function AdminContentModerationPage() {
         });
         toast({ title: "Content Removed", description: "Creator has been notified." });
       } else if (action === 'WARN') {
-        await addDoc(collection(db, 'notifications'), {
+        await addDoc(collection(db!, 'notifications'), {
           userId: selectedItem.creatorId,
           title: 'Formal Policy Warning 🛡️',
           message: 'One of your recent submissions triggered our safety filters. Please review our marketplace guidelines.',
@@ -171,14 +173,14 @@ export default function AdminContentModerationPage() {
         <div className="flex items-center gap-4 flex-1">
           <div className="relative w-full lg:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder="Search by ID or reason..." 
+            <Input
+              placeholder="Search by ID or reason..."
               className="pl-10 h-11 rounded-xl bg-slate-50 border-none focus-visible:ring-primary"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          
+
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-none font-bold text-xs min-w-[160px]">
               <SelectValue placeholder="All Flag Types" />
@@ -236,9 +238,9 @@ export default function AdminContentModerationPage() {
                           {item.riskFactor}%
                         </span>
                         <div className="w-12 h-1 bg-slate-100 rounded-full mt-1">
-                          <div 
-                            className={cn("h-full rounded-full", item.riskFactor > 80 ? "bg-red-600" : "bg-orange-500")} 
-                            style={{ width: `${item.riskFactor}%` }} 
+                          <div
+                            className={cn("h-full rounded-full", item.riskFactor > 80 ? "bg-red-600" : "bg-orange-500")}
+                            style={{ width: `${item.riskFactor}%` }}
                           />
                         </div>
                       </div>
@@ -249,9 +251,9 @@ export default function AdminContentModerationPage() {
                       </p>
                     </TableCell>
                     <TableCell className="pr-8 text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="rounded-xl font-bold h-10 px-4 bg-slate-50 text-slate-600 hover:text-primary transition-all"
                         onClick={() => { setSelectedItem(item); setIsAuditOpen(true); }}
                       >

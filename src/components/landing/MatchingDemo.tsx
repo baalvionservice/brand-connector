@@ -202,7 +202,7 @@ export function MatchingDemo() {
                 </Select>
               </div>
 
-              <Button className="w-full h-12 rounded-xl group" variant="default">
+              <Button className="w-full h-12 rounded-xl group" variant="primary">
                 Reset Parameters
                 <Zap className="ml-2 h-4 w-4 fill-current group-hover:scale-110 transition-transform" />
               </Button>

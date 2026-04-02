@@ -2,16 +2,16 @@
 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Zap, 
-  Wallet, 
-  Target, 
-  UserCheck, 
-  Briefcase, 
-  CheckCircle2, 
-  AlertCircle, 
-  Clock, 
-  Eye, 
+import {
+  Zap,
+  Wallet,
+  Target,
+  UserCheck,
+  Briefcase,
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  Eye,
   Smartphone,
   ChevronRight,
   ArrowRight,
@@ -19,12 +19,12 @@ import {
   History,
   Loader2
 } from 'lucide-react';
-import { 
-  isToday, 
-  isYesterday, 
-  isThisWeek, 
-  parseISO, 
-  format 
+import {
+  isToday,
+  isYesterday,
+  isThisWeek,
+  parseISO,
+  format
 } from 'date-fns';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/use-realtime-data';
@@ -41,8 +41,8 @@ interface ActivityFeedProps {
 }
 
 export function ActivityFeed({ className, maxItems = 15 }: ActivityFeedProps) {
-  const { userProfile } = useAuth();
-  const { data: rawNotifications, loading } = useNotifications(userProfile?.id);
+  const { currentUser } = useAuth();
+  const { data: rawNotifications, loading } = useNotifications(currentUser?.id);
 
   // Group notifications by date
   const groupedActivities = useMemo(() => {
@@ -95,9 +95,9 @@ export function ActivityFeed({ className, maxItems = 15 }: ActivityFeedProps) {
     );
   }
 
-  const hasActivity = groupedActivities.today.length > 0 || 
-                      groupedActivities.yesterday.length > 0 || 
-                      groupedActivities.earlier.length > 0;
+  const hasActivity = groupedActivities.today.length > 0 ||
+    groupedActivities.yesterday.length > 0 ||
+    groupedActivities.earlier.length > 0;
 
   return (
     <Card className={cn("border-none shadow-sm rounded-[2rem] overflow-hidden bg-white h-full flex flex-col", className)}>
@@ -159,10 +159,10 @@ export function ActivityFeed({ className, maxItems = 15 }: ActivityFeedProps) {
   );
 }
 
-function ActivityGroup({ label, items, getIcon }: { 
-  label: string, 
-  items: Notification[], 
-  getIcon: (type: NotificationType) => { icon: any, color: string, bg: string } 
+function ActivityGroup({ label, items, getIcon }: {
+  label: string,
+  items: Notification[],
+  getIcon: (type: NotificationType) => { icon: any, color: string, bg: string }
 }) {
   return (
     <div className="space-y-0">

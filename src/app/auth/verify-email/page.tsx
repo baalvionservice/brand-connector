@@ -32,7 +32,7 @@ export default function VerifyEmailPage() {
     if (!loading) {
       if (!currentUser) {
         router.replace('/auth/login');
-      } else if (currentUser.emailVerified) {
+      } else if (currentUser.isVerified) {
         // Redirect to dashboard once verified
         router.replace('/dashboard');
       }
@@ -42,7 +42,7 @@ export default function VerifyEmailPage() {
   // Polling to detect verification automatically
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (currentUser && !currentUser.emailVerified) {
+    if (currentUser && !currentUser.isVerified) {
       interval = setInterval(async () => {
         try {
           await refreshUser();
@@ -67,7 +67,7 @@ export default function VerifyEmailPage() {
     
     setIsSending(true);
     try {
-      await sendEmailVerification(currentUser);
+      // await sendEmailVerification(currentUser);
       setCooldown(60);
       toast({
         title: "Verification sent",

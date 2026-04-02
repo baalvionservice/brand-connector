@@ -3,16 +3,16 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Briefcase, 
-  Search, 
-  Filter, 
-  Calendar, 
-  IndianRupee, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  Eye, 
+import {
+  Briefcase,
+  Search,
+  Filter,
+  Calendar,
+  IndianRupee,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Eye,
   MoreHorizontal,
   ArrowRight,
   Trash2,
@@ -31,11 +31,11 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
@@ -63,7 +63,7 @@ const CAMPAIGN_METADATA: Record<string, any> = {
 };
 
 export default function MyApplicationsPage() {
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
@@ -72,13 +72,13 @@ export default function MyApplicationsPage() {
 
   // Fetch applications for current creator
   const appsQuery = useMemo(() => {
-    if (!userProfile?.id) return null;
+    if (!currentUser?.id || !db) return null;
     return query(
       collection(db, 'applications'),
-      where('creatorId', '==', userProfile.id),
+      where('creatorId', '==', currentUser.id),
       orderBy('appliedAt', 'desc')
     );
-  }, [db, userProfile?.id]);
+  }, [db, currentUser?.id]);
 
   const { data: applications, loading } = useCollection<any>(appsQuery);
 
@@ -86,8 +86,8 @@ export default function MyApplicationsPage() {
     if (!applications) return [];
     return applications.filter(app => {
       const metadata = CAMPAIGN_METADATA[app.campaignId] || { title: 'Unknown Campaign', brand: 'Unknown' };
-      const matchesSearch = metadata.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           metadata.brand.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = metadata.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        metadata.brand.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesTab = activeTab === 'ALL' || app.status === activeTab;
       return matchesSearch && matchesTab;
     });
@@ -95,7 +95,7 @@ export default function MyApplicationsPage() {
 
   const handleWithdraw = async (appId: string) => {
     try {
-      await deleteDoc(doc(db, 'applications', appId));
+      await deleteDoc(doc(db!, 'applications', appId));
       toast({
         title: "Application Withdrawn",
         description: "Your pitch has been removed from the brand's list.",
@@ -135,8 +135,8 @@ export default function MyApplicationsPage() {
         </div>
         <div className="relative w-full md:w-72">
           <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-          <Input 
-            placeholder="Search campaigns..." 
+          <Input
+            placeholder="Search campaigns..."
             className="pl-10 h-11 rounded-xl bg-white border-slate-200"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -165,10 +165,10 @@ export default function MyApplicationsPage() {
             <div className="grid grid-cols-1 gap-6">
               <AnimatePresence mode="popLayout">
                 {filteredApps.map((app, idx) => (
-                  <ApplicationCard 
-                    key={app.id} 
-                    app={app} 
-                    index={idx} 
+                  <ApplicationCard
+                    key={app.id}
+                    app={app}
+                    index={idx}
                     onWithdraw={handleWithdraw}
                     statusConfig={getStatusConfig(app.status)}
                   />
@@ -184,16 +184,16 @@ export default function MyApplicationsPage() {
   );
 }
 
-function ApplicationCard({ app, index, onWithdraw, statusConfig }: { 
-  app: any, 
-  index: number, 
+function ApplicationCard({ app, index, onWithdraw, statusConfig }: {
+  app: any,
+  index: number,
   onWithdraw: (id: string) => void,
   statusConfig: any
 }) {
-  const metadata = CAMPAIGN_METADATA[app.campaignId] || { 
-    title: 'Campaign ID: ' + app.campaignId, 
-    brand: 'Baalvion Brand', 
-    logo: `https://picsum.photos/seed/${app.campaignId}/100/100` 
+  const metadata = CAMPAIGN_METADATA[app.campaignId] || {
+    title: 'Campaign ID: ' + app.campaignId,
+    brand: 'Baalvion Brand',
+    logo: `https://picsum.photos/seed/${app.campaignId}/100/100`
   };
 
   const formattedDate = new Date(app.appliedAt).toLocaleDateString('en-IN', {
@@ -248,11 +248,11 @@ function ApplicationCard({ app, index, onWithdraw, statusConfig }: {
             <div className="flex-[0.8] p-6 bg-slate-50/30 flex flex-col justify-center">
               <div className="relative">
                 <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-slate-100 rounded-full" />
-                <div 
-                  className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary rounded-full transition-all duration-1000" 
+                <div
+                  className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary rounded-full transition-all duration-1000"
                   style={{ width: app.status === 'PENDING' ? '25%' : app.status === 'REVIEWING' ? '75%' : '100%' }}
                 />
-                
+
                 <div className="relative flex justify-between">
                   {[
                     { label: 'Applied', active: true },
@@ -282,7 +282,7 @@ function ApplicationCard({ app, index, onWithdraw, statusConfig }: {
                   <Eye className="h-4 w-4 mr-2" /> View Pitch
                 </Button>
               </Link>
-              
+
               <div className="flex items-center gap-2 w-full lg:w-auto">
                 {app.status === 'PENDING' && (
                   <AlertDialog>
@@ -300,7 +300,7 @@ function ApplicationCard({ app, index, onWithdraw, statusConfig }: {
                       </AlertDialogHeader>
                       <AlertDialogFooter className="mt-8 gap-3">
                         <AlertDialogCancel className="rounded-xl font-bold">Keep Application</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogAction
                           onClick={() => onWithdraw(app.id)}
                           className="rounded-xl font-bold bg-red-600 hover:bg-red-700"
                         >
@@ -337,8 +337,8 @@ function EmptyState({ tab, hasSearch }: { tab: string, hasSearch: boolean }) {
         {hasSearch ? "No matching applications" : isAll ? "You haven't applied yet" : `No ${tab.toLowerCase()} applications`}
       </h3>
       <p className="text-slate-500 mt-2 max-w-sm mx-auto font-medium">
-        {hasSearch 
-          ? "Try clearing your search or filters to see all applications." 
+        {hasSearch
+          ? "Try clearing your search or filters to see all applications."
           : "Discover high-paying campaigns tailored to your reach in the discovery feed."}
       </p>
       <Link href="/dashboard/creator/campaigns" className="mt-10">

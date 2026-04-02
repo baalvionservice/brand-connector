@@ -3,18 +3,18 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ShieldAlert, 
-  Search, 
-  Filter, 
-  AlertTriangle, 
-  CheckCircle2, 
-  XCircle, 
-  Scale, 
-  FileText, 
-  MessageSquare, 
-  ExternalLink, 
-  Download, 
+import {
+  ShieldAlert,
+  Search,
+  Filter,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Scale,
+  FileText,
+  MessageSquare,
+  ExternalLink,
+  Download,
   Loader2,
   Clock,
   ArrowRight,
@@ -40,28 +40,28 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -71,7 +71,7 @@ import { cn } from '@/lib/utils';
 export default function AdminDisputeResolutionPage() {
   const db = useFirestore();
   const { toast } = useToast();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('FILED');
   const [selectedDispute, setSelectedDispute] = useState<Dispute | null>(null);
@@ -81,14 +81,16 @@ export default function AdminDisputeResolutionPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 1. Fetch Disputes
-  const { data: disputes, loading } = useCollection<Dispute>(
-    query(collection(db, 'disputes'), orderBy('createdAt', 'desc'))
-  );
+  const disputesQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'disputes'), orderBy('createdAt', 'desc'));
+  }, [db]);
+  const { data: disputes, loading } = useCollection<Dispute>(disputesQuery);
 
   const filteredDisputes = useMemo(() => {
     return disputes.filter(d => {
-      const matchesSearch = d.campaignId.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           d.id.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = d.campaignId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        d.id.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'all' || d.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -101,8 +103,8 @@ export default function AdminDisputeResolutionPage() {
     }
 
     setIsSubmitting(true);
-    const disputeRef = doc(db, 'disputes', selectedDispute.id);
-    
+    const disputeRef = doc(db!, 'disputes', selectedDispute.id);
+
     const updateData = {
       status: DisputeStatus.RESOLVED,
       adminNotes: adminNote,
@@ -115,11 +117,11 @@ export default function AdminDisputeResolutionPage() {
       await updateDoc(disputeRef, updateData);
 
       // Notify Creator
-      await addDoc(collection(db, 'notifications'), {
+      await addDoc(collection(db!, 'notifications'), {
         userId: selectedDispute.creatorId,
         title: rulingType === 'CREATOR' ? 'Dispute Resolved in Your Favor! 🎉' : 'Dispute Resolution Update',
-        message: rulingType === 'CREATOR' 
-          ? `Arbitration complete for campaign #${selectedDispute.campaignId}. Escrow funds have been released.` 
+        message: rulingType === 'CREATOR'
+          ? `Arbitration complete for campaign #${selectedDispute.campaignId}. Escrow funds have been released.`
           : `The dispute for campaign #${selectedDispute.campaignId} has been resolved in favor of the brand. Reason: ${adminNote}`,
         type: 'PAYMENT',
         read: false,
@@ -128,11 +130,11 @@ export default function AdminDisputeResolutionPage() {
       });
 
       // Notify Brand
-      await addDoc(collection(db, 'notifications'), {
+      await addDoc(collection(db!, 'notifications'), {
         userId: selectedDispute.brandId,
         title: rulingType === 'BRAND' ? 'Dispute Resolved: Refund Issued' : 'Dispute Resolution Update',
-        message: rulingType === 'BRAND' 
-          ? `Arbitration complete. The escrow hold for campaign #${selectedDispute.campaignId} has been refunded to your wallet.` 
+        message: rulingType === 'BRAND'
+          ? `Arbitration complete. The escrow hold for campaign #${selectedDispute.campaignId} has been refunded to your wallet.`
           : `The dispute for campaign #${selectedDispute.campaignId} has been resolved in favor of the creator. Reason: ${adminNote}`,
         type: 'SYSTEM',
         read: false,
@@ -140,11 +142,11 @@ export default function AdminDisputeResolutionPage() {
         link: `/dashboard/brand/wallet`
       });
 
-      toast({ 
-        title: "Final Ruling Applied", 
-        description: `Case resolved in favor of ${rulingType.toLowerCase()}. Both parties notified.` 
+      toast({
+        title: "Final Ruling Applied",
+        description: `Case resolved in favor of ${rulingType.toLowerCase()}. Both parties notified.`
       });
-      
+
       setIsRulingDialogOpen(false);
       setAdminNote('');
       setSelectedDispute(null);
@@ -191,14 +193,14 @@ export default function AdminDisputeResolutionPage() {
         <div className="flex items-center gap-4 flex-1">
           <div className="relative w-full lg:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder="Search by campaign ID or Dispute Ref..." 
+            <Input
+              placeholder="Search by campaign ID or Dispute Ref..."
               className="pl-10 h-11 rounded-xl bg-slate-50 border-none focus-visible:ring-primary"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          
+
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-none font-bold text-xs min-w-[160px]">
               <SelectValue placeholder="All Status" />
@@ -246,8 +248,8 @@ export default function AdminDisputeResolutionPage() {
                           <div className="min-w-0 space-y-1">
                             <p className="font-black text-slate-900 leading-none truncate max-w-[250px]">{dispute.category.replace('_', ' ')}</p>
                             <div className="flex items-center gap-2">
-                              <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-none font-bold text-[9px] uppercase h-4 px-1.5">ID: {dispute.id.substring(0,8)}</Badge>
-                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Campaign #{dispute.campaignId.substring(0,8)}</span>
+                              <Badge variant="secondary" className="bg-slate-100 text-slate-500 border-none font-bold text-[9px] uppercase h-4 px-1.5">ID: {dispute.id.substring(0, 8)}</Badge>
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Campaign #{dispute.campaignId.substring(0, 8)}</span>
                             </div>
                           </div>
                         </div>
@@ -280,9 +282,9 @@ export default function AdminDisputeResolutionPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="pr-8 text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="rounded-xl font-bold h-10 px-4 bg-slate-50 text-slate-600 hover:text-primary"
                           onClick={() => {
                             setSelectedDispute(dispute);
@@ -399,7 +401,7 @@ export default function AdminDisputeResolutionPage() {
 
               <div className="space-y-4">
                 <Label className="font-bold text-slate-700">Admin Justification (Sent to both parties)</Label>
-                <Textarea 
+                <Textarea
                   placeholder="Provide a detailed legal/professional justification for this ruling based on the campaign brief and evidence..."
                   className="min-h-[120px] rounded-2xl p-6 bg-slate-50 border-none focus-visible:ring-primary text-md"
                   value={adminNote}
@@ -411,13 +413,13 @@ export default function AdminDisputeResolutionPage() {
 
           <DialogFooter className="p-8 bg-slate-50 border-t gap-3">
             <Button variant="ghost" className="rounded-xl font-bold h-12 px-6" onClick={() => setIsRulingDialogOpen(false)}>Close Review</Button>
-            <Button 
+            <Button
               disabled={isSubmitting || !adminNote.trim()}
               onClick={handleRuling}
               className={cn(
                 "rounded-xl font-black h-12 px-10 shadow-xl",
                 rulingType === 'CREATOR' ? "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20" :
-                rulingType === 'BRAND' ? "bg-red-500 hover:bg-red-600 shadow-red-500/20" : "bg-indigo-500 hover:bg-indigo-600 shadow-indigo-500/20"
+                  rulingType === 'BRAND' ? "bg-red-500 hover:bg-red-600 shadow-red-500/20" : "bg-indigo-500 hover:bg-indigo-600 shadow-indigo-500/20"
               )}
             >
               {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}

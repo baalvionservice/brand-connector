@@ -17,4 +17,5 @@ const CampaignInputForMatchingSchema = z.object({
   title: z.string().describe('The title of the campaign.'),
   description: z.string().describe('A detailed description of the campaign.'),
   objectives: z.array(z.string()).describe('List of campaign objectives (e.g., brand awareness, lead generation).'),
-  targetAudience: z.string().describe('Description of the target audience for the campaign (e.g., 
+  targetAudience: z.string().describe('Description of the target audience for the campaign'),
+});

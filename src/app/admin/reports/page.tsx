@@ -1,69 +1,103 @@
+"use client";
 
-'use client';
-
-import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  FileBarChart, 
-  Download, 
-  Calendar as CalendarIcon, 
-  RefreshCcw, 
-  FileText, 
-  PieChart, 
-  TrendingUp, 
-  ShieldCheck, 
-  Zap, 
-  ChevronRight, 
-  Mail, 
-  Clock, 
-  CheckCircle2, 
+import React, { useState } from "react";
+import {
+  FileBarChart,
+  Download,
+  Calendar as CalendarIcon,
+  RefreshCcw,
+  PieChart,
+  TrendingUp,
+  ShieldCheck,
+  Zap,
+  Mail,
+  Clock,
+  CheckCircle2,
   Plus,
   Loader2,
-  Trash2,
   History,
-  Info,
   Smartphone,
-  Check
-} from 'lucide-react';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { format } from 'date-fns';
-import { collection, addDoc, query, orderBy } from 'firebase/firestore';
-import { useFirestore, useCollection } from '@/firebase';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+} from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import { format } from "date-fns";
+import { collection, addDoc, query, orderBy } from "firebase/firestore";
+import { useFirestore, useCollection } from "@/firebase";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { 
-  Popover, 
-  PopoverContent, 
-  PopoverTrigger 
-} from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { Separator } from '@/components/ui/separator';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 const PRESET_REPORTS = [
-  { id: 'revenue', title: 'Monthly Revenue', desc: 'Breakdown of GMV, commission, and net platform earnings.', icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-  { id: 'creators', title: 'Creator Performance', desc: 'Top talent engagement rates, rating distribution, and reach metrics.', icon: Zap, color: 'text-primary', bg: 'bg-primary/5' },
-  { id: 'brands', title: 'Brand Activity', desc: 'Campaign launch velocity, hiring efficiency, and repeat client rate.', icon: ShieldCheck, color: 'text-blue-600', bg: 'bg-blue-50' },
-  { id: 'disputes', title: 'Dispute Summary', desc: 'Arbitration outcomes, resolution times, and recurring conflict areas.', icon: ShieldCheck, color: 'text-orange-600', bg: 'bg-orange-50' },
-  { id: 'health', title: 'Platform Health', desc: 'Technical uptime, AI matching latency, and user onboarding flow.', icon: Smartphone, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+  {
+    id: "revenue",
+    title: "Monthly Revenue",
+    desc: "Breakdown of GMV, commission, and net platform earnings.",
+    icon: TrendingUp,
+    color: "text-emerald-600",
+    bg: "bg-emerald-50",
+  },
+  {
+    id: "creators",
+    title: "Creator Performance",
+    desc: "Top talent engagement rates, rating distribution, and reach metrics.",
+    icon: Zap,
+    color: "text-primary",
+    bg: "bg-primary/5",
+  },
+  {
+    id: "brands",
+    title: "Brand Activity",
+    desc: "Campaign launch velocity, hiring efficiency, and repeat client rate.",
+    icon: ShieldCheck,
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+  },
+  {
+    id: "disputes",
+    title: "Dispute Summary",
+    desc: "Arbitration outcomes, resolution times, and recurring conflict areas.",
+    icon: ShieldCheck,
+    color: "text-orange-600",
+    bg: "bg-orange-50",
+  },
+  {
+    id: "health",
+    title: "Platform Health",
+    desc: "Technical uptime, AI matching latency, and user onboarding flow.",
+    icon: Smartphone,
+    color: "text-indigo-600",
+    bg: "bg-indigo-50",
+  },
 ];
 
 export default function AdminReportsPage() {
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
 
@@ -72,88 +106,120 @@ export default function AdminReportsPage() {
     to: new Date(),
   });
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
-  const [selectedFormat, setSelectedFormat] = useState<'PDF' | 'CSV'>('PDF');
+  const [selectedFormat, setSelectedFormat] = useState<"PDF" | "CSV">("PDF");
 
   // Generation History
   const { data: history, loading: historyLoading } = useCollection<any>(
-    query(collection(db, 'generated_reports'), orderBy('createdAt', 'desc'))
+    db
+      ? query(collection(db, "generated_reports"), orderBy("createdAt", "desc"))
+      : null
   );
 
   const handleGenerateReport = async (reportId: string) => {
     setIsGenerating(reportId);
-    
+
     // Simulate data fetching and processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     try {
-      const reportTitle = PRESET_REPORTS.find(r => r.id === reportId)?.title || 'Platform Report';
-      
-      if (selectedFormat === 'PDF') {
+      const reportTitle =
+        PRESET_REPORTS.find((r) => r.id === reportId)?.title ||
+        "Platform Report";
+
+      if (selectedFormat === "PDF") {
         const doc = new jsPDF();
-        
+
         // Branded Header
         doc.setFillColor(108, 58, 232); // Primary color
-        doc.rect(0, 0, 210, 40, 'F');
+        doc.rect(0, 0, 210, 40, "F");
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(24);
-        doc.text('Baalvion Connect', 20, 20);
+        doc.text("Baalvion Connect", 20, 20);
         doc.setFontSize(12);
         doc.text(`${reportTitle} - Internal Admin Document`, 20, 30);
-        
+
         // Metadata
         doc.setTextColor(100, 116, 139);
         doc.setFontSize(10);
-        doc.text(`Generated by: ${userProfile?.displayName || 'System Admin'}`, 20, 50);
-        doc.text(`Period: ${format(dateRange.from, 'PPP')} to ${format(dateRange.to, 'PPP')}`, 20, 55);
+        doc.text(
+          `Generated by: ${currentUser?.displayName || "System Admin"}`,
+          20,
+          50
+        );
+        doc.text(
+          `Period: ${format(dateRange.from, "PPP")} to ${format(
+            dateRange.to,
+            "PPP"
+          )}`,
+          20,
+          55
+        );
         doc.text(`Timestamp: ${new Date().toLocaleString()}`, 20, 60);
 
         // Body Content (Mock Data Table)
         const tableData = [
-          ['Total Projects', '156', '+12% MoM'],
-          ['Platform Reach', '4.8M', '+18.4% MoM'],
-          ['Net Revenue', '₹78.4L', '+12.5% MoM'],
-          ['Active Creators', '10,240', '+840 MoM'],
-          ['Avg. ROI Score', '4.2x', '+0.8x MoM'],
+          ["Total Projects", "156", "+12% MoM"],
+          ["Platform Reach", "4.8M", "+18.4% MoM"],
+          ["Net Revenue", "₹78.4L", "+12.5% MoM"],
+          ["Active Creators", "10,240", "+840 MoM"],
+          ["Avg. ROI Score", "4.2x", "+0.8x MoM"],
         ];
 
         autoTable(doc, {
           startY: 70,
-          head: [['Metric', 'Current Value', 'Trajectory']],
+          head: [["Metric", "Current Value", "Trajectory"]],
           body: tableData,
-          theme: 'striped',
-          headStyles: { fillStyle: 'F', fillColor: [108, 58, 232] },
+          theme: "striped",
+          headStyles: { fillColor: [108, 58, 232] },
         });
 
-        doc.save(`Baalvion_${reportId}_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+        doc.save(
+          `Baalvion_${reportId}_${format(new Date(), "yyyy-MM-dd")}.pdf`
+        );
       } else {
         // CSV Generation
         const headers = "Metric,Value,Trajectory\n";
         const rows = [
           "Total Projects,156,+12%",
           "Reach,4.8M,+18.4%",
-          "Revenue,78.4L,+12.5%"
+          "Revenue,78.4L,+12.5%",
         ].join("\n");
-        const blob = new Blob([headers + rows], { type: 'text/csv' });
+        const blob = new Blob([headers + rows], { type: "text/csv" });
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = `Baalvion_${reportId}_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+        a.download = `Baalvion_${reportId}_${format(
+          new Date(),
+          "yyyy-MM-dd"
+        )}.csv`;
         a.click();
       }
 
       // Record in history
-      await addDoc(collection(db, 'generated_reports'), {
-        reportId,
-        title: reportTitle,
-        generatedBy: userProfile?.displayName || 'Admin',
-        format: selectedFormat,
-        period: `${format(dateRange.from, 'MMM d')} - ${format(dateRange.to, 'MMM d')}`,
-        createdAt: new Date().toISOString()
-      });
+      if (db) {
+        await addDoc(collection(db, "generated_reports"), {
+          reportId,
+          title: reportTitle,
+          generatedBy: currentUser?.displayName || "Admin",
+          format: selectedFormat,
+          period: `${format(dateRange.from, "MMM d")} - ${format(
+            dateRange.to,
+            "MMM d"
+          )}`,
+          createdAt: new Date().toISOString(),
+        });
+      }
 
-      toast({ title: "Report Generated", description: "The file has been downloaded to your device." });
+      toast({
+        title: "Report Generated",
+        description: "The file has been downloaded to your device.",
+      });
     } catch (err) {
-      toast({ variant: 'destructive', title: 'Generation Failed', description: 'Could not generate report data.' });
+      toast({
+        variant: "destructive",
+        title: "Generation Failed",
+        description: "Could not generate report data.",
+      });
     } finally {
       setIsGenerating(null);
     }
@@ -168,31 +234,51 @@ export default function AdminReportsPage() {
             <FileBarChart className="h-8 w-8 text-primary" />
             Intelligence & Reports
           </h1>
-          <p className="text-slate-500 font-medium">Generate high-fidelity snapshots of marketplace performance and financial health.</p>
+          <p className="text-slate-500 font-medium">
+            Generate high-fidelity snapshots of marketplace performance and
+            financial health.
+          </p>
         </div>
         <div className="flex items-center gap-3">
-          <Select value={selectedFormat} onValueChange={(v: any) => setSelectedFormat(v)}>
+          <Select
+            value={selectedFormat}
+            onValueChange={(v: any) => setSelectedFormat(v)}
+          >
             <SelectTrigger className="w-28 h-11 rounded-xl bg-white font-bold border-slate-200">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="PDF" className="font-bold">PDF</SelectItem>
-              <SelectItem value="CSV" className="font-bold">CSV</SelectItem>
+              <SelectItem value="PDF" className="font-bold">
+                PDF
+              </SelectItem>
+              <SelectItem value="CSV" className="font-bold">
+                CSV
+              </SelectItem>
             </SelectContent>
           </Select>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="h-11 rounded-xl font-bold bg-white border-slate-200">
+              <Button
+                variant="outline"
+                className="h-11 rounded-xl font-bold bg-white border-slate-200"
+              >
                 <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
-                {format(dateRange.from, 'MMM d')} - {format(dateRange.to, 'MMM d')}
+                {format(dateRange.from, "MMM d")} -{" "}
+                {format(dateRange.to, "MMM d")}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 rounded-2xl overflow-hidden border-none" align="end">
+            <PopoverContent
+              className="w-auto p-0 rounded-2xl overflow-hidden border-none"
+              align="end"
+            >
               <Calendar
                 mode="range"
                 selected={{ from: dateRange.from, to: dateRange.to }}
-                onSelect={(range: any) => range?.from && range?.to && setDateRange({ from: range.from, to: range.to })}
-                initialFocus
+                onSelect={(range: any) =>
+                  range?.from &&
+                  range?.to &&
+                  setDateRange({ from: range.from, to: range.to })
+                }
               />
             </PopoverContent>
           </Popover>
@@ -200,29 +286,46 @@ export default function AdminReportsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
         {/* Preset Reports Grid */}
         <div className="lg:col-span-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {PRESET_REPORTS.map((report) => (
-              <Card key={report.id} className="border-none shadow-sm hover:shadow-xl transition-all duration-300 rounded-[2rem] overflow-hidden bg-white group">
+              <Card
+                key={report.id}
+                className="border-none shadow-sm hover:shadow-xl transition-all duration-300 rounded-[2rem] overflow-hidden bg-white group"
+              >
                 <CardHeader className="p-8 pb-4">
-                  <div className={cn("h-14 w-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform", report.bg, report.color)}>
+                  <div
+                    className={cn(
+                      "h-14 w-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform",
+                      report.bg,
+                      report.color
+                    )}
+                  >
                     <report.icon className="h-7 w-7" />
                   </div>
-                  <CardTitle className="text-xl font-black">{report.title}</CardTitle>
-                  <CardDescription className="font-medium leading-relaxed mt-2">{report.desc}</CardDescription>
+                  <CardTitle className="text-xl font-black">
+                    {report.title}
+                  </CardTitle>
+                  <CardDescription className="font-medium leading-relaxed mt-2">
+                    {report.desc}
+                  </CardDescription>
                 </CardHeader>
                 <CardFooter className="p-8 pt-4">
-                  <Button 
+                  <Button
                     disabled={!!isGenerating}
                     onClick={() => handleGenerateReport(report.id)}
                     className="w-full rounded-xl font-black h-12 shadow-lg shadow-primary/10 group-hover:shadow-primary/20"
                   >
                     {isGenerating === report.id ? (
-                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</>
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                        Processing...
+                      </>
                     ) : (
-                      <><Zap className="mr-2 h-4 w-4" /> Run Report</>
+                      <>
+                        <Zap className="mr-2 h-4 w-4" /> Run Report
+                      </>
                     )}
                   </Button>
                 </CardFooter>
@@ -233,30 +336,54 @@ export default function AdminReportsPage() {
           {/* Custom Report Builder Mock */}
           <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
             <CardHeader className="p-8 border-b bg-slate-50/50">
-              <CardTitle className="text-xl font-black">Advanced Custom Builder</CardTitle>
-              <CardDescription>Aggregate specific metrics across multiple data entities.</CardDescription>
+              <CardTitle className="text-xl font-black">
+                Advanced Custom Builder
+              </CardTitle>
+              <CardDescription>
+                Aggregate specific metrics across multiple data entities.
+              </CardDescription>
             </CardHeader>
             <CardContent className="p-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <div className="space-y-6">
-                  <Label className="text-xs font-black uppercase text-slate-400 tracking-widest">Select Dimensions</Label>
+                  <Label className="text-xs font-black uppercase text-slate-400 tracking-widest">
+                    Select Dimensions
+                  </Label>
                   <div className="grid grid-cols-2 gap-4">
-                    {['GMV Velocity', 'Net Fee%', 'Active Seats', 'Dispute Ratio', 'Verification%'].map((dim) => (
+                    {[
+                      "GMV Velocity",
+                      "Net Fee%",
+                      "Active Seats",
+                      "Dispute Ratio",
+                      "Verification%",
+                    ].map((dim) => (
                       <div key={dim} className="flex items-center gap-2">
                         <Checkbox id={dim} />
-                        <label htmlFor={dim} className="text-sm font-bold text-slate-600">{dim}</label>
+                        <label
+                          htmlFor={dim}
+                          className="text-sm font-bold text-slate-600"
+                        >
+                          {dim}
+                        </label>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div className="space-y-6">
-                  <Label className="text-xs font-black uppercase text-slate-400 tracking-widest">Email Distribution</Label>
+                  <Label className="text-xs font-black uppercase text-slate-400 tracking-widest">
+                    Email Distribution
+                  </Label>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 border border-slate-100">
-                      <span className="text-xs font-bold text-slate-500">leadership-list@baalvion.com</span>
+                      <span className="text-xs font-bold text-slate-500">
+                        leadership-list@baalvion.com
+                      </span>
                       <CheckCircle2 className="h-4 w-4 text-emerald-500" />
                     </div>
-                    <Button variant="outline" className="w-full rounded-xl font-bold border-dashed h-11">
+                    <Button
+                      variant="outline"
+                      className="w-full rounded-xl font-bold border-dashed h-11"
+                    >
                       <Mail className="mr-2 h-4 w-4" /> CC Additional Admin
                     </Button>
                   </div>
@@ -264,7 +391,10 @@ export default function AdminReportsPage() {
               </div>
             </CardContent>
             <CardFooter className="p-8 border-t bg-slate-50/30">
-              <Button variant="ghost" className="w-full rounded-xl font-black h-12 uppercase tracking-widest text-slate-400">
+              <Button
+                variant="ghost"
+                className="w-full rounded-xl font-black h-12 uppercase tracking-widest text-slate-400"
+              >
                 Save Multi-Metric Template
               </Button>
             </CardFooter>
@@ -273,7 +403,6 @@ export default function AdminReportsPage() {
 
         {/* Sidebar panels */}
         <aside className="lg:col-span-4 space-y-8">
-          
           {/* Automated Schedules */}
           <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
             <CardHeader className="bg-slate-50/50 border-b p-6 flex flex-row items-center justify-between">
@@ -281,25 +410,46 @@ export default function AdminReportsPage() {
                 <Clock className="h-4 w-4 text-primary" />
                 Active Schedules
               </CardTitle>
-              <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-primary">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-lg text-primary"
+              >
                 <Plus className="h-4 w-4" />
               </Button>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-slate-50">
                 {[
-                  { title: 'Weekly Revenue Dispatch', period: 'Every Mon, 8AM', status: 'ACTIVE' },
-                  { title: 'Monthly Trust Audit', period: '1st of Month', status: 'ACTIVE' },
+                  {
+                    title: "Weekly Revenue Dispatch",
+                    period: "Every Mon, 8AM",
+                    status: "ACTIVE",
+                  },
+                  {
+                    title: "Monthly Trust Audit",
+                    period: "1st of Month",
+                    status: "ACTIVE",
+                  },
                 ].map((item, i) => (
-                  <div key={i} className="p-5 flex items-start gap-4 hover:bg-slate-50/50 transition-colors">
+                  <div
+                    key={i}
+                    className="p-5 flex items-start gap-4 hover:bg-slate-50/50 transition-colors"
+                  >
                     <div className="h-10 w-10 rounded-xl bg-primary/5 text-primary flex items-center justify-center shrink-0">
                       <RefreshCcw className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-900 truncate">{item.title}</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">{item.period}</p>
+                      <p className="text-sm font-bold text-slate-900 truncate">
+                        {item.title}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-bold uppercase mt-1">
+                        {item.period}
+                      </p>
                     </div>
-                    <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[8px] h-4">ON</Badge>
+                    <Badge className="bg-emerald-50 text-emerald-600 border-none font-black text-[8px] h-4">
+                      ON
+                    </Badge>
                   </div>
                 ))}
               </div>
@@ -318,12 +468,15 @@ export default function AdminReportsPage() {
               <div className="space-y-2">
                 <h3 className="text-xl font-black">Data Integrity</h3>
                 <p className="text-slate-400 text-xs leading-relaxed font-medium">
-                  Reports are generated from the primary transaction ledger and verified by our secondary reconciliation engine.
+                  Reports are generated from the primary transaction ledger and
+                  verified by our secondary reconciliation engine.
                 </p>
               </div>
               <div className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10">
                 <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black uppercase text-slate-300">Market Sync Correct</span>
+                <span className="text-[10px] font-black uppercase text-slate-300">
+                  Market Sync Correct
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -339,28 +492,45 @@ export default function AdminReportsPage() {
             <CardContent className="p-0">
               <div className="max-h-[300px] overflow-y-auto scrollbar-hide divide-y divide-slate-50">
                 {historyLoading ? (
-                  <div className="p-10 flex justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary/30" /></div>
-                ) : history.slice(0, 5).map((log: any) => (
-                  <div key={log.id} className="p-5 hover:bg-slate-50/50 transition-colors">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-bold text-slate-900 truncate">{log.title}</span>
-                      <Badge variant="outline" className="text-[8px] font-black h-4 px-1">{log.format}</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-[10px] text-slate-400 font-medium">{log.period}</p>
-                      <button className="text-primary hover:scale-110 transition-transform">
-                        <Download className="h-3 w-3" />
-                      </button>
-                    </div>
+                  <div className="p-10 flex justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary/30" />
                   </div>
-                ))}
+                ) : (
+                  history.slice(0, 5).map((log: any) => (
+                    <div
+                      key={log.id}
+                      className="p-5 hover:bg-slate-50/50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold text-slate-900 truncate">
+                          {log.title}
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className="text-[8px] font-black h-4 px-1"
+                        >
+                          {log.format}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] text-slate-400 font-medium">
+                          {log.period}
+                        </p>
+                        <button className="text-primary hover:scale-110 transition-transform">
+                          <Download className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
                 {!historyLoading && history.length === 0 && (
-                  <div className="p-10 text-center text-[10px] font-black text-slate-300 uppercase tracking-widest">No reports archived</div>
+                  <div className="p-10 text-center text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                    No reports archived
+                  </div>
                 )}
               </div>
             </CardContent>
           </Card>
-
         </aside>
       </div>
     </div>

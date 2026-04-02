@@ -2,20 +2,20 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  MoreHorizontal, 
-  IndianRupee, 
-  Users, 
-  FileText, 
-  Clock, 
-  Pause, 
-  Play, 
-  Copy, 
-  Archive, 
-  Edit2, 
+import {
+  Plus,
+  Search,
+  Filter,
+  MoreHorizontal,
+  IndianRupee,
+  Users,
+  FileText,
+  Clock,
+  Pause,
+  Play,
+  Copy,
+  Archive,
+  Edit2,
   ChevronRight,
   TrendingUp,
   Loader2,
@@ -41,19 +41,19 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
@@ -61,24 +61,24 @@ import { cn } from '@/lib/utils';
 type SortOption = 'newest' | 'deadline' | 'budget';
 
 export default function BrandCampaignsPage() {
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
-  
+
   const [activeTab, setActiveTab] = useState<string>('ACTIVE');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
 
   // Fetch campaigns for the current brand
   const campaignsQuery = useMemo(() => {
-    if (!userProfile?.id) return null;
+    if (!currentUser?.id || !db) return null;
     return query(
       collection(db, 'campaigns'),
-      where('brandId', '==', `brand_${userProfile.id}`),
+      where('brandId', '==', `brand_${currentUser.id}`),
       orderBy('createdAt', 'desc')
     );
-  }, [db, userProfile?.id]);
+  }, [db, currentUser?.id]);
 
   const { data: campaigns, loading } = useCollection<Campaign>(campaignsQuery);
 
@@ -96,8 +96,8 @@ export default function BrandCampaignsPage() {
   }, [campaigns, searchQuery, activeTab, sortBy]);
 
   const handleUpdateStatus = (id: string, newStatus: CampaignStatus) => {
-    const campaignRef = doc(db, 'campaigns', id);
-    updateDoc(campaignRef, { 
+    const campaignRef = doc(db!, 'campaigns', id);
+    updateDoc(campaignRef, {
       status: newStatus,
       updatedAt: new Date().toISOString()
     }).catch(async (err) => {
@@ -138,8 +138,8 @@ export default function BrandCampaignsPage() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-4 rounded-[2rem] shadow-sm border border-slate-100">
         <div className="relative w-full lg:w-96">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input 
-            placeholder="Search campaigns..." 
+          <Input
+            placeholder="Search campaigns..."
             className="pl-10 h-11 rounded-xl bg-slate-50 border-none focus-visible:ring-primary"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -195,9 +195,9 @@ export default function BrandCampaignsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <AnimatePresence mode="popLayout">
                 {filteredCampaigns.map((campaign, idx) => (
-                  <CampaignManagementCard 
-                    key={campaign.id} 
-                    campaign={campaign} 
+                  <CampaignManagementCard
+                    key={campaign.id}
+                    campaign={campaign}
                     index={idx}
                     onStatusUpdate={handleUpdateStatus}
                     onDuplicate={() => handleDuplicate(campaign)}
@@ -214,8 +214,8 @@ export default function BrandCampaignsPage() {
   );
 }
 
-function CampaignManagementCard({ campaign, index, onStatusUpdate, onDuplicate }: { 
-  campaign: Campaign, 
+function CampaignManagementCard({ campaign, index, onStatusUpdate, onDuplicate }: {
+  campaign: Campaign,
   index: number,
   onStatusUpdate: (id: string, s: CampaignStatus) => void,
   onDuplicate: () => void
@@ -341,8 +341,8 @@ function EmptyState({ tab }: { tab: string }) {
       </div>
       <h3 className="text-2xl font-black text-slate-900">No {tab.toLowerCase()} campaigns</h3>
       <p className="text-slate-500 mt-2 max-w-sm mx-auto font-medium">
-        {tab === 'ACTIVE' 
-          ? "You haven't launched any live campaigns yet. Create one to start reaching creators." 
+        {tab === 'ACTIVE'
+          ? "You haven't launched any live campaigns yet. Create one to start reaching creators."
           : "Your campaign history is clean. Let's get something moving!"}
       </p>
       <Link href="/dashboard/campaigns/new" className="mt-10">

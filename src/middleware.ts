@@ -1,6 +1,5 @@
-
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/request';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 /**
  * Baalvion Route Protection Middleware - DISABLED for unrestricted access
@@ -12,6 +11,6 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|public|logo.png).*)',
+    "/((?!api|_next/static|_next/image|favicon.ico|public|logo.png).*)",
   ],
 };

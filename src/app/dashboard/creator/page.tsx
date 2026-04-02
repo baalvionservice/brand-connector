@@ -2,11 +2,11 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Zap, 
-  Wallet, 
-  Star, 
-  Clock, 
+import {
+  Zap,
+  Wallet,
+  Star,
+  Clock,
   ChevronRight,
   TrendingUp,
   CheckCircle2,
@@ -85,7 +85,7 @@ const RECENT_ACTIVITY = [
 ];
 
 export default function CreatorDashboard() {
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const completeness = 85;
 
   return (
@@ -94,7 +94,7 @@ export default function CreatorDashboard() {
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-headline font-bold text-slate-900 tracking-tight">
-            Welcome back, {userProfile?.displayName?.split(' ')[0] || 'Creator'}!
+            Welcome back, {currentUser?.displayName?.split(' ')[0] || 'Creator'}!
           </h1>
           <p className="text-slate-500 mt-1 flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -136,7 +136,7 @@ export default function CreatorDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Column - Stats & Matches */}
         <div className="lg:col-span-8 space-y-8">
-          
+
           {/* Earnings & Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden bg-slate-950 text-white relative">
@@ -208,7 +208,7 @@ export default function CreatorDashboard() {
                 <Button variant="link" className="text-primary font-bold text-sm">View Discovery Feed <ChevronRight className="h-4 w-4 ml-1" /></Button>
               </Link>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {AI_MATCHES.map((job, i) => (
                 <motion.div
@@ -261,7 +261,7 @@ export default function CreatorDashboard() {
 
         {/* Right Column - Sidebar Panels */}
         <div className="lg:col-span-4 space-y-8">
-          
+
           {/* AI Insights Panel */}
           <AIInsightsPanel />
 

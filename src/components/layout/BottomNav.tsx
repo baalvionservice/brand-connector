@@ -4,14 +4,14 @@ import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { 
-  LayoutDashboard, 
-  Search, 
-  Briefcase, 
-  Wallet, 
-  User, 
-  LineChart, 
-  Users, 
+import {
+  LayoutDashboard,
+  Search,
+  Briefcase,
+  Wallet,
+  User,
+  LineChart,
+  Users,
   CreditCard,
   Bell
 } from 'lucide-react';
@@ -21,11 +21,11 @@ import { cn } from '@/lib/utils';
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { userProfile } = useAuth();
-  const { data: notifications } = useNotifications(userProfile?.id);
-  
+  const { currentUser } = useAuth();
+  const { data: notifications } = useNotifications(currentUser?.id);
+
   const unreadCount = notifications.filter(n => !n.read).length;
-  const role = userProfile?.role || 'BRAND';
+  const role = currentUser?.role || 'BRAND';
 
   const creatorTabs = [
     { name: 'Home', href: '/dashboard/creator', icon: LayoutDashboard },
@@ -51,10 +51,10 @@ export function BottomNav() {
         {tabs.map((tab) => {
           const isActive = pathname === tab.href;
           const Icon = tab.icon;
-          
+
           return (
-            <Link 
-              key={tab.name} 
+            <Link
+              key={tab.name}
               href={tab.href}
               aria-current={isActive ? 'page' : undefined}
               className="flex flex-col items-center justify-center relative w-16 h-12"
@@ -64,10 +64,10 @@ export function BottomNav() {
                   "h-5 w-5 transition-all duration-300",
                   isActive ? "text-primary scale-110" : "text-slate-400"
                 )} aria-hidden="true" />
-                
+
                 {/* Notification Badge for Home/Apps */}
                 {(tab.name === 'Home' && unreadCount > 0) && (
-                  <span 
+                  <span
                     className="absolute -top-1.5 -right-1.5 h-4 w-4 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] text-white font-bold animate-in zoom-in"
                     aria-label={`${unreadCount} new alerts`}
                   >
@@ -75,7 +75,7 @@ export function BottomNav() {
                   </span>
                 )}
               </div>
-              
+
               <span className={cn(
                 "text-[10px] font-bold mt-1 tracking-tight transition-all duration-300",
                 isActive ? "text-primary opacity-100" : "text-slate-400 opacity-70"

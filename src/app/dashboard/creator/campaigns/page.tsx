@@ -183,7 +183,7 @@ export default function DiscoverCampaignsPage() {
         <div className="flex items-center gap-2">
           <div className="bg-slate-100 p-1 rounded-xl flex">
             <Button 
-              variant={viewMode === 'grid' ? 'white' : 'ghost'} 
+              variant={viewMode === 'grid' ? 'outline' : 'ghost'} 
               size="icon" 
               className={cn("h-9 w-9 rounded-lg", viewMode === 'grid' && "shadow-sm")}
               onClick={() => setViewViewMode('grid')}
@@ -191,7 +191,7 @@ export default function DiscoverCampaignsPage() {
               <LayoutGrid className="h-4 w-4" />
             </Button>
             <Button 
-              variant={viewMode === 'list' ? 'white' : 'ghost'} 
+              variant={viewMode === 'list' ? 'outline' : 'ghost'} 
               size="icon" 
               className={cn("h-9 w-9 rounded-lg", viewMode === 'list' && "shadow-sm")}
               onClick={() => setViewViewMode('list')}
@@ -343,7 +343,7 @@ export default function DiscoverCampaignsPage() {
                   <Button variant="outline" disabled className="rounded-xl font-bold h-11 px-6">Previous</Button>
                   <div className="flex gap-2">
                     {[1, 2, 3].map(p => (
-                      <Button key={p} variant={p === 1 ? 'default' : 'ghost'} className="h-11 w-11 rounded-xl font-bold">
+                      <Button key={p} variant={p === 1 ? 'primary' : 'ghost'} className="h-11 w-11 rounded-xl font-bold">
                         {p}
                       </Button>
                     ))}

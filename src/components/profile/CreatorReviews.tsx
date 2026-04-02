@@ -3,25 +3,25 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Star, 
-  MessageSquare, 
-  Filter, 
-  ChevronDown, 
-  CheckCircle2, 
-  Clock, 
+import {
+  Star,
+  MessageSquare,
+  Filter,
+  ChevronDown,
+  CheckCircle2,
+  Clock,
   ArrowUpRight,
   Reply,
   Loader2,
   Trash2
 } from 'lucide-react';
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  doc, 
-  updateDoc 
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  doc,
+  updateDoc
 } from 'firebase/firestore';
 import { useFirestore, useCollection } from '@/firebase';
 import { Review } from '@/types';
@@ -30,11 +30,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -48,7 +48,7 @@ interface CreatorReviewsProps {
 type SortOption = 'recent' | 'highest' | 'lowest';
 
 export function CreatorReviews({ creatorId }: CreatorReviewsProps) {
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
   const [sortBy, setSortBy] = useState<SortOption>('recent');
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
@@ -57,6 +57,7 @@ export function CreatorReviews({ creatorId }: CreatorReviewsProps) {
 
   // 1. Fetch Reviews
   const reviewsQuery = useMemo(() => {
+    if (!db) return null;
     return query(
       collection(db, 'reviews'),
       where('creatorId', '==', creatorId)
@@ -91,7 +92,7 @@ export function CreatorReviews({ creatorId }: CreatorReviewsProps) {
     setIsSubmitting(true);
 
     try {
-      const reviewRef = doc(db, 'reviews', reviewId);
+      const reviewRef = doc(db!, 'reviews', reviewId);
       await updateDoc(reviewRef, { response: responseText });
       setRespondingTo(null);
       setResponseText('');
@@ -218,21 +219,21 @@ export function CreatorReviews({ creatorId }: CreatorReviewsProps) {
                             </p>
                           </div>
                         ) : (
-                          userProfile?.id === creatorId && (
+                          currentUser?.id === creatorId && (
                             <div className="pt-2">
                               {respondingTo === review.id ? (
                                 <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                                  <Textarea 
-                                    placeholder="Write a professional response..." 
+                                  <Textarea
+                                    placeholder="Write a professional response..."
                                     className="rounded-xl min-h-[80px] bg-slate-50 border-slate-200"
                                     value={responseText}
                                     onChange={(e) => setResponseText(e.target.value)}
                                   />
                                   <div className="flex gap-2 justify-end">
                                     <Button variant="ghost" size="sm" className="rounded-lg font-bold" onClick={() => setRespondingTo(null)}>Cancel</Button>
-                                    <Button 
-                                      size="sm" 
-                                      className="rounded-lg font-bold px-6" 
+                                    <Button
+                                      size="sm"
+                                      className="rounded-lg font-bold px-6"
                                       disabled={isSubmitting || !responseText.trim()}
                                       onClick={() => handleResponse(review.id)}
                                     >
@@ -242,9 +243,9 @@ export function CreatorReviews({ creatorId }: CreatorReviewsProps) {
                                   </div>
                                 </div>
                               ) : (
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
                                   className="text-[10px] font-black uppercase text-slate-400 hover:text-primary p-0 h-auto gap-1.5"
                                   onClick={() => setRespondingTo(review.id)}
                                 >

@@ -2,20 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Settings, 
-  ShieldCheck, 
-  CreditCard, 
-  Zap, 
-  Mail, 
-  Key, 
-  Save, 
-  Loader2, 
-  AlertTriangle, 
-  Building2, 
-  CheckCircle2, 
-  Trash2, 
-  Plus, 
+import {
+  Settings,
+  ShieldCheck,
+  CreditCard,
+  Zap,
+  Mail,
+  Key,
+  Save,
+  Loader2,
+  AlertTriangle,
+  Building2,
+  CheckCircle2,
+  Trash2,
+  Plus,
   RefreshCcw,
   Globe,
   Bell,
@@ -40,19 +40,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
 export default function PlatformSettingsPage() {
   const db = useFirestore();
   const { toast } = useToast();
-  
+
   // Fetch Global Settings
   const { data: settings, loading } = useDoc<any>('system/platform');
 
@@ -87,8 +87,8 @@ export default function PlatformSettingsPage() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    const settingsRef = doc(db, 'system', 'platform');
-    
+    const settingsRef = doc(db!, 'system', 'platform');
+
     // Pattern: Non-blocking mutation
     setDoc(settingsRef, { ...formData, updatedAt: new Date().toISOString() }, { merge: true })
       .then(() => {
@@ -125,7 +125,7 @@ export default function PlatformSettingsPage() {
           <p className="text-slate-500 font-medium">Control global variables, economics, and feature availability.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button 
+          <Button
             disabled={isSaving}
             onClick={handleSave}
             className="rounded-xl font-black px-8 shadow-xl shadow-primary/20 h-12"
@@ -167,18 +167,18 @@ export default function PlatformSettingsPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <Label className="font-bold text-slate-700">Platform Name</Label>
-                          <Input 
-                            value={formData.platformName} 
-                            onChange={(e) => handleUpdateField('platformName', e.target.value)} 
-                            className="h-12 rounded-xl bg-slate-50 border-none font-bold" 
+                          <Input
+                            value={formData.platformName}
+                            onChange={(e) => handleUpdateField('platformName', e.target.value)}
+                            className="h-12 rounded-xl bg-slate-50 border-none font-bold"
                           />
                         </div>
                         <div className="space-y-2">
                           <Label className="font-bold text-slate-700">Admin Support Email</Label>
-                          <Input 
-                            value={formData.supportEmail} 
-                            onChange={(e) => handleUpdateField('supportEmail', e.target.value)} 
-                            className="h-12 rounded-xl bg-slate-50 border-none" 
+                          <Input
+                            value={formData.supportEmail}
+                            onChange={(e) => handleUpdateField('supportEmail', e.target.value)}
+                            className="h-12 rounded-xl bg-slate-50 border-none"
                           />
                         </div>
                       </div>
@@ -232,11 +232,11 @@ export default function PlatformSettingsPage() {
                       <div key={fee.id} className="space-y-3">
                         <Label className="font-black text-[10px] uppercase text-slate-400 tracking-widest">{fee.label}</Label>
                         <div className="relative">
-                          <Input 
-                            type="number" 
-                            value={formData.fees[fee.id]} 
-                            onChange={(e) => handleUpdateField(`fees.${fee.id}`, parseFloat(e.target.value) || 0)} 
-                            className="h-14 rounded-2xl bg-slate-50 border-none font-black text-2xl text-primary text-center pr-10" 
+                          <Input
+                            type="number"
+                            value={formData.fees[fee.id]}
+                            onChange={(e) => handleUpdateField(`fees.${fee.id}`, parseFloat(e.target.value) || 0)}
+                            className="h-14 rounded-2xl bg-slate-50 border-none font-black text-2xl text-primary text-center pr-10"
                           />
                           <span className="absolute right-4 top-1/2 -translate-y-1/2 font-black text-slate-300">%</span>
                         </div>
@@ -278,9 +278,9 @@ export default function PlatformSettingsPage() {
                             <p className="text-xs text-slate-500 font-medium">{flag.desc}</p>
                           </div>
                         </div>
-                        <Switch 
-                          checked={formData.flags[flag.id]} 
-                          onCheckedChange={(v) => handleUpdateField(`flags.${flag.id}`, v)} 
+                        <Switch
+                          checked={formData.flags[flag.id]}
+                          onCheckedChange={(v) => handleUpdateField(`flags.${flag.id}`, v)}
                         />
                       </div>
                     ))}
@@ -316,9 +316,9 @@ export default function PlatformSettingsPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="font-bold">Email Body (HTML/Markdown)</Label>
-                        <Textarea 
-                          placeholder="Write your email content here..." 
-                          className="min-h-[300px] rounded-2xl p-6 bg-slate-50 border-none resize-none font-mono text-xs" 
+                        <Textarea
+                          placeholder="Write your email content here..."
+                          className="min-h-[300px] rounded-2xl p-6 bg-slate-50 border-none resize-none font-mono text-xs"
                           defaultValue="Hi {{name}},\n\nWelcome to the premier marketplace for high-performance creative talent. Your profile is now being indexed by our AI..."
                         />
                       </div>
@@ -401,9 +401,9 @@ export default function PlatformSettingsPage() {
                       <h4 className="text-lg font-black text-red-900">Global Maintenance Mode</h4>
                       <p className="text-sm text-red-700 max-w-md">When enabled, all users (except admins) will be redirected to a maintenance page. Active campaign processing will pause.</p>
                     </div>
-                    <Switch 
-                      checked={formData.isMaintenanceMode} 
-                      onCheckedChange={(v) => handleUpdateField('isMaintenanceMode', v)} 
+                    <Switch
+                      checked={formData.isMaintenanceMode}
+                      onCheckedChange={(v) => handleUpdateField('isMaintenanceMode', v)}
                       className="data-[state=checked]:bg-red-600"
                     />
                   </div>

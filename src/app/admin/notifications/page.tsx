@@ -3,16 +3,16 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Megaphone, 
-  Send, 
-  Calendar, 
-  Users, 
-  Target, 
-  Zap, 
-  BarChart3, 
-  History, 
-  Plus, 
+import {
+  Megaphone,
+  Send,
+  Calendar,
+  Users,
+  Target,
+  Zap,
+  BarChart3,
+  History,
+  Plus,
   Trash2,
   Loader2,
   Clock,
@@ -37,12 +37,12 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
@@ -52,9 +52,9 @@ import { CREATOR_NICHES, PLAN_TYPES } from '@/constants';
 
 export default function NotificationBroadcastPage() {
   const db = useFirestore();
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const { toast } = useToast();
-  
+
   const [activeTab, setActiveTab] = useState('compose');
   const [isSending, setIsSending] = useState(false);
 
@@ -67,9 +67,11 @@ export default function NotificationBroadcastPage() {
   const [channelType, setChannelType] = useState<string>('IN_APP');
 
   // 1. Fetch Broadcast History
-  const { data: broadcasts, loading: historyLoading } = useCollection<Broadcast>(
-    query(collection(db, 'broadcasts'), orderBy('sentAt', 'desc'))
-  );
+  const broadcastsQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'broadcasts'), orderBy('sentAt', 'desc'));
+  }, [db]);
+  const { data: broadcasts, loading: historyLoading } = useCollection<Broadcast>(broadcastsQuery);
 
   const handleSendBroadcast = async () => {
     if (!title || !body || isSending) return;
@@ -92,12 +94,12 @@ export default function NotificationBroadcastPage() {
 
     try {
       // 1. Record the broadcast
-      await addDoc(collection(db, 'broadcasts'), broadcastData);
+      await addDoc(collection(db!, 'broadcasts'), broadcastData);
 
       // 2. Demonstration: Create one real notification for the admin themselves
-      if (userProfile?.id) {
-        await addDoc(collection(db, 'notifications'), {
-          userId: userProfile.id,
+      if (currentUser?.id) {
+        await addDoc(collection(db!, 'notifications'), {
+          userId: currentUser.id,
           title: `[BROADCAST] ${title}`,
           message: body,
           type: 'SYSTEM',
@@ -107,11 +109,11 @@ export default function NotificationBroadcastPage() {
         });
       }
 
-      toast({ 
-        title: "Broadcast Initiated", 
-        description: "The notification is being delivered to the target audience." 
+      toast({
+        title: "Broadcast Initiated",
+        description: "The notification is being delivered to the target audience."
       });
-      
+
       // Reset form
       setTitle('');
       setBody('');
@@ -140,17 +142,17 @@ export default function NotificationBroadcastPage() {
           <p className="text-slate-500 font-medium">Deploy mass announcements and system-wide alerts to your marketplace.</p>
         </div>
         <div className="flex items-center gap-1 bg-slate-100/50 p-1 rounded-2xl border">
-          <Button 
-            variant={activeTab === 'compose' ? 'white' : 'ghost'} 
-            size="sm" 
+          <Button
+            variant={activeTab === 'compose' ? 'outline' : 'ghost'}
+            size="sm"
             className={cn("rounded-xl font-bold px-6 h-10", activeTab === 'compose' && "shadow-sm")}
             onClick={() => setActiveTab('compose')}
           >
             <Plus className="h-4 w-4 mr-2" /> Compose
           </Button>
-          <Button 
-            variant={activeTab === 'history' ? 'white' : 'ghost'} 
-            size="sm" 
+          <Button
+            variant={activeTab === 'history' ? 'outline' : 'ghost'}
+            size="sm"
             className={cn("rounded-xl font-bold px-6 h-10", activeTab === 'history' && "shadow-sm")}
             onClick={() => setActiveTab('history')}
           >
@@ -161,7 +163,7 @@ export default function NotificationBroadcastPage() {
 
       <AnimatePresence mode="wait">
         {activeTab === 'compose' ? (
-          <motion.div 
+          <motion.div
             key="compose"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -178,8 +180,8 @@ export default function NotificationBroadcastPage() {
                 <CardContent className="p-8 space-y-8">
                   <div className="space-y-3">
                     <Label className="font-bold text-slate-700">Notification Title</Label>
-                    <Input 
-                      placeholder="e.g. Major Platform Update: 0% Payout Fees for Pro Users!" 
+                    <Input
+                      placeholder="e.g. Major Platform Update: 0% Payout Fees for Pro Users!"
                       className="h-12 rounded-xl bg-slate-50 border-none font-bold text-lg"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
@@ -188,8 +190,8 @@ export default function NotificationBroadcastPage() {
 
                   <div className="space-y-3">
                     <Label className="font-bold text-slate-700">Message Body</Label>
-                    <Textarea 
-                      placeholder="Enter the details of your announcement. Keep it concise and actionable." 
+                    <Textarea
+                      placeholder="Enter the details of your announcement. Keep it concise and actionable."
                       className="min-h-[180px] rounded-2xl p-6 bg-slate-50 border-none resize-none text-md"
                       value={body}
                       onChange={(e) => setBody(e.target.value)}
@@ -200,8 +202,8 @@ export default function NotificationBroadcastPage() {
                     <Label className="font-bold text-slate-700">CTA Link (Optional)</Label>
                     <div className="relative">
                       <Zap className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
-                      <Input 
-                        placeholder="https://baalvion.com/updates/fees" 
+                      <Input
+                        placeholder="https://baalvion.com/updates/fees"
                         className="pl-12 h-12 rounded-xl bg-slate-50 border-none font-medium"
                         value={cta}
                         onChange={(e) => setCta(e.target.value)}
@@ -255,7 +257,7 @@ export default function NotificationBroadcastPage() {
 
                   <AnimatePresence>
                     {(audience === 'NICHE' || audience === 'PLAN') && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
@@ -284,7 +286,7 @@ export default function NotificationBroadcastPage() {
                   <Button variant="outline" className="rounded-xl font-bold h-12 px-8 border-slate-200">
                     <Calendar className="mr-2 h-4 w-4" /> Schedule Later
                   </Button>
-                  <Button 
+                  <Button
                     disabled={!title || !body || isSending}
                     onClick={handleSendBroadcast}
                     className="rounded-xl font-black h-12 px-12 shadow-xl shadow-primary/20"
@@ -336,7 +338,7 @@ export default function NotificationBroadcastPage() {
                       Your current filters target approximately <span className="text-white font-bold">4,850 active accounts</span>.
                     </p>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-500">
                       <span>Delivery Confidence</span>
@@ -356,7 +358,7 @@ export default function NotificationBroadcastPage() {
             </div>
           </motion.div>
         ) : (
-          <motion.div 
+          <motion.div
             key="history"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

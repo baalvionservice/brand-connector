@@ -8,19 +8,19 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 export function OnboardingTour() {
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
   const [run, setRun] = useState(false);
 
   useEffect(() => {
     // Only run if user exists, is onboarded, and hasn't completed the tour yet
-    if (userProfile && !userProfile.tourCompleted) {
+    if (currentUser && !currentUser.tourCompleted) {
       // Small delay to ensure layout is painted
       const timer = setTimeout(() => setRun(true), 1500);
       return () => clearTimeout(timer);
     }
-  }, [userProfile]);
+  }, [currentUser]);
 
   const creatorSteps: Step[] = [
     {
@@ -88,10 +88,10 @@ export function OnboardingTour() {
 
     if (finishedStatuses.includes(status)) {
       setRun(false);
-      
-      if (userProfile?.id) {
+
+      if (currentUser?.id) {
         try {
-          await updateDoc(doc(db, 'users', userProfile.id), {
+          await updateDoc(doc(db!, 'users', currentUser.id), {
             tourCompleted: true,
             updatedAt: new Date().toISOString()
           });
@@ -102,11 +102,11 @@ export function OnboardingTour() {
     }
   };
 
-  if (!userProfile) return null;
+  if (!currentUser) return null;
 
   return (
     <Joyride
-      steps={userProfile.role === 'CREATOR' ? creatorSteps : brandSteps}
+      steps={currentUser.role === 'CREATOR' ? creatorSteps : brandSteps}
       run={run}
       continuous
       showProgress

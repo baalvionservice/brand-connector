@@ -2,22 +2,23 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Sparkles, 
-  Lightbulb, 
-  ChevronDown, 
-  Copy, 
-  Check, 
-  Bookmark, 
-  Loader2, 
-  Zap, 
-  Video, 
-  Layout, 
+import {
+  Sparkles,
+  Lightbulb,
+  ChevronDown,
+  Copy,
+  Check,
+  Bookmark,
+  Loader2,
+  Zap,
+  Video,
+  Layout,
   Smartphone,
   Wand2,
   RefreshCcw,
   MessageSquare,
-  ArrowRight
+  ArrowRight,
+  CheckCircle2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,9 +40,9 @@ interface ContentIdeasProps {
 
 export function ContentIdeas({ campaignTitle, campaignBrief, creatorNiche, className }: ContentIdeasProps) {
   const { toast } = useToast();
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
-  
+
   const [ideas, setIdeas] = useState<any[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [savedIds, setSavedIds] = useState<string[]>([]);
@@ -65,18 +66,18 @@ export function ContentIdeas({ campaignTitle, campaignBrief, creatorNiche, class
   };
 
   const handleSaveToNotes = async (idea: any, index: number) => {
-    if (!userProfile?.id) return;
-    
+    if (!currentUser?.id) return;
+
     try {
-      await addDoc(collection(db, 'creator_notes'), {
-        userId: userProfile.id,
+      await addDoc(collection(db!, 'creator_notes'), {
+        userId: currentUser.id,
         campaignTitle,
         title: idea.title,
         content: `Format: ${idea.format}\nHook: ${idea.hook}\nMessage: ${idea.keyMessage}\nTip: ${idea.engagementTip}`,
         type: 'AI_IDEA',
         createdAt: new Date().toISOString()
       });
-      
+
       setSavedIds(prev => [...prev, `${index}`]);
       toast({ title: "Saved to Notes", description: "This idea is now in your production backlog." });
     } catch (err) {
@@ -116,7 +117,7 @@ export function ContentIdeas({ campaignTitle, campaignBrief, creatorNiche, class
       <CardContent className="p-8">
         <AnimatePresence mode="wait">
           {ideas.length === 0 && !isGenerating ? (
-            <motion.div 
+            <motion.div
               key="empty"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -132,8 +133,8 @@ export function ContentIdeas({ campaignTitle, campaignBrief, creatorNiche, class
                   Our AI will analyze the brand brief and your niche expertise to generate 5 high-impact content concepts.
                 </p>
               </div>
-              <Button 
-                onClick={handleGenerate} 
+              <Button
+                onClick={handleGenerate}
                 className="rounded-xl font-black h-12 px-8 shadow-lg shadow-primary/20"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
@@ -141,7 +142,7 @@ export function ContentIdeas({ campaignTitle, campaignBrief, creatorNiche, class
               </Button>
             </motion.div>
           ) : isGenerating ? (
-            <motion.div 
+            <motion.div
               key="loading"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -158,7 +159,7 @@ export function ContentIdeas({ campaignTitle, campaignBrief, creatorNiche, class
               </div>
             </motion.div>
           ) : (
-            <motion.div 
+            <motion.div
               key="results"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -166,8 +167,8 @@ export function ContentIdeas({ campaignTitle, campaignBrief, creatorNiche, class
             >
               <Accordion type="single" collapsible className="w-full space-y-4">
                 {ideas.map((idea, idx) => (
-                  <AccordionItem 
-                    key={idx} 
+                  <AccordionItem
+                    key={idx}
                     value={`item-${idx}`}
                     className="border-2 border-slate-50 rounded-2xl px-6 bg-white hover:border-primary/10 transition-all shadow-sm overflow-hidden"
                   >
@@ -209,18 +210,18 @@ export function ContentIdeas({ campaignTitle, campaignBrief, creatorNiche, class
                             </p>
                           </div>
                           <div className="flex gap-2">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
+                            <Button
+                              variant="outline"
+                              size="sm"
                               className="flex-1 rounded-xl font-bold h-10 gap-2 border-slate-200"
                               onClick={() => copyToClipboard(idea, idx)}
                             >
                               {copiedId === `${idx}` ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
                               Copy Idea
                             </Button>
-                            <Button 
-                              variant="secondary" 
-                              size="sm" 
+                            <Button
+                              variant="secondary"
+                              size="sm"
                               className="flex-1 rounded-xl font-bold h-10 gap-2"
                               disabled={savedIds.includes(`${idx}`)}
                               onClick={() => handleSaveToNotes(idea, idx)}
@@ -237,9 +238,9 @@ export function ContentIdeas({ campaignTitle, campaignBrief, creatorNiche, class
               </Accordion>
 
               <div className="flex justify-center pt-4">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="rounded-xl h-10 px-6 font-black text-[10px] uppercase tracking-widest text-slate-400 hover:text-primary"
                   onClick={handleGenerate}
                   disabled={isGenerating}

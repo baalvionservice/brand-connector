@@ -29,7 +29,7 @@ export const DeadlineReminderEmail = ({
 }: DeadlineReminderEmailProps) => (
   <Html>
     <Head />
-    <Preview>Action Required: {hoursLeft} hours left for your submission!</Preview>
+    <Preview>`Action Required: ${(hoursLeft).toString()} hours left for your submission!`</Preview>
     <Body style={main}>
       <Container style={container}>
         <Section style={logoContainer}>

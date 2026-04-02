@@ -26,7 +26,7 @@ export function StatCard({
   color = 'text-primary',
   bg = 'bg-primary/5',
   className
-}) {
+}: StatCardProps) {
   return (
     <BaseCard className={cn("p-6", className)}>
       <div className="flex items-center justify-between mb-4">

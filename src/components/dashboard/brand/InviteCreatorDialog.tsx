@@ -2,16 +2,17 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { 
-  Plus, 
-  Send, 
-  Loader2, 
-  IndianRupee, 
-  MessageSquare, 
+import {
+  Plus,
+  Send,
+  Loader2,
+  IndianRupee,
+  MessageSquare,
   CheckCircle2,
   Briefcase,
   Zap,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirestore, useCollection } from '@/firebase';
@@ -21,11 +22,11 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Campaign, CampaignStatus, InviteStatus } from '@/types';
 
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
@@ -33,15 +34,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
+import { Badge } from '@/components/ui';
 
 interface InviteCreatorDialogProps {
   creator: {
@@ -55,7 +56,7 @@ interface InviteCreatorDialogProps {
 }
 
 export function InviteCreatorDialog({ creator, open, onOpenChange }: InviteCreatorDialogProps) {
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
 
@@ -66,24 +67,24 @@ export function InviteCreatorDialog({ creator, open, onOpenChange }: InviteCreat
 
   // Fetch active campaigns for selection
   const campaignsQuery = useMemo(() => {
-    if (!userProfile?.id) return null;
+    if (!currentUser?.id || !db) return null;
     return query(
       collection(db, 'campaigns'),
-      where('brandId', '==', `brand_${userProfile.id}`),
+      where('brandId', '==', `brand_${currentUser.id}`),
       where('status', '==', CampaignStatus.ACTIVE)
     );
-  }, [db, userProfile?.id]);
+  }, [db, currentUser?.id]);
 
   const { data: campaigns, loading: campaignsLoading } = useCollection<Campaign>(campaignsQuery);
 
   const handleSendInvite = async () => {
-    if (!selectedCampaignId || !userProfile) return;
+    if (!selectedCampaignId || !currentUser) return;
     setIsSubmitting(true);
 
     const inviteData = {
       campaignId: selectedCampaignId,
       creatorId: creator.id,
-      brandId: `brand_${userProfile.id}`,
+      brandId: `brand_${currentUser.id}`,
       message,
       budgetOffer: Number(budgetOffer.replace(/[^0-9]/g, '')),
       status: InviteStatus.SENT,
@@ -93,26 +94,26 @@ export function InviteCreatorDialog({ creator, open, onOpenChange }: InviteCreat
 
     try {
       // 1. Create Invite Record
-      await addDoc(collection(db, 'invites'), inviteData);
+      await addDoc(collection(db!, 'invites'), inviteData);
 
       // 2. Notify Creator
       const notificationData = {
         userId: creator.id,
         title: 'New Campaign Invitation! 🚀',
-        message: `${userProfile.displayName} has invited you to join "${campaigns.find(c => c.id === selectedCampaignId)?.title}".`,
+        message: `${currentUser.displayName} has invited you to join "${campaigns.find(c => c.id === selectedCampaignId)?.title}".`,
         type: 'CAMPAIGN',
         read: false,
         createdAt: new Date().toISOString(),
         link: `/dashboard/creator/campaigns`
       };
 
-      await addDoc(collection(db, 'notifications'), notificationData);
+      await addDoc(collection(db!, 'notifications'), notificationData);
 
       toast({
         title: "Invitation Sent!",
         description: `${creator.name} has been notified.`,
       });
-      
+
       resetAndClose();
     } catch (err: any) {
       errorEmitter.emitPermissionError(new FirestorePermissionError({
@@ -184,8 +185,8 @@ export function InviteCreatorDialog({ creator, open, onOpenChange }: InviteCreat
               <Label className="font-bold text-slate-700">Budget Offer (₹)</Label>
               <div className="relative">
                 <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                <Input 
-                  placeholder="e.g. 15,000" 
+                <Input
+                  placeholder="e.g. 15,000"
                   className="pl-12 h-14 rounded-2xl bg-slate-50 border-none text-xl font-black focus-visible:ring-primary"
                   value={budgetOffer}
                   onChange={(e) => setBudgetOffer(e.target.value)}
@@ -195,7 +196,7 @@ export function InviteCreatorDialog({ creator, open, onOpenChange }: InviteCreat
 
             <div className="space-y-2">
               <Label className="font-bold text-slate-700">Personalized Message</Label>
-              <Textarea 
+              <Textarea
                 placeholder="Hey! Love your work in tech. We have an exciting campaign for our new hub launch and think you'd be a perfect fit..."
                 className="min-h-[120px] rounded-2xl p-6 bg-slate-50 border-none focus-visible:ring-primary text-md resize-none"
                 value={message}
@@ -205,7 +206,7 @@ export function InviteCreatorDialog({ creator, open, onOpenChange }: InviteCreat
           </div>
 
           <div className="pt-4">
-            <Button 
+            <Button
               disabled={!selectedCampaignId || !budgetOffer || isSubmitting}
               onClick={handleSendInvite}
               className="w-full h-16 rounded-2xl text-lg font-black shadow-xl shadow-primary/20 hover:scale-[1.02] transition-all"

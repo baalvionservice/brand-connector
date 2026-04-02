@@ -82,8 +82,8 @@ export default function NotificationsPage() {
       </div>
 
       <div className="flex items-center gap-1 bg-slate-100/50 p-1 rounded-2xl border w-fit">
-        <Button variant={activeTab === 'ALL' ? 'white' : 'ghost'} size="sm" className="rounded-xl px-6" onClick={() => setActiveTab('ALL')}>All</Button>
-        <Button variant={activeTab === 'UNREAD' ? 'white' : 'ghost'} size="sm" className="rounded-xl px-6" onClick={() => setActiveTab('UNREAD')}>Unread</Button>
+        <Button variant={activeTab === 'ALL' ? 'outline' : 'ghost'} size="sm" className="rounded-xl px-6" onClick={() => setActiveTab('ALL')}>All</Button>
+        <Button variant={activeTab === 'UNREAD' ? 'outline' : 'ghost'} size="sm" className="rounded-xl px-6" onClick={() => setActiveTab('UNREAD')}>Unread</Button>
       </div>
 
       <div className="space-y-4">

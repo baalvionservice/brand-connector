@@ -97,12 +97,12 @@ const TIERS = [
   { id: 'MACRO', label: 'Macro', range: '500k+', desc: 'Mass market visibility.' },
 ];
 
-export default function NewCampaignPage() {
+function NewCampaignContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sourceId = searchParams.get('sourceId');
   const db = useFirestore();
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const { toast } = useToast();
   
   const [currentStep, setCurrentStep] = useState(1);
@@ -136,11 +136,11 @@ export default function NewCampaignPage() {
   }, []);
 
   const onBasicsSubmit = async (values: CampaignBasicsValues) => {
-    if (!userProfile) return;
+    if (!currentUser) return;
     setIsSaving(true);
 
     const campaignData = {
-      brandId: `brand_${userProfile.id}`,
+      brandId: `brand_${currentUser.id}`,
       title: values.title,
       description: values.description,
       objectives: [values.objective],
@@ -152,9 +152,9 @@ export default function NewCampaignPage() {
 
     try {
       if (campaignId) {
-        await updateDoc(doc(db, 'campaigns', campaignId), campaignData);
+        await updateDoc(doc(db!, 'campaigns', campaignId), campaignData);
       } else {
-        const docRef = await addDoc(collection(db, 'campaigns'), campaignData);
+        const docRef = await addDoc(collection(db!, 'campaigns'), campaignData);
         setCampaignId(docRef.id);
       }
       toast({ title: "Progress Saved" });
@@ -250,5 +250,17 @@ export default function NewCampaignPage() {
         {/* Additional steps... */}
       </AnimatePresence>
     </div>
+  );
+}
+
+export default function NewCampaignPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="flex items-center justify-center p-20">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    }>
+      <NewCampaignContent />
+    </React.Suspense>
   );
 }

@@ -64,23 +64,23 @@ export default function CreatorCampaignWorkspace() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
 
   const [selectedDeliverable, setSelectedDeliverable] = useState<any>(MOCK_ACTIVE_CAMPAIGN.deliverables[0]);
   const [submissionNotes, setSubmissionNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeTab, setActiveTab] = useState<'work' | 'feedback' | 'history'>('work');
+  const [activeTab, setActiveTab] = useState<'work' | 'feedb!ack' | 'history'>('work');
   const [uploadedAssets, setUploadedAssets] = useState<any[]>([]);
 
   // Real-time hook for messages
   const messagesQuery = useMemo(() => {
     return query(
-      collection(db, 'notifications'), 
-      where('userId', '==', userProfile?.id || 'anonymous'),
+      collection(db!, 'notifications'), 
+      where('userId', '==', currentUser?.id || 'anonymous'),
       orderBy('createdAt', 'desc')
     );
-  }, [db, userProfile?.id]);
+  }, [db!, currentUser?.id]);
 
   const { data: messages } = useCollection<any>(messagesQuery);
 
@@ -235,12 +235,12 @@ export default function CreatorCampaignWorkspace() {
           <div className="flex items-center gap-1 bg-slate-100/50 p-1 rounded-2xl border w-fit">
             {[
               { id: 'work', label: 'Submit Work', icon: Zap },
-              { id: 'feedback', label: 'Feedback', icon: MessageSquare },
+              { id: 'feedb!ack', label: 'Feedb!ack', icon: MessageSquare },
               { id: 'history', label: 'History', icon: History }
             ].map((tab) => (
               <Button
                 key={tab.id}
-                variant={activeTab === tab.id ? 'white' : 'ghost'}
+                variant={activeTab === tab.id ? 'outline' : 'ghost'}
                 size="sm"
                 className={cn(
                   "rounded-xl font-bold px-6 h-10",
@@ -291,7 +291,7 @@ export default function CreatorCampaignWorkspace() {
                     <div className="space-y-4 pt-4 border-t">
                       <div className="flex justify-between items-center">
                         <label className="text-sm font-black uppercase text-slate-400 tracking-widest">Creator Notes</label>
-                        <Badge variant="ghost" className="text-[10px] text-slate-400 font-bold uppercase">Briefing context</Badge>
+                        <Badge variant="default" className="text-[10px] text-slate-400 font-bold uppercase">Briefing context</Badge>
                       </div>
                       <Textarea 
                         placeholder="Add context for the brand. e.g. 'I focused on the kitchen automation scenes as discussed.'" 
@@ -377,9 +377,9 @@ export default function CreatorCampaignWorkspace() {
               </motion.div>
             )}
 
-            {activeTab === 'feedback' && (
+            {activeTab === 'feedb!ack' && (
               <motion.div
-                key="feedback-tab"
+                key="feedb!ack-tab"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -388,14 +388,14 @@ export default function CreatorCampaignWorkspace() {
                 <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
                   <CardHeader className="border-b p-6">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">Collaborator Feedback</CardTitle>
+                      <CardTitle className="text-lg">Collaborator Feedb!ack</CardTitle>
                     </div>
                   </CardHeader>
                   <CardContent className="p-8 h-[400px] flex flex-col items-center justify-center text-center">
                     <div className="h-20 w-20 rounded-full bg-slate-50 flex items-center justify-center mb-4">
                       <MessageSquare className="h-10 w-10 text-slate-200" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900">No brand feedback yet</h3>
+                    <h3 className="text-xl font-bold text-slate-900">No brand feedb!ack yet</h3>
                     <p className="text-sm text-slate-500 max-w-xs mx-auto mt-2">
                       When Lumina Tech reviews your submissions, their comments and revision requests will appear here.
                     </p>

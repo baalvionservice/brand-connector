@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { 
-  Plus, 
-  X, 
-  Upload, 
-  Image as ImageIcon, 
-  Video as VideoIcon, 
-  Loader2, 
-  Globe, 
-  TrendingUp, 
+import {
+  Plus,
+  X,
+  Upload,
+  Image as ImageIcon,
+  Video as VideoIcon,
+  Loader2,
+  Globe,
+  TrendingUp,
   Zap,
   Check,
   PlusCircle,
@@ -25,11 +25,11 @@ import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
@@ -37,12 +37,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
@@ -56,7 +56,7 @@ interface AddPortfolioItemDialogProps {
 }
 
 export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemDialogProps) {
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
   const storage = useStorage();
   const { toast } = useToast();
@@ -89,7 +89,7 @@ export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemD
     setMediaType(type);
 
     const id = Math.random().toString(36).substring(7);
-    const storageRef = ref(storage, `portfolios/${userProfile?.id}/${id}_${file.name}`);
+    const storageRef = ref(storage!, `portfolios/${currentUser?.id}/${id}_${file.name}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
     uploadTask.on('state_changed',
@@ -113,7 +113,7 @@ export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemD
     setIsSubmitting(true);
 
     const itemData = {
-      userId: userProfile?.id,
+      userId: currentUser?.id,
       title: formData.title,
       description: formData.description,
       mediaUrl,
@@ -128,7 +128,7 @@ export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemD
     };
 
     try {
-      await addDoc(collection(db, 'portfolioItems'), itemData);
+      await addDoc(collection(db!, 'portfolioItems'), itemData);
       toast({ title: "Sample added!", description: "It's now visible on your profile." });
       resetAndClose();
     } catch (err: any) {
@@ -161,7 +161,7 @@ export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemD
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl rounded-[2.5rem] p-0 overflow-hidden border-none shadow-2xl">
         <div className="flex flex-col md:flex-row h-full max-h-[90vh]">
-          
+
           {/* Left: Preview & Upload */}
           <div className="md:w-2/5 bg-slate-50/50 p-8 flex flex-col justify-center border-b md:border-b-0 md:border-r">
             <div className="aspect-[4/5] rounded-3xl border-2 border-dashed border-slate-200 bg-white flex flex-col items-center justify-center relative overflow-hidden group">
@@ -187,7 +187,7 @@ export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemD
               )}
               <input type="file" ref={fileInputRef} hidden onChange={handleFileSelect} accept="image/*,video/*" />
             </div>
-            
+
             {uploadProgress > 0 && uploadProgress < 100 && (
               <div className="mt-6 space-y-2">
                 <div className="flex justify-between text-[10px] font-black text-primary uppercase">
@@ -209,10 +209,10 @@ export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemD
             <div className="space-y-6">
               <div className="space-y-2">
                 <Label className="font-bold">Collaboration Title</Label>
-                <Input 
-                  placeholder="e.g. Lumina Hub AI Review" 
+                <Input
+                  placeholder="e.g. Lumina Hub AI Review"
                   value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="rounded-xl h-11"
                 />
               </div>
@@ -220,7 +220,7 @@ export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemD
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="font-bold">Platform</Label>
-                  <Select value={formData.platform} onValueChange={(v) => setFormData({...formData, platform: v})}>
+                  <Select value={formData.platform} onValueChange={(v) => setFormData({ ...formData, platform: v })}>
                     <SelectTrigger className="rounded-xl h-11">
                       <SelectValue placeholder="Platform" />
                     </SelectTrigger>
@@ -233,10 +233,10 @@ export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemD
                 </div>
                 <div className="space-y-2">
                   <Label className="font-bold">Type</Label>
-                  <Input 
-                    placeholder="e.g. Unboxing Reel" 
+                  <Input
+                    placeholder="e.g. Unboxing Reel"
                     value={formData.campaignType}
-                    onChange={(e) => setFormData({...formData, campaignType: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, campaignType: e.target.value })}
                     className="rounded-xl h-11"
                   />
                 </div>
@@ -247,21 +247,21 @@ export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemD
                   <Label className="font-bold">Results Achieved</Label>
                   <Badge className="bg-emerald-100 text-emerald-600 border-none text-[8px] px-1.5 h-4 font-black">HIGH IMPACT</Badge>
                 </div>
-                <Input 
-                  placeholder="e.g. 2.4M Views, 15k Shares, 12% Conversion" 
+                <Input
+                  placeholder="e.g. 2.4M Views, 15k Shares, 12% Conversion"
                   value={formData.results}
-                  onChange={(e) => setFormData({...formData, results: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, results: e.target.value })}
                   className="rounded-xl h-11 border-emerald-100 focus-visible:ring-emerald-500"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label className="font-bold">Brief Description</Label>
-                <Textarea 
-                  placeholder="What was the goal of this collaboration and how did you execute it?" 
+                <Textarea
+                  placeholder="What was the goal of this collaboration and how did you execute it?"
                   className="rounded-xl min-h-[100px] resize-none"
                   value={formData.description}
-                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
 
@@ -275,17 +275,17 @@ export function AddPortfolioItemDialog({ open, onOpenChange }: AddPortfolioItemD
                     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Pin to top of portfolio</p>
                   </div>
                 </div>
-                <Switch 
-                  checked={formData.isFeatured} 
-                  onCheckedChange={(v) => setFormData({...formData, isFeatured: v})} 
+                <Switch
+                  checked={formData.isFeatured}
+                  onCheckedChange={(v) => setFormData({ ...formData, isFeatured: v })}
                 />
               </div>
             </div>
 
             <div className="mt-10 flex gap-3">
               <Button variant="outline" className="flex-1 rounded-xl h-12 font-bold" onClick={resetAndClose}>Cancel</Button>
-              <Button 
-                disabled={isSubmitting || !mediaUrl || !formData.title} 
+              <Button
+                disabled={isSubmitting || !mediaUrl || !formData.title}
                 className="flex-2 px-10 rounded-xl h-12 font-bold shadow-xl shadow-primary/20"
                 onClick={handleSubmit}
               >

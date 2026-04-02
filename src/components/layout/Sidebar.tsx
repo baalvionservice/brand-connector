@@ -4,13 +4,13 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { 
-  LayoutDashboard, 
-  Search, 
-  Briefcase, 
-  Wallet, 
-  MessageSquare, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Search,
+  Briefcase,
+  Wallet,
+  MessageSquare,
+  Settings,
   FileText,
   UserCircle,
   Zap,
@@ -51,10 +51,10 @@ interface SidebarProps {
 
 export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
   const pathname = usePathname();
-  const { userProfile, signOut } = useAuth();
+  const { currentUser, signOut } = useAuth();
 
-  const currentRole = userProfile?.role || mockRole || 'BRAND';
-  const userPlan = userProfile?.role === 'BRAND' ? (userProfile as any).plan || 'STARTER' : 'STARTER';
+  const currentRole = currentUser?.role || mockRole || 'BRAND';
+  const userPlan = currentUser?.role === 'BRAND' ? (currentUser as any).plan || 'STARTER' : 'STARTER';
 
   const creatorLinks = [
     { name: 'Dashboard', href: '/dashboard/creator', icon: LayoutDashboard, id: 'sidebar-dashboard' },
@@ -109,7 +109,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
   ];
 
   const rawLinks = currentRole === 'ADMIN' ? adminLinks : currentRole === 'BRAND' ? brandLinks : creatorLinks;
-  
+
   // Filter links based on plan feature gating
   const links = rawLinks.filter(link => {
     if (currentRole === 'BRAND' && 'feature' in link) {
@@ -129,7 +129,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
             <span className="font-headline font-bold text-lg tracking-tight text-slate-900">Baalvion</span>
           </Link>
         </div>
-        
+
         <div className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
           <nav className="flex-1 px-4 py-6 space-y-1">
             {links.map((item) => {
@@ -138,7 +138,6 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  id={item.id}
                   aria-current={isActive ? 'page' : undefined}
                   className={cn(
                     isActive
@@ -163,9 +162,9 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
 
         <div className="flex-shrink-0 p-4 space-y-3 border-t bg-slate-50/50">
           {onToggleRole && currentRole !== 'ADMIN' && (
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="w-full text-[10px] h-9 font-black border-dashed bg-white tracking-widest"
               onClick={onToggleRole}
               aria-label={`Switch to ${currentRole === 'BRAND' ? 'Creator' : 'Brand'} view`}
@@ -174,7 +173,7 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
               SWITCH TO {currentRole === 'BRAND' ? 'CREATOR' : 'BRAND'} VIEW
             </Button>
           )}
-          
+
           <div className="bg-white rounded-2xl p-4 border shadow-sm">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">
               Account Control
@@ -185,13 +184,13 @@ export function DashboardSidebar({ mockRole, onToggleRole }: SidebarProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-slate-900 truncate">
-                  {currentRole === 'ADMIN' ? 'Admin Access' : userProfile?.displayName || 'User'}
+                  {currentRole === 'ADMIN' ? 'Admin Access' : currentUser?.displayName || 'User'}
                 </p>
                 <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter truncate">
                   {currentRole === 'ADMIN' ? 'Platform Root' : currentRole === 'BRAND' ? `${userPlan} Plan` : 'Verified Pro'}
                 </p>
               </div>
-              <button 
+              <button
                 onClick={() => signOut()}
                 className="h-8 w-8 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
                 aria-label="Log out of session"

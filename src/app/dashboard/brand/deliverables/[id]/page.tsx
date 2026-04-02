@@ -28,7 +28,8 @@ import {
   IndianRupee,
   ThumbsUp,
   ThumbsDown,
-  Sparkles
+  Sparkles,
+  Star
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -55,6 +56,7 @@ import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { cn } from '@/lib/utils';
+import { Label } from '@/components/ui';
 
 // Mock Data for the prototype
 const MOCK_DELIVERABLE = {
@@ -96,7 +98,7 @@ export default function DeliverableReviewWorkspace() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
 
   const [isApproving, setIsApproving] = useState(false);
@@ -118,10 +120,10 @@ export default function DeliverableReviewWorkspace() {
     };
 
     // Non-await mutation pattern
-    updateDoc(doc(db, 'deliverables', params.id as string), updateData)
+    updateDoc(doc(db!, 'deliverables', params.id as string), updateData)
       .then(() => {
         // Notify Creator
-        addDoc(collection(db, 'notifications'), {
+        addDoc(collection(db!, 'notifications'), {
           userId: creator.id,
           title: 'Work Approved! 🎉',
           message: `Your deliverable "${deliverable.title}" has been approved. Payout is being processed.`,
@@ -154,9 +156,9 @@ export default function DeliverableReviewWorkspace() {
       updatedAt: new Date().toISOString()
     };
 
-    updateDoc(doc(db, 'deliverables', params.id as string), updateData)
+    updateDoc(doc(db!, 'deliverables', params.id as string), updateData)
       .then(() => {
-        addDoc(collection(db, 'notifications'), {
+        addDoc(collection(db!, 'notifications'), {
           userId: creator.id,
           title: status === 'REVISION_REQUESTED' ? 'Revision Requested' : 'Submission Rejected',
           message: `Update on "${deliverable.title}": ${feedback.substring(0, 50)}...`,
@@ -504,7 +506,7 @@ export default function DeliverableReviewWorkspace() {
             <Button 
               disabled={!feedback.trim() || isSubmittingFeedback}
               onClick={() => handleSubmitAction('REJECTED')}
-              variant="destructive"
+              variant="danger"
               className="rounded-xl font-bold px-8"
             >
               {isSubmittingFeedback ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}

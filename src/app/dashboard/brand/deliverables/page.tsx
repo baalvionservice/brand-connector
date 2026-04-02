@@ -49,7 +49,6 @@ const MOCK_METADATA: Record<string, any> = {
 };
 
 export default function BrandDeliverablesPage() {
-  const { userProfile } = useAuth();
   const db = useFirestore();
   const [activeTab, setActiveTab] = useState('SUBMITTED');
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,7 +56,7 @@ export default function BrandDeliverablesPage() {
   // Fetch all deliverables for campaigns owned by this brand
   // Note: In a real app, you'd filter by campaignIds owned by the brandId
   const { data: deliverables, loading } = useCollection<any>(
-    query(collection(db, 'deliverables'), orderBy('submittedAt', 'desc'))
+    db ? query(collection(db, 'deliverables'), orderBy('submittedAt', 'desc')) : null
   );
 
   const filteredDeliverables = useMemo(() => {

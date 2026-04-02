@@ -2,14 +2,14 @@
 
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  TrendingUp, 
-  Wallet, 
-  Calendar, 
-  Zap, 
-  ArrowUpRight, 
-  Info, 
-  CheckCircle2, 
+import {
+  TrendingUp,
+  Wallet,
+  Calendar,
+  Zap,
+  ArrowUpRight,
+  Info,
+  CheckCircle2,
   Clock,
   Sparkles,
   IndianRupee,
@@ -32,22 +32,23 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 export function EarningsForecast() {
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
 
   // 1. Fetch Applications to calculate pipeline
   const appsQuery = useMemo(() => {
-    if (!userProfile?.id) return null;
+    if (!currentUser?.id || !db) return null;
     return query(
       collection(db, 'applications'),
-      where('creatorId', '==', userProfile.id)
+      where('creatorId', '==', currentUser.id)
     );
-  }, [db, userProfile?.id]);
+  }, [db, currentUser?.id]);
 
   const { data: applications, loading } = useCollection<any>(appsQuery);
 
   // 2. Fetch "High Value" Campaigns for opportunities
   const opportunitiesQuery = useMemo(() => {
+    if (!db) return null;
     return query(
       collection(db, 'campaigns'),
       where('status', '==', 'ACTIVE'),
@@ -101,7 +102,7 @@ export function EarningsForecast() {
 
       <CardContent className="p-8 lg:p-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
+
           {/* Main Forecast Display */}
           <div className="lg:col-span-7 space-y-10">
             <div className="flex flex-col md:flex-row md:items-end gap-8">
@@ -127,7 +128,7 @@ export function EarningsForecast() {
                   <span className="text-slate-900">₹{forecast.lastMonth.toLocaleString()}</span>
                 </div>
                 <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                  <motion.div 
+                  <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.min((forecast.total / forecast.lastMonth) * 100, 100)}%` }}
                     transition={{ duration: 1.5, ease: "easeOut" }}
@@ -167,10 +168,10 @@ export function EarningsForecast() {
             <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] flex items-center gap-2">
               <Target className="h-3 w-3 text-primary" /> Top Opportunities to Apply
             </h4>
-            
+
             <div className="space-y-4">
               {(opportunities || []).map((op, i) => (
-                <motion.div 
+                <motion.div
                   key={op.id}
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}

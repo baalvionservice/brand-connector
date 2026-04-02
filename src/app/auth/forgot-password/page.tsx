@@ -77,7 +77,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     setError(null);
     try {
-      await sendPasswordResetEmail(auth, values.email);
+      await sendPasswordResetEmail(auth!, values.email);
       setIsSuccess(true);
       setCooldown(60); // Start 60s cooldown
       toast({

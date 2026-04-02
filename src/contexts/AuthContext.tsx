@@ -11,7 +11,7 @@ import { clearAuthCookies, setAuthCookies } from '@/lib/auth-cookies';
  */
 
 interface AuthState {
-  userProfile: User | null;
+  currentUser: User | null;
   loading: boolean;
   error: string | null;
 }
@@ -26,7 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<UserRole | null>(null);
-  const [userProfile, setUserProfile] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Initialize from session storage or default
@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const savedRole = typeof window !== 'undefined' ? localStorage.getItem('mock_role') as UserRole : null;
     if (savedRole) {
       setRole(savedRole);
-      setUserProfile(getMockProfile(savedRole));
+      setCurrentUser(getMockProfile(savedRole));
     }
     setLoading(false);
   }, []);
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signInAs = (newRole: UserRole) => {
     setRole(newRole);
     const profile = getMockProfile(newRole);
-    setUserProfile(profile);
+    setCurrentUser(profile);
     localStorage.setItem('mock_role', newRole);
     setAuthCookies({ role: newRole, onboarded: true });
   };
@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOutAction = async () => {
     clearAuthCookies();
     localStorage.removeItem('mock_role');
-    setUserProfile(null);
+    setCurrentUser(null);
     setRole(null);
     window.location.href = '/auth/login';
   };
@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {};
 
   return (
-    <AuthContext.Provider value={{ userProfile, loading, error: null, signInAs, signOut: signOutAction, refreshUser }}>
+    <AuthContext.Provider value={{ currentUser, loading, error: null, signInAs, signOut: signOutAction, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,17 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  IndianRupee, 
-  Plus, 
-  Trash2, 
-  Save, 
-  Eye, 
-  Info, 
-  Sparkles, 
-  Instagram, 
-  Youtube, 
-  Music2, 
+import {
+  IndianRupee,
+  Plus,
+  Trash2,
+  Save,
+  Eye,
+  Info,
+  Sparkles,
+  Instagram,
+  Youtube,
+  Music2,
   Twitter,
   ArrowRight,
   CheckCircle2,
@@ -34,13 +34,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -69,11 +69,11 @@ const CONTENT_TYPES = [
 ];
 
 export default function RateCardBuilderPage() {
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
-  
-  const creatorId = userProfile?.id ? `creator_${userProfile.id}` : null;
+
+  const creatorId = currentUser?.id ? `creator_${currentUser.id}` : null;
   const { data: creator, loading } = useDoc<CreatorProfile>(
     creatorId ? `creators/${creatorId}` : null
   );
@@ -126,7 +126,7 @@ export default function RateCardBuilderPage() {
     };
 
     try {
-      await updateDoc(doc(db, 'creators', creatorId), updateData);
+      await updateDoc(doc(db!, 'creators', creatorId), updateData);
       toast({ title: "Rate card saved", description: "Your profile pricing has been updated." });
     } catch (err: any) {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -160,7 +160,7 @@ export default function RateCardBuilderPage() {
             <Button variant="outline" className="rounded-xl font-bold bg-white" onClick={() => setIsPreviewOpen(true)}>
               <Eye className="mr-2 h-4 w-4" /> Preview Brand View
             </Button>
-            <Button 
+            <Button
               disabled={isSaving}
               onClick={handleSave}
               className="rounded-xl font-bold px-8 shadow-lg shadow-primary/20 h-11"
@@ -172,7 +172,7 @@ export default function RateCardBuilderPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
+
           {/* Main Pricing Table */}
           <div className="lg:col-span-8 space-y-8">
             <Card className="border-none shadow-sm shadow-slate-200/50 rounded-[2rem] overflow-hidden bg-white">
@@ -214,7 +214,7 @@ export default function RateCardBuilderPage() {
                             <TableCell key={type.id} className="text-center px-4">
                               <div className="relative group">
                                 <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-300 group-focus-within:text-primary transition-colors" />
-                                <Input 
+                                <Input
                                   value={baseRates[key] ? baseRates[key].toLocaleString() : ''}
                                   onChange={(e) => handleRateChange(platform.id, type.id, e.target.value)}
                                   placeholder="0"
@@ -267,7 +267,7 @@ export default function RateCardBuilderPage() {
                             <div className="flex-1 space-y-4">
                               <div className="space-y-1">
                                 <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Package Name</Label>
-                                <Input 
+                                <Input
                                   value={pkg.title}
                                   onChange={(e) => updatePackage(pkg.id, { title: e.target.value })}
                                   className="h-11 rounded-xl bg-slate-50 border-none font-bold text-lg focus-visible:ring-primary"
@@ -275,7 +275,7 @@ export default function RateCardBuilderPage() {
                               </div>
                               <div className="space-y-1">
                                 <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Description</Label>
-                                <Input 
+                                <Input
                                   value={pkg.description}
                                   onChange={(e) => updatePackage(pkg.id, { description: e.target.value })}
                                   className="h-11 rounded-xl bg-slate-50 border-none text-sm text-slate-500 font-medium"
@@ -294,7 +294,7 @@ export default function RateCardBuilderPage() {
                               <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Package Price</Label>
                               <div className="relative group">
                                 <IndianRupee className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary" />
-                                <Input 
+                                <Input
                                   value={pkg.price.toLocaleString()}
                                   onChange={(e) => updatePackage(pkg.id, { price: parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0 })}
                                   className="h-12 pl-10 rounded-xl bg-primary/5 border-none text-xl font-black text-primary"
@@ -324,7 +324,7 @@ export default function RateCardBuilderPage() {
                 <div className="space-y-2">
                   <h3 className="text-xl font-black">AI Insights: Pricing</h3>
                   <p className="text-white/80 text-sm leading-relaxed font-medium">
-                    Creators in your niche with similar reach typically charge <strong>₹12,500 - ₹18,000</strong> for high-quality Instagram Reels. 
+                    Creators in your niche with similar reach typically charge <strong>₹12,500 - ₹18,000</strong> for high-quality Instagram Reels.
                   </p>
                 </div>
                 <div className="p-4 rounded-2xl bg-white/10 border border-white/10">
@@ -386,7 +386,7 @@ export default function RateCardBuilderPage() {
                   const platformRates = Object.entries(baseRates)
                     .filter(([key]) => key.startsWith(platform.id))
                     .map(([key, val]) => ({ type: key.split('_')[1], val }));
-                  
+
                   if (platformRates.length === 0) return null;
 
                   return (

@@ -4,45 +4,46 @@
 import React, { useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Send, 
-  Clock, 
-  CheckCircle2, 
-  XCircle, 
-  MailOpen, 
-  Loader2, 
+import {
+  ArrowLeft,
+  Send,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  MailOpen,
+  Loader2,
   IndianRupee,
   MoreHorizontal,
   ExternalLink,
   ChevronRight,
   Filter,
   Search,
-  Check
+  Check,
+  Zap
 } from 'lucide-react';
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  doc, 
-  deleteDoc 
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  doc,
+  deleteDoc
 } from 'firebase/firestore';
 import { useFirestore, useCollection } from '@/firebase';
-import { Invite, InviteStatus } from '@/types';
+import { InviteStatus } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
@@ -63,13 +64,13 @@ export default function CampaignInvitesPage() {
   // 1. Fetch Invites
   const invitesQuery = useMemo(() => {
     return query(
-      collection(db, 'invites'),
+      collection(db!, 'invites'),
       where('campaignId', '==', campaignId),
       orderBy('createdAt', 'desc')
     );
-  }, [db, campaignId]);
+  }, [db!, campaignId]);
 
-  const { data: invites, loading } = useCollection<Invite>(invitesQuery);
+  const { data: invites, loading } = useCollection<any>(invitesQuery);
 
   const getStatusConfig = (status: InviteStatus) => {
     switch (status) {
@@ -83,7 +84,7 @@ export default function CampaignInvitesPage() {
 
   const handleCancelInvite = async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'invites', id));
+      await deleteDoc(doc(db!, 'invites', id));
       toast({ title: "Invite rescinded" });
     } catch (e) {
       toast({ variant: 'destructive', title: 'Error cancelling invite' });
@@ -108,7 +109,7 @@ export default function CampaignInvitesPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">Direct Invitations</h1>
-            <p className="text-slate-500 font-medium">Track performance of proactively sourced talent for campaign #{campaignId.substring(0,8)}</p>
+            <p className="text-slate-500 font-medium">Track performance of proactively sourced talent for campaign #{campaignId.substring(0, 8)}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">

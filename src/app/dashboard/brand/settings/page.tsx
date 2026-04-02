@@ -56,13 +56,14 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui';
 
 export default function BrandSettingsPage() {
-  const { userProfile, loading: authLoading } = useAuth();
+  const { currentUser, loading: authLoading } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
   
-  const brandId = userProfile?.id ? `brand_${userProfile.id}` : null;
+  const brandId = currentUser?.id ? `brand_${currentUser.id}` : null;
   const { data: brand, loading: brandLoading } = useDoc<BrandProfile>(brandId ? `brands/${brandId}` : null);
 
   const [isSaving, setIsSaving] = useState(false);
@@ -85,7 +86,6 @@ export default function BrandSettingsPage() {
       setWebsite(brand.website || '');
       setGstNumber(brand.gstNumber || '');
       setBillingAddress(brand.billingAddress || '');
-      setSocials(brand.socialLinks || { instagram: '', twitter: '', linkedin: '' });
       setDefaultTemplate(brand.defaultBriefTemplate || '');
       setPreferredCurrency(brand.currency || 'INR');
     }
@@ -107,7 +107,7 @@ export default function BrandSettingsPage() {
       updatedAt: new Date().toISOString()
     };
 
-    updateDoc(doc(db, 'brands', brandId), updateData)
+    updateDoc(doc(db!, 'brands', brandId), updateData)
       .then(() => {
         toast({ title: "Settings updated", description: "Your brand profile has been synchronized." });
         setIsSaving(false);

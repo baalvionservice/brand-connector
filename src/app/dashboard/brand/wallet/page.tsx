@@ -86,10 +86,10 @@ const SPEND_DATA = [
 
 export default function BrandWalletPage() {
   const { toast } = useToast();
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
   
-  const brandId = userProfile?.id ? `brand_${userProfile.id}` : null;
+  const brandId = currentUser?.id ? `brand_${currentUser.id}` : null;
   const { data: brand } = useDoc<BrandProfile>(brandId ? `brands/${brandId}` : null);
   const preferredCurrency = brand?.currency || 'INR';
 
@@ -98,13 +98,13 @@ export default function BrandWalletPage() {
 
   // 1. Fetch Real-time Transactions
   const txQuery = useMemo(() => {
-    if (!userProfile?.id) return null;
+    if (!currentUser?.id) return null;
     return query(
-      collection(db, 'transactions'),
-      where('userId', '==', userProfile.id),
+      collection(db!, 'transactions'),
+      where('userId', '==', currentUser.id),
       orderBy('createdAt', 'desc')
     );
-  }, [db, userProfile?.id]);
+  }, [db!, currentUser?.id]);
 
   const { data: transactions, loading: txLoading } = useCollection<any>(txQuery);
 

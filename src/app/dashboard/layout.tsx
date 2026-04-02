@@ -5,9 +5,9 @@ import { DashboardSidebar } from '@/components/layout/Sidebar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  Bell, 
-  Search, 
+import {
+  Bell,
+  Search,
   Menu,
   ChevronDown,
   LogOut,
@@ -26,13 +26,13 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -46,7 +46,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { userProfile, signOut } = useAuth();
+  const { currentUser, signOut } = useAuth();
   const { notifications, fetchNotifications, unreadCount, markRead } = useNotificationStore();
 
   useEffect(() => {
@@ -56,10 +56,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [role, setRole] = useState<'BRAND' | 'CREATOR' | 'ADMIN'>('BRAND');
 
   useEffect(() => {
-    if (userProfile) {
-      setRole(userProfile.role as any);
+    if (currentUser) {
+      setRole(currentUser.role as any);
     }
-  }, [userProfile]);
+  }, [currentUser]);
 
   const toggleRole = () => {
     const nextRole = role === 'BRAND' ? 'CREATOR' : 'BRAND';
@@ -82,7 +82,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
       <DashboardSidebar mockRole={role as any} onToggleRole={toggleRole} />
-      
+
       <div className="md:pl-64 flex flex-col flex-1 pb-20 md:pb-0">
         <header className="sticky top-0 z-20 h-16 bg-white/80 backdrop-blur-md border-b px-4 md:px-8 flex items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
@@ -98,11 +98,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </SheetContent>
               </Sheet>
             </div>
-            
+
             <div className="relative max-w-md w-full hidden sm:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input 
-                placeholder="Search campaigns, creators..." 
+              <Input
+                placeholder="Search campaigns, creators..."
                 className="pl-10 bg-slate-100/50 border-none rounded-xl h-10 focus-visible:ring-primary"
               />
             </div>
@@ -177,7 +177,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   </div>
                   <div className="hidden md:flex flex-col items-start">
                     <span className="text-xs font-bold leading-tight">
-                      {userProfile?.displayName || 'User'}
+                      {currentUser?.displayName || 'User'}
                     </span>
                     <span className="text-[10px] text-muted-foreground font-medium">
                       {role} Access
@@ -193,8 +193,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <Settings className="mr-2 h-4 w-4" /> Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  className="rounded-lg py-2 text-red-600 hover:bg-red-50" 
+                <DropdownMenuItem
+                  className="rounded-lg py-2 text-red-600 hover:bg-red-50"
                   onClick={handleLogout}
                 >
                   <LogOut className="mr-2 h-4 w-4" /> Exit Session

@@ -2,17 +2,17 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  CreditCard, 
-  Zap, 
-  ShieldCheck, 
-  Save, 
-  History, 
-  Plus, 
-  Trash2, 
-  Info, 
-  ArrowUpRight, 
-  TrendingUp, 
+import {
+  CreditCard,
+  Zap,
+  ShieldCheck,
+  Save,
+  History,
+  Plus,
+  Trash2,
+  Info,
+  ArrowUpRight,
+  TrendingUp,
   Clock,
   Sparkles,
   BarChart3,
@@ -32,12 +32,12 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
@@ -83,16 +83,23 @@ const DEFAULT_PLANS: Record<string, any> = {
 export default function AdminPlanConfigPage() {
   const db = useFirestore();
   const { toast } = useToast();
-  
+
   const [activeTier, setActiveTab] = useState('GROWTH');
   const [isSaving, setIsSaving] = useState(false);
   const [plansData, setPlansData] = useState<any>(DEFAULT_PLANS);
 
   // Fetch Live Plan Config
-  const { data: livePlans, loading } = useCollection<any>(collection(db, 'system_plans'));
-  const { data: changeHistory } = useCollection<any>(
-    query(collection(db, 'system_plan_history'), orderBy('createdAt', 'desc'))
-  );
+  const livePlansQuery = useMemo(() => {
+    if (!db) return null;
+    return collection(db, 'system_plans');
+  }, [db]);
+  const { data: livePlans, loading } = useCollection<any>(livePlansQuery);
+
+  const historyQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'system_plan_history'), orderBy('createdAt', 'desc'));
+  }, [db]);
+  const { data: changeHistory } = useCollection<any>(historyQuery);
 
   useEffect(() => {
     if (livePlans && livePlans.length > 0) {
@@ -113,13 +120,13 @@ export default function AdminPlanConfigPage() {
   const handleSave = async () => {
     if (!activePlan) return;
     setIsSaving(true);
-    const planRef = doc(db, 'system_plans', activeTier);
-    
+    const planRef = doc(db!, 'system_plans', activeTier);
+
     try {
       await setDoc(planRef, activePlan, { merge: true });
-      
+
       // Record in history
-      await addDoc(collection(db, 'system_plan_history'), {
+      await addDoc(collection(db!, 'system_plan_history'), {
         planId: activeTier,
         changes: activePlan,
         adminId: 'current_admin',
@@ -158,7 +165,7 @@ export default function AdminPlanConfigPage() {
           <p className="text-slate-500 font-medium">Define marketplace tiers, pricing strategies, and platform economics.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button 
+          <Button
             disabled={isSaving}
             onClick={handleSave}
             className="rounded-xl font-black px-8 shadow-xl shadow-primary/20 h-12"
@@ -170,7 +177,7 @@ export default function AdminPlanConfigPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         {/* Configuration Panel */}
         <div className="lg:col-span-8 space-y-8">
           <Tabs value={activeTier} onValueChange={setActiveTab} className="w-full">
@@ -195,15 +202,15 @@ export default function AdminPlanConfigPage() {
                     <CardDescription>Adjust the economic levers for the {activeTier} tier.</CardDescription>
                   </CardHeader>
                   <CardContent className="p-8 space-y-8">
-                    
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-3">
                         <Label className="font-bold text-slate-700">Monthly Price (₹)</Label>
                         <div className="relative">
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">₹</span>
-                          <Input 
-                            type="number" 
-                            value={activePlan?.monthlyPrice} 
+                          <Input
+                            type="number"
+                            value={activePlan?.monthlyPrice}
                             onChange={(e) => handleUpdateField('monthlyPrice', parseInt(e.target.value) || 0)}
                             className="pl-8 h-12 rounded-xl bg-slate-50 border-none font-bold text-lg"
                           />
@@ -213,9 +220,9 @@ export default function AdminPlanConfigPage() {
                         <Label className="font-bold text-slate-700">Annual Price (₹/mo)</Label>
                         <div className="relative">
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">₹</span>
-                          <Input 
-                            type="number" 
-                            value={activePlan?.annualPrice} 
+                          <Input
+                            type="number"
+                            value={activePlan?.annualPrice}
                             onChange={(e) => handleUpdateField('annualPrice', parseInt(e.target.value) || 0)}
                             className="pl-8 h-12 rounded-xl bg-slate-50 border-none font-bold text-lg"
                           />
@@ -227,9 +234,9 @@ export default function AdminPlanConfigPage() {
                       <div className="space-y-3">
                         <Label className="font-bold text-slate-700">Platform Fee (%)</Label>
                         <div className="relative">
-                          <Input 
-                            type="number" 
-                            value={activePlan?.commission} 
+                          <Input
+                            type="number"
+                            value={activePlan?.commission}
                             onChange={(e) => handleUpdateField('commission', parseInt(e.target.value) || 0)}
                             className="h-12 rounded-xl bg-slate-50 border-none font-bold pr-8"
                           />
@@ -238,9 +245,9 @@ export default function AdminPlanConfigPage() {
                       </div>
                       <div className="space-y-3">
                         <Label className="font-bold text-slate-700">Campaign Limit</Label>
-                        <Input 
-                          type="number" 
-                          value={activePlan?.campaignLimit} 
+                        <Input
+                          type="number"
+                          value={activePlan?.campaignLimit}
                           onChange={(e) => handleUpdateField('campaignLimit', parseInt(e.target.value) || 0)}
                           className="h-12 rounded-xl bg-slate-50 border-none font-bold"
                         />
@@ -268,9 +275,9 @@ export default function AdminPlanConfigPage() {
                         {activePlan?.features.map((feature: string, i: number) => (
                           <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
                             <span className="text-sm font-bold text-slate-600">{feature}</span>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
+                            <Button
+                              variant="ghost"
+                              size="icon"
                               className="h-8 w-8 text-slate-300 hover:text-red-500"
                               onClick={() => handleUpdateField('features', activePlan.features.filter((_: any, idx: number) => idx !== i))}
                             >
@@ -297,7 +304,7 @@ export default function AdminPlanConfigPage() {
 
         {/* Sidebar: History & Impact */}
         <aside className="lg:col-span-4 space-y-8">
-          
+
           {/* Version History */}
           <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
             <CardHeader className="bg-slate-50/50 border-b p-6 flex flex-row items-center justify-between">
@@ -342,7 +349,7 @@ export default function AdminPlanConfigPage() {
                   Growth tier conversions are sensitive to the ₹10k/mo barrier. Current strategy maintains high liquidity at ₹9,999.
                 </p>
               </div>
-              
+
               <div className="space-y-4">
                 <div className="flex justify-between items-center text-[10px] font-black uppercase text-slate-500">
                   <span>Revenue Projection</span>

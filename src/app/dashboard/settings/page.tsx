@@ -6,14 +6,14 @@ import { useFirestore, useDoc, useCollection } from '@/firebase';
 import { doc, updateDoc, collection, addDoc, query, where, orderBy, limit } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { 
-  User, 
-  ShieldCheck, 
-  Bell, 
-  Share2, 
-  Trash2, 
-  Camera, 
-  Loader2, 
+import {
+  User,
+  ShieldCheck,
+  Bell,
+  Share2,
+  Trash2,
+  Camera,
+  Loader2,
   CheckCircle2,
   Mail,
   Lock,
@@ -36,7 +36,9 @@ import {
   Send,
   Clock,
   AlertCircle,
-  MapPin
+  MapPin,
+  RefreshCcw,
+  MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -48,53 +50,54 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle, 
-  AlertDialogTrigger 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { CreatorProfile, BrandProfile, SupportTicket } from '@/types';
 import { cn } from '@/lib/utils';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui';
 
 export default function SettingsPage() {
-  const { userProfile, loading: authLoading } = useAuth();
+  const { currentUser, loading: authLoading } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
-  
-  const creatorId = userProfile?.role === 'CREATOR' ? `creator_${userProfile.id}` : null;
-  const brandId = userProfile?.role === 'BRAND' ? `brand_${userProfile.id}` : null;
-  
+
+  const creatorId = currentUser?.role === 'CREATOR' ? `creator_${currentUser.id}` : null;
+  const brandId = currentUser?.role === 'BRAND' ? `brand_${currentUser.id}` : null;
+
   const { data: creatorData } = useDoc<CreatorProfile>(creatorId ? `creators/${creatorId}` : null);
   const { data: brandData } = useDoc<BrandProfile>(brandId ? `brands/${brandId}` : null);
 
   // Fetch user's support tickets
   const ticketsQuery = React.useMemo(() => {
-    if (!userProfile?.id) return null;
+    if (!currentUser?.id) return null;
     return query(
-      collection(db, 'support_tickets'),
-      where('userId', '==', userProfile.id),
+      collection(db!, 'support_tickets'),
+      where('userId', '==', currentUser.id),
       orderBy('createdAt', 'desc'),
       limit(10)
     );
-  }, [db, userProfile?.id]);
+  }, [db!, currentUser?.id]);
 
   const { data: userTickets } = useCollection<SupportTicket>(ticketsQuery);
 
@@ -114,9 +117,9 @@ export default function SettingsPage() {
   const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
 
   useEffect(() => {
-    if (userProfile) {
-      setDisplayName(userProfile.displayName || '');
-      setPhone(userProfile.phone || '');
+    if (currentUser) {
+      setDisplayName(currentUser.displayName || '');
+      setPhone(currentUser.phone || '');
     }
     if (creatorData) {
       setBio(creatorData.bio || '');
@@ -124,12 +127,12 @@ export default function SettingsPage() {
     } else if (brandData) {
       setBio(brandData.brandGuidelines || '');
     }
-  }, [userProfile, creatorData, brandData]);
+  }, [currentUser, creatorData, brandData]);
 
   const handleUpdateUser = async () => {
-    if (!userProfile) return;
+    if (!currentUser) return;
     setIsSaving(true);
-    
+
     const userUpdate = {
       displayName,
       phone,
@@ -137,10 +140,10 @@ export default function SettingsPage() {
     };
 
     try {
-      await updateDoc(doc(db, 'users', userProfile.id), userUpdate);
-      
+      await updateDoc(doc(db!, 'users', currentUser.id), userUpdate);
+
       if (creatorId) {
-        await updateDoc(doc(db, 'creators', creatorId), {
+        await updateDoc(doc(db!, 'creators', creatorId), {
           bio,
           visibility,
           updatedAt: new Date().toISOString()
@@ -150,7 +153,7 @@ export default function SettingsPage() {
       toast({ title: "Settings saved", description: "Your profile has been updated." });
     } catch (err: any) {
       errorEmitter.emitPermissionError(new FirestorePermissionError({
-        path: `/users/${userProfile.id}`,
+        path: `/users/${currentUser.id}`,
         operation: 'update',
         requestResourceData: userUpdate
       }));
@@ -160,9 +163,9 @@ export default function SettingsPage() {
   };
 
   const handleRestartTour = async () => {
-    if (!userProfile?.id) return;
+    if (!currentUser?.id) return;
     try {
-      await updateDoc(doc(db, 'users', userProfile.id), {
+      await updateDoc(doc(db!, 'users', currentUser.id), {
         tourCompleted: false,
         updatedAt: new Date().toISOString()
       });
@@ -173,13 +176,13 @@ export default function SettingsPage() {
   };
 
   const handleSubmitTicket = async () => {
-    if (!supportSubject || !supportMessage || !userProfile) return;
+    if (!supportSubject || !supportMessage || !currentUser) return;
     setIsSubmittingTicket(true);
 
     const ticketData = {
-      userId: userProfile.id,
-      userName: userProfile.displayName || 'Unnamed User',
-      userEmail: userProfile.email,
+      userId: currentUser.id,
+      userName: currentUser.displayName || 'Unnamed User',
+      userEmail: currentUser.email,
       subject: supportSubject,
       message: supportMessage,
       category: supportCategory,
@@ -190,21 +193,21 @@ export default function SettingsPage() {
     };
 
     try {
-      const docRef = await addDoc(collection(db, 'support_tickets'), ticketData);
-      
+      const docRef = await addDoc(collection(db!, 'support_tickets'), ticketData);
+
       // Initial message in subcollection for chat history
-      await addDoc(collection(db, 'support_tickets', docRef.id, 'messages'), {
-        senderId: userProfile.id,
-        senderName: userProfile.displayName || 'User',
+      await addDoc(collection(db!, 'support_tickets', docRef.id, 'messages'), {
+        senderId: currentUser.id,
+        senderName: currentUser.displayName || 'User',
         text: supportMessage,
         createdAt: new Date().toISOString()
       });
 
-      toast({ 
-        title: "Ticket Submitted", 
-        description: "An administrator will review your request and get back to you shortly." 
+      toast({
+        title: "Ticket Submitted",
+        description: "An administrator will review your request and get back to you shortly."
       });
-      
+
       setSupportSubject('');
       setSupportMessage('');
     } catch (err: any) {
@@ -219,17 +222,17 @@ export default function SettingsPage() {
   };
 
   const handleTogglePref = (key: string) => {
-    if (!userProfile) return;
-    
-    const currentPrefs = userProfile.notificationPreferences || { campaigns: true, payments: true, messages: true, system: true };
+    if (!currentUser) return;
+
+    const currentPrefs = currentUser.notificationPreferences || { campaigns: true, payments: true, messages: true, system: true };
     const newPrefs = { ...currentPrefs, [key]: !currentPrefs[key as keyof typeof currentPrefs] };
 
-    updateDoc(doc(db, 'users', userProfile.id), {
+    updateDoc(doc(db!, 'users', currentUser.id), {
       notificationPreferences: newPrefs,
       updatedAt: new Date().toISOString()
     }).catch(async () => {
       errorEmitter.emitPermissionError(new FirestorePermissionError({
-        path: `/users/${userProfile.id}`,
+        path: `/users/${currentUser.id}`,
         operation: 'update',
         requestResourceData: { notificationPreferences: newPrefs }
       }));
@@ -237,9 +240,9 @@ export default function SettingsPage() {
   };
 
   const handleResetPassword = async () => {
-    if (!userProfile?.email) return;
+    if (!currentUser?.email) return;
     try {
-      await sendPasswordResetEmail(auth, userProfile.email);
+      await sendPasswordResetEmail(auth, currentUser.email);
       toast({
         title: "Reset link sent",
         description: "Check your email to reset your password.",
@@ -257,7 +260,7 @@ export default function SettingsPage() {
     );
   }
 
-  const isCreator = userProfile?.role === 'CREATOR';
+  const isCreator = currentUser?.role === 'CREATOR';
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-20">
@@ -266,8 +269,8 @@ export default function SettingsPage() {
           <h1 className="text-3xl font-headline font-bold text-slate-900 tracking-tight">Account Settings</h1>
           <p className="text-slate-500 mt-1">Manage your professional presence and platform preferences.</p>
         </div>
-        <Button 
-          onClick={handleUpdateUser} 
+        <Button
+          onClick={handleUpdateUser}
           disabled={isSaving}
           className="rounded-xl font-bold px-10 shadow-xl shadow-primary/20 h-12"
         >
@@ -326,8 +329,8 @@ export default function SettingsPage() {
                       <div className="flex flex-col md:flex-row items-center gap-8">
                         <div className="relative group">
                           <Avatar className="h-32 w-32 border-4 border-white shadow-xl">
-                            <AvatarImage src={userProfile?.photoURL || `https://picsum.photos/seed/${userProfile?.id}/200`} />
-                            <AvatarFallback className="text-3xl font-black">{userProfile?.displayName?.charAt(0)}</AvatarFallback>
+                            <AvatarImage src={currentUser?.photoURL || `https://picsum.photos/seed/${currentUser?.id}/200`} />
+                            <AvatarFallback className="text-3xl font-black">{currentUser?.displayName?.charAt(0)}</AvatarFallback>
                           </Avatar>
                           <button className="absolute bottom-0 right-0 p-2.5 bg-primary text-white rounded-xl shadow-lg hover:scale-110 transition-transform">
                             <Camera className="h-5 w-5" />
@@ -338,7 +341,7 @@ export default function SettingsPage() {
                             <h3 className="text-xl font-bold">{displayName}</h3>
                             {creatorData?.isVerified && <CheckCircle2 className="h-5 w-5 text-blue-500 fill-blue-500/10" />}
                           </div>
-                          <p className="text-sm text-slate-500">Member since {new Date(userProfile?.createdAt || '').getFullYear()}</p>
+                          <p className="text-sm text-slate-500">Member since {new Date(currentUser?.createdAt || '').getFullYear()}</p>
                           <div className="flex gap-2 mt-4 justify-center md:justify-start">
                             <Button variant="outline" size="sm" className="rounded-xl font-bold px-6 h-10">Upload New Photo</Button>
                           </div>
@@ -360,11 +363,11 @@ export default function SettingsPage() {
 
                       <div className="space-y-2">
                         <Label className="font-bold text-slate-700">{isCreator ? 'Biography' : 'Brand Guidelines'}</Label>
-                        <Textarea 
-                          value={bio} 
-                          onChange={(e) => setBio(e.target.value)} 
-                          placeholder="Tell your story..." 
-                          className="rounded-2xl min-h-[150px] bg-slate-50/50 border-slate-100 focus:bg-white p-6 resize-none" 
+                        <Textarea
+                          value={bio}
+                          onChange={(e) => setBio(e.target.value)}
+                          placeholder="Tell your story..."
+                          className="rounded-2xl min-h-[150px] bg-slate-50/50 border-slate-100 focus:bg-white p-6 resize-none"
                         />
                       </div>
                     </CardContent>
@@ -382,9 +385,9 @@ export default function SettingsPage() {
                           <p className="text-sm font-bold text-slate-900">Public Visibility</p>
                           <p className="text-[10px] text-slate-400 font-medium">Visible in marketplace</p>
                         </div>
-                        <Switch 
-                          checked={visibility === 'PUBLIC'} 
-                          onCheckedChange={(v) => setVisibility(v ? 'PUBLIC' : 'PRIVATE')} 
+                        <Switch
+                          checked={visibility === 'PUBLIC'}
+                          onCheckedChange={(v) => setVisibility(v ? 'PUBLIC' : 'PRIVATE')}
                         />
                       </div>
                       <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-start gap-3">
@@ -399,8 +402,8 @@ export default function SettingsPage() {
                   <Card className="border-none shadow-sm rounded-[2rem] overflow-hidden bg-slate-50 border border-slate-100">
                     <CardContent className="p-6 space-y-4">
                       <h4 className="text-xs font-black uppercase text-slate-400 tracking-widest">Platform Help</h4>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         className="w-full rounded-xl font-bold h-11 border-slate-200 bg-white"
                         onClick={handleRestartTour}
                       >
@@ -535,9 +538,9 @@ export default function SettingsPage() {
                             <p className="text-xs text-slate-500 font-medium">{item.desc}</p>
                           </div>
                         </div>
-                        <Switch 
-                          checked={userProfile?.notificationPreferences?.[item.id as keyof typeof userProfile.notificationPreferences] ?? true}
-                          onCheckedChange={() => handleTogglePref(item.id)} 
+                        <Switch
+                          checked={currentUser?.notificationPreferences?.[item.id as keyof typeof currentUser.notificationPreferences] ?? true}
+                          onCheckedChange={() => handleTogglePref(item.id)}
                         />
                       </div>
                     ))}
@@ -619,11 +622,11 @@ export default function SettingsPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <Badge variant="outline" className="bg-slate-100 text-slate-500 border-none uppercase text-[9px] h-5 font-black">DISABLED</Badge>
-                      <Switch 
-                        checked={userProfile?.twoFactorEnabled} 
+                      <Switch
+                        checked={currentUser?.twoFactorEnabled}
                         onCheckedChange={(v) => {
-                          updateDoc(doc(db, 'users', userProfile!.id), { twoFactorEnabled: v });
-                        }} 
+                          updateDoc(doc(db!, 'users', currentUser!.id), { twoFactorEnabled: v });
+                        }}
                       />
                     </div>
                   </div>
@@ -639,7 +642,7 @@ export default function SettingsPage() {
                       </div>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="destructive" className="rounded-xl font-bold px-8 h-12">
+                          <Button variant="danger" className="rounded-xl font-bold px-8 h-12">
                             Delete My Account
                           </Button>
                         </AlertDialogTrigger>
@@ -674,8 +677,8 @@ export default function SettingsPage() {
                     <CardContent className="p-8 space-y-6">
                       <div className="space-y-2">
                         <Label className="font-bold">Subject</Label>
-                        <Input 
-                          placeholder="Brief summary of the issue" 
+                        <Input
+                          placeholder="Brief summary of the issue"
                           value={supportSubject}
                           onChange={(e) => setSupportSubject(e.target.value)}
                           className="rounded-xl h-12 bg-slate-50/50 border-slate-100"
@@ -697,8 +700,8 @@ export default function SettingsPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="font-bold">Message</Label>
-                        <Textarea 
-                          placeholder="Describe your issue in detail..." 
+                        <Textarea
+                          placeholder="Describe your issue in detail..."
                           className="rounded-2xl min-h-[150px] bg-slate-50/50 border-slate-100 p-6 resize-none"
                           value={supportMessage}
                           onChange={(e) => setSupportMessage(e.target.value)}
@@ -706,7 +709,7 @@ export default function SettingsPage() {
                       </div>
                     </CardContent>
                     <CardFooter className="bg-slate-50/50 p-8 border-t flex justify-end">
-                      <Button 
+                      <Button
                         onClick={handleSubmitTicket}
                         disabled={!supportSubject || !supportMessage || isSubmittingTicket}
                         className="rounded-xl font-bold px-10 h-12 shadow-lg shadow-primary/20"
@@ -731,8 +734,8 @@ export default function SettingsPage() {
                               <Badge className={cn(
                                 "text-[8px] font-black uppercase border-none px-2 h-4",
                                 ticket.status === 'OPEN' ? "bg-red-50 text-red-600" :
-                                ticket.status === 'RESOLVED' ? "bg-emerald-50 text-emerald-600" :
-                                "bg-blue-50 text-blue-600"
+                                  ticket.status === 'RESOLVED' ? "bg-emerald-50 text-emerald-600" :
+                                    "bg-blue-50 text-blue-600"
                               )}>
                                 {ticket.status}
                               </Badge>

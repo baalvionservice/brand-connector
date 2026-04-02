@@ -7,14 +7,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { 
-  ArrowLeft, 
-  AlertTriangle, 
-  ShieldAlert, 
-  CheckCircle2, 
-  Loader2, 
-  Upload, 
-  Send, 
+import {
+  ArrowLeft,
+  AlertTriangle,
+  ShieldAlert,
+  CheckCircle2,
+  Loader2,
+  Upload,
+  Send,
   MessageSquare,
   History,
   FileText,
@@ -23,7 +23,8 @@ import {
   Check,
   ShieldCheck,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  PlusCircle
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -32,41 +33,42 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage
 } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirestore, useCollection, useStorage } from '@/firebase';
 import { collection, query, where, addDoc, doc, limit } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
-import { Dispute, DisputeStatus } from '@/types';
+import { DisputeStatus, Dispute } from '@/types';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { disputeSchema } from '@/lib/validations';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 type DisputeFormValues = z.infer<typeof disputeSchema>;
 
-export default function DisputeFilingPage() {
+function DisputeFilingContent() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
   const storage = useStorage();
   const { toast } = useToast();
@@ -77,14 +79,14 @@ export default function DisputeFilingPage() {
 
   // 1. Check for existing dispute
   const disputeQuery = useMemo(() => {
-    if (!userProfile?.id || !campaignId) return null;
+    if (!currentUser?.id || !campaignId || !db) return null;
     return query(
       collection(db, 'disputes'),
       where('campaignId', '==', campaignId),
-      where('creatorId', '==', userProfile.id),
+      where('creatorId', '==', currentUser.id),
       limit(1)
     );
-  }, [db, campaignId, userProfile?.id]);
+  }, [db, campaignId, currentUser?.id]);
 
   const { data: existingDisputes, loading: disputeLoading } = useCollection<Dispute>(disputeQuery);
   const activeDispute = existingDisputes?.[0];
@@ -108,7 +110,7 @@ export default function DisputeFilingPage() {
     if (!file) return;
 
     const id = Math.random().toString(36).substring(7);
-    const storageRef = ref(storage, `disputes/${campaignId}/evidence/${id}_${file.name}`);
+    const storageRef = ref(storage!, `disputes/${campaignId}/evidence/${id}_${file.name}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
     uploadTask.on('state_changed',
@@ -125,12 +127,12 @@ export default function DisputeFilingPage() {
   };
 
   const onSubmit = async (values: DisputeFormValues) => {
-    if (!userProfile) return;
+    if (!currentUser) return;
     setIsSubmitting(true);
 
     const disputeData = {
       campaignId,
-      creatorId: userProfile.id,
+      creatorId: currentUser.id,
       brandId: 'brand_mock_id', // In a real app, fetch from campaign doc
       deliverableId: deliverableId || undefined,
       ...values,
@@ -140,10 +142,10 @@ export default function DisputeFilingPage() {
     };
 
     try {
-      await addDoc(collection(db, 'disputes'), disputeData);
-      
+      await addDoc(collection(db!, 'disputes'), disputeData);
+
       // Also notify brand and admin (simulation)
-      await addDoc(collection(db, 'notifications'), {
+      await addDoc(collection(db!, 'notifications'), {
         userId: 'brand_mock_id',
         title: 'Dispute Filed',
         message: `A creator has filed a dispute for campaign #${campaignId}.`,
@@ -245,8 +247,8 @@ export default function DisputeFilingPage() {
                             <FormItem>
                               <FormLabel className="font-bold text-slate-700">Detailed Reason</FormLabel>
                               <FormControl>
-                                <Textarea 
-                                  placeholder="Explain exactly what happened. Be specific about dates and previous communication." 
+                                <Textarea
+                                  placeholder="Explain exactly what happened. Be specific about dates and previous communication."
                                   className="min-h-[150px] rounded-2xl p-6 bg-slate-50 border-none focus-visible:ring-primary text-md"
                                   {...field}
                                 />
@@ -269,7 +271,7 @@ export default function DisputeFilingPage() {
                                 </div>
                               </div>
                             ))}
-                            <button 
+                            <button
                               type="button"
                               onClick={() => fileInputRef.current?.click()}
                               className="aspect-square rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center bg-slate-50 hover:border-primary transition-all group"
@@ -292,10 +294,10 @@ export default function DisputeFilingPage() {
                           name="proposedResolution"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="font-bold text-slate-700">Your Proposed Resolution</Label>
+                              <FormLabel className="font-bold text-slate-700">Your Proposed Resolution</FormLabel>
                               <FormControl>
-                                <Input 
-                                  placeholder="e.g. Release 100% of payment as work matches all initial requirements." 
+                                <Input
+                                  placeholder="e.g. Release 100% of payment as work matches all initial requirements."
                                   className="h-12 rounded-xl bg-slate-50 border-none focus-visible:ring-primary font-medium"
                                   {...field}
                                 />
@@ -305,7 +307,7 @@ export default function DisputeFilingPage() {
                           )}
                         />
 
-                        <Button 
+                        <Button
                           type="submit"
                           disabled={isSubmitting}
                           className="w-full h-14 rounded-2xl text-lg font-black shadow-xl shadow-primary/20"
@@ -336,7 +338,7 @@ export default function DisputeFilingPage() {
                         <CardTitle className="text-xl">Dispute Under Review</CardTitle>
                       </div>
                       <Badge className="bg-orange-100 text-orange-600 border-none uppercase text-[10px] font-black px-3 py-1">
-                        Ref: #{activeDispute.id.substring(0, 8)}
+                        Ref: #{activeDispute.id!.substring(0, 8)}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -344,7 +346,7 @@ export default function DisputeFilingPage() {
                     <div className="relative py-10">
                       <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-slate-100 rounded-full" />
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary rounded-full transition-all duration-1000" style={{ width: activeDispute.status === 'FILED' ? '25%' : activeDispute.status === 'UNDER_REVIEW' ? '50%' : activeDispute.status === 'ADMIN_DECISION' ? '75%' : '100%' }} />
-                      
+
                       <div className="relative flex justify-between">
                         {[
                           { id: 'FILED', label: 'Filed', active: true },
@@ -482,5 +484,17 @@ export default function DisputeFilingPage() {
         </aside>
       </div>
     </div>
+  );
+}
+
+export default function DisputeFilingPage() {
+  return (
+    <React.Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    }>
+      <DisputeFilingContent />
+    </React.Suspense>
   );
 }

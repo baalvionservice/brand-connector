@@ -27,7 +27,7 @@ export function PricingCard({
   ctaText = "Get Started",
   className,
   onCtaClick
-}) {
+}: PricingCardProps) {
   return (
     <BaseCard 
       className={cn(

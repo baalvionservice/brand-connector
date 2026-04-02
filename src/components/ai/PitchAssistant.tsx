@@ -13,7 +13,8 @@ import {
   FileText,
   AlertCircle,
   Wand2,
-  Trash2
+  Trash2,
+  Info
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

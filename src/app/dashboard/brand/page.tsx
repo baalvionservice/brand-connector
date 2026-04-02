@@ -2,12 +2,12 @@
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Briefcase, 
-  TrendingUp, 
-  IndianRupee, 
-  Plus, 
+import {
+  Users,
+  Briefcase,
+  TrendingUp,
+  IndianRupee,
+  Plus,
   Clock,
   CheckCircle2,
   Zap,
@@ -18,13 +18,13 @@ import {
   BarChart3,
   Sparkles
 } from 'lucide-react';
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -65,8 +65,8 @@ const DEADLINES = [
 ];
 
 export default function BrandDashboard() {
-  const { userProfile } = useAuth();
-  const brandId = userProfile?.id ? `brand_${userProfile.id}` : null;
+  const { currentUser } = useAuth();
+  const brandId = currentUser?.id ? `brand_${currentUser.id}` : null;
   const { data: brand } = useDoc<BrandProfile>(brandId ? `brands/${brandId}` : null);
   const preferredCurrency = brand?.currency || 'INR';
 
@@ -141,10 +141,10 @@ export default function BrandDashboard() {
 
       {/* Main Content Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         {/* Left: Charts & Recs */}
         <div className="lg:col-span-8 space-y-12">
-          
+
           {/* Performance Chart */}
           <Card className="border-none shadow-sm shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white">
             <CardHeader className="p-8 border-b bg-slate-50/50 flex flex-row items-center justify-between">
@@ -169,34 +169,34 @@ export default function BrandDashboard() {
                   <AreaChart data={PERFORMANCE_DATA}>
                     <defs>
                       <linearGradient id="colorReach" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6C3AE8" stopOpacity={0.1}/>
-                        <stop offset="95%" stopColor="#6C3AE8" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#6C3AE8" stopOpacity={0.1} />
+                        <stop offset="95%" stopColor="#6C3AE8" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 600}}
+                    <XAxis
+                      dataKey="name"
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }}
                       dy={10}
                     />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{fill: '#94a3b8', fontSize: 12, fontWeight: 600}}
+                    <YAxis
+                      axisLine={false}
+                      tickLine={false}
+                      tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }}
                       tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
                     />
-                    <Tooltip 
-                      contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px'}}
+                    <Tooltip
+                      contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px' }}
                     />
-                    <Area 
-                      type="monotone" 
-                      dataKey="reach" 
-                      stroke="#6C3AE8" 
-                      strokeWidth={4} 
-                      fillOpacity={1} 
-                      fill="url(#colorReach)" 
+                    <Area
+                      type="monotone"
+                      dataKey="reach"
+                      stroke="#6C3AE8"
+                      strokeWidth={4}
+                      fillOpacity={1}
+                      fill="url(#colorReach)"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -210,7 +210,7 @@ export default function BrandDashboard() {
 
         {/* Right: Deadlines & Activity */}
         <aside className="lg:col-span-4 space-y-8">
-          
+
           {/* Upcoming Deadlines */}
           <Card className="border-none shadow-sm shadow-slate-200/50 rounded-3xl overflow-hidden bg-white">
             <CardHeader className="bg-primary/5 border-b border-primary/10 p-6">
@@ -271,7 +271,7 @@ export default function BrandDashboard() {
                 <Progress value={85} className="h-1.5 bg-white/5" />
               </div>
               <p className="text-[10px] text-slate-400 leading-relaxed font-medium">
-                Your current active campaigns are performing 12% above niche benchmarks. 
+                Your current active campaigns are performing 12% above niche benchmarks.
               </p>
               <Button className="w-full bg-white text-slate-900 hover:bg-slate-100 font-black rounded-xl h-11 text-[10px] uppercase tracking-widest">
                 Optimize Strategy

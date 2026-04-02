@@ -8,25 +8,25 @@ import { motion } from 'framer-motion';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { userProfile, loading } = useAuth();
+  const { currentUser, loading } = useAuth();
 
   useEffect(() => {
     if (!loading) {
-      if (userProfile?.role === 'BRAND') {
+      if (currentUser?.role === 'BRAND') {
         router.replace('/dashboard/brand');
-      } else if (userProfile?.role === 'CREATOR') {
+      } else if (currentUser?.role === 'CREATOR') {
         router.replace('/dashboard/creator');
-      } else if (userProfile?.role === 'ADMIN') {
+      } else if (currentUser?.role === 'ADMIN') {
         router.replace('/admin');
       } else {
         router.replace('/auth/login');
       }
     }
-  }, [userProfile, loading, router]);
+  }, [currentUser, loading, router]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white">
-      <motion.div 
+      <motion.div
         animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
         className="bg-primary p-4 rounded-[2rem] shadow-2xl shadow-primary/20 mb-8"

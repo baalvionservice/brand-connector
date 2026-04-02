@@ -2,16 +2,16 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ShieldAlert, 
-  Search, 
-  Filter, 
-  ChevronRight, 
-  Loader2, 
-  Zap, 
-  Clock, 
-  UserX, 
-  ShieldCheck, 
+import {
+  ShieldAlert,
+  Search,
+  Filter,
+  ChevronRight,
+  Loader2,
+  Zap,
+  Clock,
+  UserX,
+  ShieldCheck,
   MoreVertical,
   History,
   ThumbsUp,
@@ -39,28 +39,28 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -112,7 +112,7 @@ const MOCK_ALERTS: FraudAlert[] = [
 export function FraudAlerts() {
   const db = useFirestore();
   const { toast } = useToast();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [selectedAlert, setSelectedAlert] = useState<FraudAlert | null>(null);
@@ -130,8 +130,8 @@ export function FraudAlerts() {
 
   const filteredAlerts = useMemo(() => {
     return alerts.filter(a => {
-      const matchesSearch = a.userName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           a.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = a.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.description.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = typeFilter === 'all' || a.type === typeFilter;
       return matchesSearch && matchesType;
     });
@@ -141,8 +141,8 @@ export function FraudAlerts() {
     if (!selectedAlert || isProcessing) return;
     setIsProcessing(true);
 
-    const alertRef = doc(db, 'fraud_alerts', selectedAlert.id);
-    const userRef = doc(db, 'users', selectedAlert.userId);
+    const alertRef = doc(db!, 'fraud_alerts', selectedAlert.id);
+    const userRef = doc(db!, 'users', selectedAlert.userId);
 
     const updateData: any = {
       status: action === 'RESOLVE' ? 'RESOLVED' : action === 'DISMISS' ? 'DISMISSED' : 'UNDER_REVIEW',
@@ -164,7 +164,7 @@ export function FraudAlerts() {
       console.log("Mock update for alert:", selectedAlert.id, updateData);
 
       // Audit Log Entry
-      await addDoc(collection(db, 'audit_logs'), {
+      await addDoc(collection(db!, 'audit_logs'), {
         adminId: 'current_admin',
         adminName: 'Root Admin',
         actionType: `FRAUD_${action}`,
@@ -205,14 +205,14 @@ export function FraudAlerts() {
         <div className="flex items-center gap-4 flex-1">
           <div className="relative w-full lg:w-96">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder="Search user or incident..." 
+            <Input
+              placeholder="Search user or incident..."
               className="pl-10 h-11 rounded-xl bg-slate-50 border-none focus-visible:ring-primary"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          
+
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-none font-bold text-xs min-w-[160px]">
               <SelectValue placeholder="All Categories" />
@@ -272,9 +272,9 @@ export function FraudAlerts() {
                           {alert.riskScore}%
                         </span>
                         <div className="w-12 h-1 bg-slate-100 rounded-full mt-1">
-                          <div 
-                            className={cn("h-full rounded-full", alert.riskScore > 80 ? "bg-red-600" : "bg-orange-500")} 
-                            style={{ width: `${alert.riskScore}%` }} 
+                          <div
+                            className={cn("h-full rounded-full", alert.riskScore > 80 ? "bg-red-600" : "bg-orange-500")}
+                            style={{ width: `${alert.riskScore}%` }}
                           />
                         </div>
                       </div>
@@ -288,9 +288,9 @@ export function FraudAlerts() {
                       </Badge>
                     </TableCell>
                     <TableCell className="pr-8 text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="rounded-xl font-bold h-10 px-4 bg-slate-50 text-slate-600 hover:text-primary transition-all"
                         onClick={() => { setSelectedAlert(alert); setIsAuditOpen(true); }}
                       >
@@ -372,16 +372,16 @@ export function FraudAlerts() {
                 <div className="space-y-4">
                   <h4 className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Enforcement Protocol</h4>
                   <div className="grid grid-cols-2 gap-3">
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="h-20 flex flex-col gap-1 rounded-2xl border-slate-100 hover:border-orange-200 hover:bg-orange-50 group"
                       onClick={() => handleAction('PAUSE_PAYOUT')}
                     >
                       <PauseCircle className="h-5 w-5 text-slate-400 group-hover:text-orange-600" />
                       <span className="text-[10px] font-black uppercase">Pause Payouts</span>
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       className="h-20 flex flex-col gap-1 rounded-2xl border-slate-100 hover:border-red-200 hover:bg-red-50 group"
                       onClick={() => handleAction('SUSPEND')}
                     >
@@ -393,8 +393,8 @@ export function FraudAlerts() {
 
                 <div className="space-y-4">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Audit Note (Logged)</Label>
-                  <Textarea 
-                    placeholder="Specify findings or justification for decision..." 
+                  <Textarea
+                    placeholder="Specify findings or justification for decision..."
                     className="min-h-[120px] rounded-2xl p-6 bg-slate-50 border-none focus-visible:ring-primary text-md"
                     value={feedbackNote}
                     onChange={(e) => setFeedbackNote(e.target.value)}
@@ -414,15 +414,15 @@ export function FraudAlerts() {
                   <p className="text-xs text-indigo-100/70 font-medium">Was this AI flag accurate? Your feedback retrains our detection neural network.</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="rounded-xl h-11 px-6 bg-white/10 hover:bg-emerald-500 text-white font-bold text-xs uppercase"
                     onClick={() => handleAction('RESOLVE')}
                   >
                     <ThumbsUp className="h-4 w-4 mr-2" /> Correct
                   </Button>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="rounded-xl h-11 px-6 bg-white/10 hover:bg-red-500 text-white font-bold text-xs uppercase"
                     onClick={() => handleAction('DISMISS')}
                   >

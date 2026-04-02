@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useCollection, useDoc, useFirestore } from '@/firebase';
-import { collection, query, where, orderBy, limit } from 'firebase/firestore';
-import { useMemo } from 'react';
-import { Notification, Campaign, Wallet, Application } from '@/types';
+import { useCollection, useDoc, useFirestore } from "@/firebase";
+import { collection, query, where, orderBy, limit } from "firebase/firestore";
+import { useMemo } from "react";
+import { Notification, Campaign, Wallet } from "@/types";
 
 /**
  * Streams real-time notifications for a specific user.
@@ -11,11 +11,11 @@ import { Notification, Campaign, Wallet, Application } from '@/types';
 export function useNotifications(userId: string | undefined) {
   const db = useFirestore();
   const nQuery = useMemo(() => {
-    if (!userId) return null;
+    if (!userId || !db) return null;
     return query(
-      collection(db, 'notifications'),
-      where('userId', '==', userId),
-      orderBy('createdAt', 'desc'),
+      collection(db, "notifications"),
+      where("userId", "==", userId),
+      orderBy("createdAt", "desc"),
       limit(50)
     );
   }, [db, userId]);
@@ -38,22 +38,15 @@ export function useWalletBalance(userId: string | undefined) {
 }
 
 /**
- * Streams the real-time status and metadata of a specific application.
- */
-export function useApplicationStatus(applicationId: string | undefined) {
-  return useDoc<Application>(applicationId ? `applications/${applicationId}` : null);
-}
-
-/**
  * Streams real-time messages for a specific conversation thread.
  */
 export function useMessages(conversationId: string | undefined) {
   const db = useFirestore();
   const mQuery = useMemo(() => {
-    if (!conversationId) return null;
+    if (!conversationId || !db) return null;
     return query(
-      collection(db, 'conversations', conversationId, 'messages'),
-      orderBy('createdAt', 'asc'),
+      collection(db, "conversations", conversationId, "messages"),
+      orderBy("createdAt", "asc"),
       limit(100)
     );
   }, [db, conversationId]);

@@ -73,7 +73,7 @@ const QUICK_REPLIES = [
 ];
 
 export default function BrandMessagesPage() {
-  const { userProfile: authProfile } = useAuth();
+  const { currentUser: authProfile } = useAuth();
   const db = useFirestore();
   
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
@@ -85,7 +85,7 @@ export default function BrandMessagesPage() {
 
   // 1. Fetch Conversations for this brand
   const convQuery = useMemo(() => {
-    if (!authProfile?.id) return null;
+    if (!authProfile?.id || !db) return null;
     return query(
       collection(db, 'conversations'),
       where('participantIds', 'array-contains', authProfile.id),
@@ -137,8 +137,8 @@ export default function BrandMessagesPage() {
     };
 
     try {
-      addDoc(collection(db, 'conversations', selectedConvId, 'messages'), messageData);
-      updateDoc(doc(db, 'conversations', selectedConvId), {
+      addDoc(collection(db!, 'conversations', selectedConvId, 'messages'), messageData);
+      updateDoc(doc(db!, 'conversations', selectedConvId), {
         lastMessage: textToSend,
         lastSenderId: authProfile.id,
         updatedAt: new Date().toISOString()
@@ -155,7 +155,7 @@ export default function BrandMessagesPage() {
   };
 
   const toggleStar = (id: string, current: boolean) => {
-    updateDoc(doc(db, 'conversations', id), {
+    updateDoc(doc(db!, 'conversations', id), {
       [`importantBy.${authProfile?.id}`]: !current
     }).catch(() => {});
   };

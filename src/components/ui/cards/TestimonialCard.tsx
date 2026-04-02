@@ -24,7 +24,7 @@ export function TestimonialCard({
   quote,
   rating = 5,
   className
-}) {
+} : TestimonialCardProps) {
   return (
     <BaseCard className={cn("p-8 flex flex-col h-full", className)}>
       <div className="flex items-center gap-0.5 mb-6">

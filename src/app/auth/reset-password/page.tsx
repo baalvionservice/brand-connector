@@ -80,7 +80,7 @@ function ResetPasswordContent() {
     }
 
     // Verify the action code
-    verifyPasswordResetCode(auth, oobCode)
+    verifyPasswordResetCode(auth!, oobCode)
       .then(() => {
         setIsLoading(false);
       })
@@ -97,7 +97,7 @@ function ResetPasswordContent() {
     setIsSubmitting(true);
     setError(null);
     try {
-      await confirmPasswordReset(auth, oobCode, values.password);
+      await confirmPasswordReset(auth!, oobCode, values.password);
       setIsSuccess(true);
       toast({
         title: "Password Updated",

@@ -3,16 +3,16 @@
 
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  ShieldCheck, 
-  TrendingUp, 
-  Users, 
-  Briefcase, 
-  IndianRupee, 
-  AlertTriangle, 
-  Zap, 
-  Settings, 
-  ArrowUpRight, 
+import {
+  ShieldCheck,
+  TrendingUp,
+  Users,
+  Briefcase,
+  IndianRupee,
+  AlertTriangle,
+  Zap,
+  Settings,
+  ArrowUpRight,
   ArrowDownRight,
   Clock,
   ChevronRight,
@@ -26,13 +26,13 @@ import {
   FileBox,
   History
 } from 'lucide-react';
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   LineChart,
   Line
@@ -59,7 +59,7 @@ const REVENUE_TRENDS = [
 ];
 
 export default function AdminDashboardPage() {
-  const { userProfile, loading: authLoading } = useAuth();
+  const { currentUser, loading: authLoading } = useAuth();
   const { stats, logs, fetchDashboard, loading: statsLoading } = useAdminStore();
 
   useEffect(() => {
@@ -132,7 +132,7 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
+
         {/* Charts Column */}
         <div className="lg:col-span-8 space-y-8">
           <Card className="border-none shadow-sm rounded-[2.5rem] overflow-hidden bg-white">
@@ -156,14 +156,14 @@ export default function AdminDashboardPage() {
                   <AreaChart data={REVENUE_TRENDS}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6C3AE8" stopOpacity={0.1}/>
-                        <stop offset="95%" stopColor="#6C3AE8" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#6C3AE8" stopOpacity={0.1} />
+                        <stop offset="95%" stopColor="#6C3AE8" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#94a3b8', fontSize: 12}} />
-                    <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
+                    <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
                     <Area type="monotone" dataKey="revenue" stroke="#6C3AE8" strokeWidth={4} fillOpacity={1} fill="url(#colorRevenue)" />
                     <Area type="monotone" dataKey="gmv" stroke="#e2e8f0" strokeWidth={2} strokeDasharray="5 5" fillOpacity={0} />
                   </AreaChart>

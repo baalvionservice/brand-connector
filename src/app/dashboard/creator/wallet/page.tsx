@@ -2,49 +2,49 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Wallet, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
-  IndianRupee, 
-  History, 
-  Plus, 
-  ShieldCheck, 
-  Loader2, 
-  ChevronRight, 
-  MoreHorizontal, 
-  Download, 
-  Building2, 
-  Zap, 
-  Check, 
-  Smartphone, 
-  Globe, 
-  ArrowRight, 
-  ArrowLeft, 
-  Activity 
+import {
+  Wallet,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  IndianRupee,
+  History,
+  Plus,
+  ShieldCheck,
+  Loader2,
+  ChevronRight,
+  MoreHorizontal,
+  Download,
+  Building2,
+  Zap,
+  Check,
+  Smartphone,
+  Globe,
+  ArrowRight,
+  ArrowLeft,
+  Activity
 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import {
   Dialog,
@@ -64,12 +64,13 @@ import { collection, query, where, orderBy } from 'firebase/firestore';
 import { TransactionHistory } from '@/components/payments/TransactionHistory';
 import { requestPayout, getPayoutStep } from '@/lib/payouts';
 import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui';
 
 type PayoutStep = 'amount' | 'method' | 'confirm' | 'otp' | 'processing' | 'success';
 
 export default function CreatorWalletPage() {
   const { toast } = useToast();
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
 
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
@@ -81,13 +82,13 @@ export default function CreatorWalletPage() {
 
   // 1. Fetch Transactions
   const txQuery = useMemo(() => {
-    if (!userProfile?.id) return null;
+    if (!currentUser?.id) return null;
     return query(
-      collection(db, 'transactions'),
-      where('userId', '==', userProfile.id),
+      collection(db!, 'transactions'),
+      where('userId', '==', currentUser.id),
       orderBy('createdAt', 'desc')
     );
-  }, [db, userProfile?.id]);
+  }, [db!, currentUser?.id]);
 
   const { data: transactions, loading: txLoading } = useCollection<any>(txQuery);
 
@@ -128,8 +129,8 @@ export default function CreatorWalletPage() {
     setIsSubmitting(true);
 
     try {
-      await requestPayout(db, {
-        creatorId: userProfile!.id,
+      await requestPayout(db!, {
+        creatorId: currentUser!.id,
         amount: Number(amount),
         method: payoutMethod as any,
         target: payoutMethod === 'upi' ? 'sarah@okaxis' : payoutMethod === 'bank' ? 'HDFC ****4242' : 'sarah.chen@payoneer.com'
@@ -167,7 +168,7 @@ export default function CreatorWalletPage() {
             <Download className="mr-2 h-4 w-4" />
             Statements
           </Button>
-          
+
           <Dialog open={isWithdrawModalOpen} onOpenChange={setIsWithdrawModalOpen}>
             <DialogTrigger asChild>
               <Button className="rounded-xl font-bold shadow-lg shadow-primary/20 h-11 px-6">
@@ -191,9 +192,9 @@ export default function CreatorWalletPage() {
                         </div>
                         <div className="relative">
                           <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-slate-400" />
-                          <Input 
-                            type="number" 
-                            placeholder="5,000" 
+                          <Input
+                            type="number"
+                            placeholder="5,000"
                             className="h-16 pl-12 rounded-2xl text-2xl font-black border-slate-100 bg-slate-50 focus-visible:ring-primary"
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
@@ -263,7 +264,7 @@ export default function CreatorWalletPage() {
                       <DialogTitle className="text-2xl font-black">Confirm Details</DialogTitle>
                       <DialogDescription className="font-medium">Please verify the payout information below.</DialogDescription>
                     </DialogHeader>
-                    
+
                     <div className="bg-slate-50 rounded-[2rem] p-8 space-y-6">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Amount</span>
@@ -302,11 +303,11 @@ export default function CreatorWalletPage() {
                       <DialogTitle className="text-2xl font-black">Identity Verification</DialogTitle>
                       <DialogDescription className="font-medium">A 6-digit code was sent to your registered phone number.</DialogDescription>
                     </DialogHeader>
-                    
+
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <Input 
-                          placeholder="0 0 0 0 0 0" 
+                        <Input
+                          placeholder="0 0 0 0 0 0"
                           className="h-16 text-center text-3xl font-black tracking-[0.5em] rounded-2xl bg-slate-50 border-slate-100"
                           maxLength={6}
                           value={otpValue}
@@ -314,8 +315,8 @@ export default function CreatorWalletPage() {
                         />
                         <button className="w-full text-xs font-bold text-primary hover:underline uppercase tracking-widest mt-2">Resend Code</button>
                       </div>
-                      <Button 
-                        disabled={otpValue.length < 6} 
+                      <Button
+                        disabled={otpValue.length < 6}
                         onClick={handleVerifyOtp}
                         className="w-full h-14 rounded-2xl font-bold text-lg shadow-xl shadow-primary/20"
                       >
@@ -347,7 +348,7 @@ export default function CreatorWalletPage() {
                       <h3 className="text-3xl font-black">Transfer Initiated!</h3>
                       <p className="text-slate-500 font-medium">₹{Number(amount).toLocaleString()} is on its way to your account.</p>
                     </div>
-                    
+
                     <div className="w-full p-6 rounded-2xl bg-slate-50 border border-slate-100 flex items-center gap-4 text-left">
                       <Clock className="h-10 w-10 text-orange-500 shrink-0" />
                       <div>
@@ -394,11 +395,11 @@ export default function CreatorWalletPage() {
               <CardContent className="p-8 lg:p-12">
                 <div className="relative py-10">
                   <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-slate-100 rounded-full" />
-                  <div 
-                    className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary rounded-full transition-all duration-[2000ms] ease-out" 
+                  <div
+                    className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-primary rounded-full transition-all duration-[2000ms] ease-out"
                     style={{ width: `${(getPayoutStep(activePayout.status, activePayout.payoutMethod?.type) / 4) * 100}%` }}
                   />
-                  
+
                   <div className="relative flex justify-between">
                     {[
                       { label: 'Request Received', active: true },
@@ -421,7 +422,7 @@ export default function CreatorWalletPage() {
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="mt-8 flex flex-col md:flex-row items-center justify-between p-6 rounded-2xl bg-slate-50 border border-slate-100 gap-6">
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-10 rounded-xl bg-white shadow-sm flex items-center justify-center shrink-0">
@@ -478,11 +479,11 @@ export default function CreatorWalletPage() {
                 <span>Audit in Progress</span>
               </div>
               <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
-                <motion.div 
+                <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: '65%' }}
                   transition={{ duration: 1.5 }}
-                  className="h-full bg-orange-500 rounded-full" 
+                  className="h-full bg-orange-500 rounded-full"
                 />
               </div>
             </div>
@@ -507,9 +508,9 @@ export default function CreatorWalletPage() {
       </div>
 
       {/* Shared Transaction History Component */}
-      <TransactionHistory 
-        data={transactions || []} 
-        loading={txLoading} 
+      <TransactionHistory
+        data={transactions || []}
+        loading={txLoading}
         title="Personal Earnings Ledger"
         description="Comprehensive audit of campaign payouts, milestone releases, and platform settlements."
       />

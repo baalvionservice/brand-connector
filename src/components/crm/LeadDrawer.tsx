@@ -46,6 +46,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { Textarea } from '../ui';
 
 export function LeadDrawer() {
   const { 

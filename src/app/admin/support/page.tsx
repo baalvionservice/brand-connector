@@ -3,18 +3,18 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  LifeBuoy, 
-  Search, 
-  Filter, 
-  MoreVertical, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle, 
-  UserCircle, 
-  Send, 
-  Loader2, 
-  ChevronRight, 
+import {
+  LifeBuoy,
+  Search,
+  Filter,
+  MoreVertical,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  UserCircle,
+  Send,
+  Loader2,
+  ChevronRight,
   MessageSquare,
   ShieldCheck,
   Zap,
@@ -22,7 +22,8 @@ import {
   Smartphone,
   ChevronLeft,
   X,
-  UserPlus
+  UserPlus,
+  ChevronDown
 } from 'lucide-react';
 import { collection, query, orderBy, doc, updateDoc, addDoc, where, limit } from 'firebase/firestore';
 import { useFirestore, useCollection } from '@/firebase';
@@ -37,30 +38,31 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui';
 
 export default function AdminSupportCenter() {
   const db = useFirestore();
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const { toast } = useToast();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
@@ -70,6 +72,7 @@ export default function AdminSupportCenter() {
 
   // 1. Fetch Global Tickets
   const ticketsQuery = useMemo(() => {
+    if (!db) return null;
     return query(collection(db, 'support_tickets'), orderBy('createdAt', 'desc'));
   }, [db]);
 
@@ -77,7 +80,7 @@ export default function AdminSupportCenter() {
 
   // 2. Fetch Messages for Selected Ticket
   const messagesQuery = useMemo(() => {
-    if (!selectedTicketId) return null;
+    if (!selectedTicketId || !db) return null;
     return query(
       collection(db, 'support_tickets', selectedTicketId, 'messages'),
       orderBy('createdAt', 'asc')
@@ -86,7 +89,7 @@ export default function AdminSupportCenter() {
 
   const { data: messages, loading: messagesLoading } = useCollection<TicketMessage>(messagesQuery);
 
-  const selectedTicket = useMemo(() => 
+  const selectedTicket = useMemo(() =>
     tickets.find(t => t.id === selectedTicketId),
     [tickets, selectedTicketId]
   );
@@ -99,16 +102,16 @@ export default function AdminSupportCenter() {
 
   const filteredTickets = useMemo(() => {
     return tickets.filter(t => {
-      const matchesSearch = t.userName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           t.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           t.id.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = t.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        t.id.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
   }, [tickets, searchQuery, statusFilter]);
 
   const handleUpdateStatus = async (ticketId: string, newStatus: SupportStatus) => {
-    const ticketRef = doc(db, 'support_tickets', ticketId);
+    const ticketRef = doc(db!, 'support_tickets', ticketId);
     updateDoc(ticketRef, { status: newStatus, updatedAt: new Date().toISOString() })
       .then(() => toast({ title: `Ticket marked as ${newStatus.toLowerCase()}` }))
       .catch(async (err) => {
@@ -121,30 +124,30 @@ export default function AdminSupportCenter() {
   };
 
   const handleAssign = async (ticketId: string, adminName: string) => {
-    const ticketRef = doc(db, 'support_tickets', ticketId);
+    const ticketRef = doc(db!, 'support_tickets', ticketId);
     updateDoc(ticketRef, { assignedTo: adminName, status: 'IN_PROGRESS', updatedAt: new Date().toISOString() })
       .then(() => toast({ title: `Ticket assigned to ${adminName}` }))
-      .catch(() => {});
+      .catch(() => { });
   };
 
   const handleSendReply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!replyText.trim() || !selectedTicketId || !userProfile) return;
+    if (!replyText.trim() || !selectedTicketId || !currentUser) return;
 
     const text = replyText;
     setReplyText('');
     setIsSending(true);
 
     const messageData = {
-      senderId: userProfile.id,
-      senderName: userProfile.displayName || 'Admin',
+      senderId: currentUser.id,
+      senderName: currentUser.displayName || 'Admin',
       text: text,
       createdAt: new Date().toISOString()
     };
 
     try {
-      await addDoc(collection(db, 'support_tickets', selectedTicketId, 'messages'), messageData);
-      await updateDoc(doc(db, 'support_tickets', selectedTicketId), {
+      await addDoc(collection(db!, 'support_tickets', selectedTicketId, 'messages'), messageData);
+      await updateDoc(doc(db!, 'support_tickets', selectedTicketId), {
         status: 'IN_PROGRESS',
         updatedAt: new Date().toISOString()
       });
@@ -202,8 +205,8 @@ export default function AdminSupportCenter() {
             <div className="space-y-4">
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                <Input 
-                  placeholder="Search user or subject..." 
+                <Input
+                  placeholder="Search user or subject..."
                   className="pl-10 h-11 rounded-xl bg-white border-none shadow-inner"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -274,7 +277,7 @@ export default function AdminSupportCenter() {
         <main className="flex-1 min-w-0">
           <AnimatePresence mode="wait">
             {selectedTicket ? (
-              <motion.div 
+              <motion.div
                 key={selectedTicket.id}
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -299,8 +302,8 @@ export default function AdminSupportCenter() {
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <Select 
-                          value={selectedTicket.assignedTo || 'unassigned'} 
+                        <Select
+                          value={selectedTicket.assignedTo || 'unassigned'}
                           onValueChange={(v) => handleAssign(selectedTicket.id, v)}
                         >
                           <SelectTrigger className="w-40 h-10 rounded-xl bg-slate-50 border-none font-bold text-xs">
@@ -354,7 +357,7 @@ export default function AdminSupportCenter() {
                         </div>
 
                         {messages.map((msg) => {
-                          const isMe = msg.senderId === userProfile?.id;
+                          const isMe = msg.senderId === currentUser?.id;
                           return (
                             <div key={msg.id} className={cn("flex gap-4", isMe ? "flex-row-reverse" : "")}>
                               <Avatar className="h-10 w-10 border shrink-0">
@@ -386,13 +389,13 @@ export default function AdminSupportCenter() {
                     {/* Input Bar */}
                     <footer className="p-6 border-t bg-white shrink-0">
                       <form onSubmit={handleSendReply} className="flex gap-3">
-                        <Input 
-                          placeholder="Type your official response..." 
+                        <Input
+                          placeholder="Type your official response..."
                           className="flex-1 h-14 rounded-2xl bg-slate-50 border-none px-6 focus-visible:ring-primary text-md"
                           value={replyText}
                           onChange={(e) => setReplyText(e.target.value)}
                         />
-                        <Button 
+                        <Button
                           disabled={!replyText.trim() || isSending}
                           className="h-14 w-14 rounded-2xl shadow-xl shadow-primary/20 shrink-0"
                         >

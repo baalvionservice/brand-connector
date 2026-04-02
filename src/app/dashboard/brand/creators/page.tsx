@@ -74,7 +74,7 @@ export default function CreatorMarketplace() {
         <div className="flex items-center gap-3">
           <div className="bg-slate-100 p-1 rounded-xl flex gap-1">
             <Button 
-              variant={viewMode === 'grid' ? 'white' : 'ghost'} 
+              variant={viewMode === 'grid' ? 'outline' : 'ghost'} 
               size="icon" 
               className="h-9 w-9"
               onClick={() => setViewMode('grid')}
@@ -82,7 +82,7 @@ export default function CreatorMarketplace() {
               <LayoutGrid className="h-4 w-4" />
             </Button>
             <Button 
-              variant={viewMode === 'list' ? 'white' : 'ghost'} 
+              variant={viewMode === 'list' ? 'outline' : 'ghost'} 
               size="icon" 
               className="h-9 w-9"
               onClick={() => setViewMode('list')}

@@ -3,15 +3,15 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Plus, 
-  Search, 
-  Filter, 
-  LayoutGrid, 
-  List, 
-  Star, 
-  Eye, 
-  EyeOff, 
+import {
+  Plus,
+  Search,
+  Filter,
+  LayoutGrid,
+  List,
+  Star,
+  Eye,
+  EyeOff,
   MoreVertical,
   ArrowUpRight,
   TrendingUp,
@@ -35,10 +35,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
@@ -46,34 +46,34 @@ import { AddPortfolioItemDialog } from '@/components/dashboard/creator/AddPortfo
 import { cn } from '@/lib/utils';
 
 export default function CreatorPortfolioPage() {
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'ALL' | 'FEATURED' | 'PRIVATE'>('ALL');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   // 1. Fetch Portfolio Items
   const portfolioQuery = useMemo(() => {
-    if (!userProfile?.id) return null;
+    if (!currentUser?.id) return null;
     return query(
-      collection(db, 'portfolioItems'),
-      where('userId', '==', userProfile.id),
+      collection(db!, 'portfolioItems'),
+      where('userId', '==', currentUser.id),
       orderBy('createdAt', 'desc')
     );
-  }, [db, userProfile?.id]);
+  }, [db!, currentUser?.id]);
 
   const { data: items, loading } = useCollection<PortfolioItem>(portfolioQuery);
 
   const filteredItems = useMemo(() => {
     return items.filter(item => {
-      const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           item.platform.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesTab = activeTab === 'ALL' 
-        ? true 
-        : activeTab === 'FEATURED' 
-          ? item.isFeatured 
+      const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.platform.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesTab = activeTab === 'ALL'
+        ? true
+        : activeTab === 'FEATURED'
+          ? item.isFeatured
           : !item.isPublic;
       return matchesSearch && matchesTab;
     });
@@ -81,7 +81,7 @@ export default function CreatorPortfolioPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteDoc(doc(db, 'portfolioItems', id));
+      await deleteDoc(doc(db!, 'portfolioItems', id));
       toast({ title: "Item deleted", description: "Your portfolio has been updated." });
     } catch (err) {
       toast({ variant: "destructive", title: "Error", description: "Failed to delete item." });
@@ -90,7 +90,7 @@ export default function CreatorPortfolioPage() {
 
   const toggleFeatured = async (id: string, current: boolean) => {
     try {
-      await updateDoc(doc(db, 'portfolioItems', id), { isFeatured: !current });
+      await updateDoc(doc(db!, 'portfolioItems', id), { isFeatured: !current });
       toast({ title: !current ? "Pinned to top" : "Removed from featured" });
     } catch (err) {
       console.error(err);
@@ -99,7 +99,7 @@ export default function CreatorPortfolioPage() {
 
   const toggleVisibility = async (id: string, current: boolean) => {
     try {
-      await updateDoc(doc(db, 'portfolioItems', id), { isPublic: !current });
+      await updateDoc(doc(db!, 'portfolioItems', id), { isPublic: !current });
       toast({ title: !current ? "Now visible to brands" : "Hidden from profile" });
     } catch (err) {
       console.error(err);
@@ -116,11 +116,11 @@ export default function CreatorPortfolioPage() {
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="rounded-xl font-bold bg-white" asChild>
-            <a href={`/creator/${userProfile?.displayName?.toLowerCase().replace(' ', '_')}`} target="_blank">
+            <a href={`/creator/${currentUser?.displayName?.toLowerCase().replace(' ', '_')}`} target="_blank">
               <Eye className="mr-2 h-4 w-4" /> View Public Profile
             </a>
           </Button>
-          <Button 
+          <Button
             className="rounded-xl font-bold shadow-lg shadow-primary/20 h-11 px-6"
             onClick={() => setIsAddDialogOpen(true)}
           >
@@ -177,7 +177,7 @@ export default function CreatorPortfolioPage() {
           ].map((tab) => (
             <Button
               key={tab.id}
-              variant={activeTab === tab.id ? 'white' : 'ghost'}
+              variant={activeTab === tab.id ? 'outline' : 'ghost'}
               size="sm"
               className={cn(
                 "rounded-xl font-bold px-6 h-10",
@@ -191,8 +191,8 @@ export default function CreatorPortfolioPage() {
         </div>
         <div className="relative w-full md:w-72">
           <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-          <Input 
-            placeholder="Search title or platform..." 
+          <Input
+            placeholder="Search title or platform..."
             className="pl-10 h-11 rounded-xl bg-white border-slate-200"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -210,9 +210,9 @@ export default function CreatorPortfolioPage() {
         <div className="columns-1 sm:columns-2 lg:columns-3 gap-6 space-y-6">
           <AnimatePresence mode="popLayout">
             {filteredItems.map((item, idx) => (
-              <PortfolioItemCard 
-                key={item.id} 
-                item={item} 
+              <PortfolioItemCard
+                key={item.id}
+                item={item}
                 index={idx}
                 onDelete={() => handleDelete(item.id)}
                 onToggleFeatured={() => toggleFeatured(item.id, item.isFeatured)}
@@ -230,7 +230,7 @@ export default function CreatorPortfolioPage() {
           <p className="text-slate-500 mt-2 max-w-sm mx-auto font-medium">
             Upload your best collaborations to attract higher-paying brand campaigns.
           </p>
-          <Button 
+          <Button
             className="mt-10 rounded-full px-10 h-14 text-lg font-black shadow-xl shadow-primary/20"
             onClick={() => setIsAddDialogOpen(true)}
           >
@@ -239,16 +239,16 @@ export default function CreatorPortfolioPage() {
         </div>
       )}
 
-      <AddPortfolioItemDialog 
-        open={isAddDialogOpen} 
-        onOpenChange={setIsAddDialogOpen} 
+      <AddPortfolioItemDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
       />
     </div>
   );
 }
 
-function PortfolioItemCard({ item, index, onDelete, onToggleFeatured, onToggleVisibility }: { 
-  item: PortfolioItem, 
+function PortfolioItemCard({ item, index, onDelete, onToggleFeatured, onToggleVisibility }: {
+  item: PortfolioItem,
   index: number,
   onDelete: () => void,
   onToggleFeatured: () => void,
@@ -267,16 +267,16 @@ function PortfolioItemCard({ item, index, onDelete, onToggleFeatured, onToggleVi
         <CardContent className="p-0 relative">
           {/* Media Preview */}
           <div className="relative aspect-video sm:aspect-square lg:aspect-[4/5] overflow-hidden group-hover:cursor-pointer">
-            <img 
-              src={item.mediaUrl} 
-              alt={item.title} 
+            <img
+              src={item.mediaUrl}
+              alt={item.title}
               className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
               <Button size="icon" variant="secondary" className="rounded-full h-10 w-10">
                 <Edit2 className="h-4 w-4" />
               </Button>
-              <Button size="icon" variant="destructive" className="rounded-full h-10 w-10" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
+              <Button size="icon" variant="danger" className="rounded-full h-10 w-10" onClick={(e) => { e.stopPropagation(); onDelete(); }}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>

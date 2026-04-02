@@ -3,14 +3,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  CreditCard, 
-  Zap, 
-  CheckCircle2, 
-  Clock, 
-  Download, 
-  ArrowUpRight, 
-  ShieldCheck, 
+import {
+  CreditCard,
+  Zap,
+  CheckCircle2,
+  Clock,
+  Download,
+  ArrowUpRight,
+  ShieldCheck,
   AlertCircle,
   FileText,
   Loader2,
@@ -31,17 +31,17 @@ import { cn } from '@/lib/utils';
 import { PlanTier } from '@/types/billing';
 
 export default function BrandBillingDashboard() {
-  const { userProfile } = useAuth();
-  const { 
-    plans, 
-    subscription, 
-    invoices, 
-    fetchPlans, 
-    fetchSubscription, 
-    fetchInvoices, 
-    subscribe, 
-    cancel, 
-    loading 
+  const { currentUser } = useAuth();
+  const {
+    plans,
+    subscription,
+    invoices,
+    fetchPlans,
+    fetchSubscription,
+    fetchInvoices,
+    subscribe,
+    cancel,
+    loading
   } = useBillingStore();
   const { toast } = useToast();
   const [isAnnual, setIsAnnual] = useState(false);
@@ -93,7 +93,7 @@ export default function BrandBillingDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Plans & Usage */}
         <div className="lg:col-span-8 space-y-8">
-          
+
           {/* Current Plan Card */}
           <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[2.5rem] overflow-hidden bg-white ring-1 ring-slate-100">
             <CardHeader className="p-8 border-b bg-slate-50/50 flex flex-row items-center justify-between">
@@ -105,8 +105,8 @@ export default function BrandBillingDashboard() {
                   </Badge>
                 </div>
                 <CardDescription>
-                  {subscription?.cancelAtPeriodEnd 
-                    ? `Expiring on ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}` 
+                  {subscription?.cancelAtPeriodEnd
+                    ? `Expiring on ${new Date(subscription.currentPeriodEnd).toLocaleDateString()}`
                     : `Next renewal: ${new Date(subscription?.currentPeriodEnd || '').toLocaleDateString()} for ₹${activePlan?.monthlyPrice.toLocaleString()}/mo.`}
                 </CardDescription>
               </div>
@@ -227,7 +227,7 @@ export default function BrandBillingDashboard() {
 
         {/* Right Column: Cards & Tips */}
         <aside className="lg:col-span-4 space-y-8">
-          
+
           <Card className="border-none shadow-sm rounded-3xl overflow-hidden bg-white">
             <CardHeader className="bg-slate-50/50 border-b p-6 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">

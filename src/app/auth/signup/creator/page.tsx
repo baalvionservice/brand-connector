@@ -102,7 +102,7 @@ export default function CreatorSignupPage() {
   async function onSubmit(values: CreatorSignupValues) {
     setIsLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const userCredential = await createUserWithEmailAndPassword(auth!, values.email, values.password);
       const user = userCredential.user;
 
       await updateProfile(user, { displayName: values.fullName });
@@ -119,7 +119,7 @@ export default function CreatorSignupPage() {
         updatedAt: new Date().toISOString()
       };
 
-      setDoc(doc(db, 'users', user.uid), userProfileData).catch(async (err) => {
+      setDoc(doc(db!, 'users', user.uid), userProfileData).catch(async (err) => {
         errorEmitter.emitPermissionError(new FirestorePermissionError({
           path: `/users/${user.uid}`,
           operation: 'create',
@@ -145,7 +145,7 @@ export default function CreatorSignupPage() {
         updatedAt: new Date().toISOString()
       };
 
-      setDoc(doc(db, 'creators', creatorData.id), creatorData).catch(async (err) => {
+      setDoc(doc(db!, 'creators', creatorData.id), creatorData).catch(async (err) => {
         errorEmitter.emitPermissionError(new FirestorePermissionError({
           path: `/creators/${creatorData.id}`,
           operation: 'create',

@@ -2,17 +2,17 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Trophy, 
-  Target, 
-  IndianRupee, 
-  TrendingUp, 
-  Briefcase, 
-  Filter, 
-  Search, 
-  Zap, 
-  Medal, 
-  Crown, 
+import {
+  Trophy,
+  Target,
+  IndianRupee,
+  TrendingUp,
+  Briefcase,
+  Filter,
+  Search,
+  Zap,
+  Medal,
+  Crown,
   ChevronRight,
   ArrowUpRight,
   Star,
@@ -31,21 +31,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import { useAuth } from '@/contexts/AuthContext';
 import { CREATOR_NICHES, SOCIAL_PLATFORMS } from '@/constants';
@@ -66,7 +66,7 @@ const MOCK_LEADERBOARD = [
 ];
 
 export default function LeaderboardPage() {
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const [metric, setMetric] = useState<'score' | 'campaigns' | 'earnings' | 'er'>('score');
   const [niche, setNiche] = useState('all');
   const [platform, setPlatform] = useState('all');
@@ -114,7 +114,7 @@ export default function LeaderboardPage() {
     <div className="min-h-screen bg-slate-50 pb-20">
       {/* Dynamic Background Decoration */}
       <div className="absolute top-0 left-0 right-0 h-[500px] bg-gradient-to-b from-primary/10 to-transparent -z-10" />
-      
+
       <div className="container px-4 md:px-8 pt-12 max-w-7xl mx-auto space-y-12">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
@@ -192,7 +192,7 @@ export default function LeaderboardPage() {
               </div>
             </div>
 
-            {userProfile?.role === 'CREATOR' && (
+            {currentUser?.role === 'CREATOR' && (
               <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 flex items-center gap-4 w-full lg:w-auto">
                 <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
                   <Star className="h-5 w-5 text-white fill-current" />
@@ -212,10 +212,10 @@ export default function LeaderboardPage() {
         {/* Podium Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-end pt-12 pb-8">
           {/* Silver - Rank 2 */}
-          <PodiumCard 
-            creator={topThree[1]} 
-            rank={2} 
-            metric={metric} 
+          <PodiumCard
+            creator={topThree[1]}
+            rank={2}
+            metric={metric}
             metricLabel={getMetricLabel(metric)}
             formatVal={formatMetricValue}
             icon={<Medal className="h-6 w-6 text-slate-400 fill-slate-100" />}
@@ -224,10 +224,10 @@ export default function LeaderboardPage() {
           />
 
           {/* Gold - Rank 1 */}
-          <PodiumCard 
-            creator={topThree[0]} 
-            rank={1} 
-            metric={metric} 
+          <PodiumCard
+            creator={topThree[0]}
+            rank={1}
+            metric={metric}
             metricLabel={getMetricLabel(metric)}
             formatVal={formatMetricValue}
             icon={<Crown className="h-10 w-10 text-yellow-500 fill-yellow-200" />}
@@ -237,10 +237,10 @@ export default function LeaderboardPage() {
           />
 
           {/* Bronze - Rank 3 */}
-          <PodiumCard 
-            creator={topThree[2]} 
-            rank={3} 
-            metric={metric} 
+          <PodiumCard
+            creator={topThree[2]}
+            rank={3}
+            metric={metric}
             metricLabel={getMetricLabel(metric)}
             formatVal={formatMetricValue}
             icon={<Medal className="h-6 w-6 text-orange-600 fill-orange-100" />}
@@ -329,23 +329,23 @@ export default function LeaderboardPage() {
   );
 }
 
-function PodiumCard({ 
-  creator, 
-  rank, 
-  metric, 
-  metricLabel, 
-  formatVal, 
-  icon, 
-  color, 
+function PodiumCard({
+  creator,
+  rank,
+  metric,
+  metricLabel,
+  formatVal,
+  icon,
+  color,
   isGold = false,
-  delay = 0 
-}: { 
-  creator: any, 
-  rank: number, 
-  metric: string, 
-  metricLabel: string, 
-  formatVal: any, 
-  icon: React.ReactNode, 
+  delay = 0
+}: {
+  creator: any,
+  rank: number,
+  metric: string,
+  metricLabel: string,
+  formatVal: any,
+  icon: React.ReactNode,
   color: string,
   isGold?: boolean,
   delay?: number

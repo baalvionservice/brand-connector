@@ -1,64 +1,79 @@
+export type UserRole = "BRAND" | "CREATOR" | "ADMIN";
 
-export type UserRole = 'BRAND' | 'CREATOR' | 'ADMIN';
-
-export type BrandMemberRole = 'OWNER' | 'MANAGER' | 'REVIEWER' | 'VIEWER';
+export type BrandMemberRole = "OWNER" | "MANAGER" | "REVIEWER" | "VIEWER";
 
 export enum CampaignStatus {
-  DRAFT = 'DRAFT',
-  PENDING_REVIEW = 'PENDING_REVIEW',
-  ACTIVE = 'ACTIVE',
-  PAUSED = 'PAUSED',
-  COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED',
-  REJECTED = 'REJECTED'
+  DRAFT = "DRAFT",
+  PENDING_REVIEW = "PENDING_REVIEW",
+  ACTIVE = "ACTIVE",
+  PAUSED = "PAUSED",
+  COMPLETED = "COMPLETED",
+  CANCELLED = "CANCELLED",
+  REJECTED = "REJECTED",
 }
 
 export enum ApplicationStatus {
-  PENDING = 'PENDING',
-  REVIEWING = 'REVIEWING',
-  ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
-  WITHDRAWN = 'WITHDRAWN'
+  PENDING = "PENDING",
+  REVIEWING = "REVIEWING",
+  ACCEPTED = "ACCEPTED",
+  REJECTED = "REJECTED",
+  WITHDRAWN = "WITHDRAWN",
 }
 
 export enum InviteStatus {
-  SENT = 'SENT',
-  OPENED = 'OPENED',
-  ACCEPTED = 'ACCEPTED',
-  DECLINED = 'DECLINED'
+  SENT = "SENT",
+  OPENED = "OPENED",
+  ACCEPTED = "ACCEPTED",
+  DECLINED = "DECLINED",
 }
 
 export enum DeliverableStatus {
-  PENDING = 'PENDING',
-  SUBMITTED = 'SUBMITTED',
-  REVISION_REQUESTED = 'REVISION_REQUESTED',
-  APPROVED = 'APPROVED',
-  REMOVED = 'REMOVED'
+  PENDING = "PENDING",
+  SUBMITTED = "SUBMITTED",
+  REVISION_REQUESTED = "REVISION_REQUESTED",
+  APPROVED = "APPROVED",
+  REMOVED = "REMOVED",
 }
 
 export enum DisputeStatus {
-  FILED = 'FILED',
-  UNDER_REVIEW = 'UNDER_REVIEW',
-  ADMIN_DECISION = 'ADMIN_DECISION',
-  RESOLVED = 'RESOLVED'
+  FILED = "FILED",
+  UNDER_REVIEW = "UNDER_REVIEW",
+  ADMIN_DECISION = "ADMIN_DECISION",
+  RESOLVED = "RESOLVED",
+}
+
+export interface Dispute {
+  id: string;
+  campaignId: string;
+  creatorId: string;
+  brandId: string;
+  deliverableId?: string;
+  category: string;
+  reason: string;
+  proposedResolution: string;
+  evidenceUrls: string[];
+  status: DisputeStatus;
+  createdAt: string;
+  updatedAt: string;
+  adminNotes?: string;
 }
 
 export enum TransactionStatus {
-  PENDING = 'PENDING',
-  COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED',
-  REFUNDED = 'REFUNDED'
+  PENDING = "PENDING",
+  COMPLETED = "COMPLETED",
+  FAILED = "FAILED",
+  REFUNDED = "REFUNDED",
 }
 
 export enum OnboardingStatus {
-  PENDING = 'PENDING',
-  IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED'
+  PENDING = "PENDING",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
 }
 
-export type SupportCategory = 'TECHNICAL' | 'BILLING' | 'CAMPAIGN' | 'OTHER';
-export type SupportPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
-export type SupportStatus = 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+export type SupportCategory = "TECHNICAL" | "BILLING" | "CAMPAIGN" | "OTHER";
+export type SupportPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+export type SupportStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
 
 export interface User {
   id: string;
@@ -67,7 +82,7 @@ export interface User {
   displayName: string;
   photoURL?: string;
   phone?: string;
-  status?: 'ACTIVE' | 'SUSPENDED' | 'PENDING';
+  status?: "ACTIVE" | "SUSPENDED" | "PENDING";
   isVerified?: boolean;
   preferredCurrency?: string;
   notificationPreferences?: {
@@ -116,7 +131,7 @@ export interface PackageDeal {
 
 export interface AuthenticityReport {
   score: number;
-  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+  riskLevel: "LOW" | "MEDIUM" | "HIGH";
   flags: string[];
   breakdown: {
     growth: number;
@@ -139,18 +154,18 @@ export interface CreatorProfile {
   packages?: PackageDeal[];
   location?: string;
   rating: number;
-  visibility?: 'PUBLIC' | 'PRIVATE';
+  visibility?: "PUBLIC" | "PRIVATE";
   isVerified?: boolean;
-  verificationStatus?: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'FLAGGED';
+  verificationStatus?: "UNVERIFIED" | "PENDING" | "VERIFIED" | "FLAGGED";
   authenticityScore?: number;
   authenticityReport?: AuthenticityReport;
   privacySettings?: {
-    canMessage: 'anyone' | 'verified' | 'invited';
-    canSeeRates: 'anyone' | 'verified';
+    canMessage: "anyone" | "verified" | "invited";
+    canSeeRates: "anyone" | "verified";
   };
   payoutAccounts?: Array<{
     id: string;
-    type: 'UPI' | 'BANK';
+    type: "UPI" | "BANK";
     name: string;
     details: string;
     isPrimary: boolean;
@@ -158,7 +173,7 @@ export interface CreatorProfile {
   onboardingStatus: OnboardingStatus;
   onboardingStep: number;
   payoutMethod?: {
-    type: 'UPI' | 'BANK';
+    type: "UPI" | "BANK";
     details: Record<string, string>;
   };
   portfolioSamples?: string[];
@@ -172,7 +187,7 @@ export interface PortfolioItem {
   title: string;
   description: string;
   mediaUrl: string;
-  mediaType: 'IMAGE' | 'VIDEO';
+  mediaType: "IMAGE" | "VIDEO";
   platform: string;
   campaignType: string;
   results: string;
@@ -182,7 +197,12 @@ export interface PortfolioItem {
   createdAt: string;
 }
 
-export type SubscriptionStatus = 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | 'TRIALING' | 'INCOMPLETE';
+export type SubscriptionStatus =
+  | "ACTIVE"
+  | "PAST_DUE"
+  | "CANCELLED"
+  | "TRIALING"
+  | "INCOMPLETE";
 
 export interface BrandProfile {
   id: string;
@@ -191,7 +211,7 @@ export interface BrandProfile {
   industry: string;
   website: string;
   teamSize: string;
-  plan: 'STARTER' | 'GROWTH' | 'ENTERPRISE';
+  plan: "STARTER" | "GROWTH" | "ENTERPRISE";
   subscriptionStatus?: SubscriptionStatus;
   currentPeriodEnd?: string;
   cancelAtPeriodEnd?: boolean;
@@ -201,7 +221,7 @@ export interface BrandProfile {
   onboardingStep: number;
   currency?: string;
   billingMethod?: {
-    type: 'CARD';
+    type: "CARD";
     last4: string;
     brand: string;
   };
@@ -212,7 +232,7 @@ export interface BrandProfile {
   };
   gstNumber?: string;
   billingAddress?: string;
-  verificationStatus?: 'UNVERIFIED' | 'PENDING' | 'VERIFIED';
+  verificationStatus?: "UNVERIFIED" | "PENDING" | "VERIFIED";
   apiKeys?: string[];
   defaultBriefTemplate?: string;
   createdAt: string;
@@ -248,7 +268,7 @@ export interface Campaign {
   handles?: string[];
   links?: string[];
   mandatoryMentions?: string;
-  creatorTier?: 'NANO' | 'MICRO' | 'MID' | 'MACRO';
+  creatorTier?: "NANO" | "MICRO" | "MID" | "MACRO";
   minFollowers?: number;
   maxFollowers?: number;
   minEngagementRate?: number;
@@ -302,23 +322,33 @@ export interface Transaction {
   userId: string;
   campaignId?: string;
   amount: number;
-  type: 'DEPOSIT' | 'WITHDRAWAL' | 'PAYMENT' | 'PAYOUT' | 'CREDIT' | 'DEBIT' | 'ESCROW_LOCK' | 'ESCROW_RELEASE' | 'FEE' | 'REFUND';
+  type:
+    | "DEPOSIT"
+    | "WITHDRAWAL"
+    | "PAYMENT"
+    | "PAYOUT"
+    | "CREDIT"
+    | "DEBIT"
+    | "ESCROW_LOCK"
+    | "ESCROW_RELEASE"
+    | "FEE"
+    | "REFUND";
   status: TransactionStatus;
   description: string;
   receiptUrl?: string;
   createdAt: string;
 }
 
-export type NotificationType = 
-  | 'NEW_MATCH' 
-  | 'APPLICATION_UPDATE' 
-  | 'PAYMENT_RECEIVED' 
-  | 'DEADLINE_REMINDER' 
-  | 'DISPUTE_UPDATE' 
-  | 'NEW_MESSAGE' 
-  | 'SYSTEM'
-  | 'PROFILE_VIEW'
-  | 'CAMPAIGN_INVITE';
+export type NotificationType =
+  | "NEW_MATCH"
+  | "APPLICATION_UPDATE"
+  | "PAYMENT_RECEIVED"
+  | "DEADLINE_REMINDER"
+  | "DISPUTE_UPDATE"
+  | "NEW_MESSAGE"
+  | "SYSTEM"
+  | "PROFILE_VIEW"
+  | "CAMPAIGN_INVITE";
 
 export interface Notification {
   id: string;
@@ -338,10 +368,10 @@ export interface Broadcast {
   title: string;
   body: string;
   cta?: string;
-  audience: 'ALL' | 'BRANDS' | 'CREATORS' | 'NICHE' | 'PLAN';
+  audience: "ALL" | "BRANDS" | "CREATORS" | "NICHE" | "PLAN";
   audienceValue?: string;
-  type: 'IN_APP' | 'EMAIL' | 'BOTH';
-  status: 'SENT' | 'SCHEDULED';
+  type: "IN_APP" | "EMAIL" | "BOTH";
+  status: "SENT" | "SCHEDULED";
   sentAt: string;
   stats: {
     recipients: number;
@@ -369,7 +399,7 @@ export interface CreatorNote {
   campaignTitle: string;
   title: string;
   content: string;
-  type: 'AI_IDEA' | 'MANUAL';
+  type: "AI_IDEA" | "MANUAL";
   createdAt: string;
 }
 
@@ -380,13 +410,17 @@ export type FlaggedContent = {
   creatorId: string;
   brandId: string;
   reason: string;
-  flagType: 'USER_REPORT' | 'AUTO_KEYWORD' | 'AI_DETECTION';
+  flagType: "USER_REPORT" | "AUTO_KEYWORD" | "AI_DETECTION";
   riskFactor: number;
-  status: 'PENDING' | 'CLEARED' | 'REMOVED';
+  status: "PENDING" | "CLEARED" | "REMOVED";
   createdAt: string;
 };
 
-export type FraudAlertType = 'FOLLOWER_SPIKE' | 'HIGH_ENGAGEMENT' | 'MULTI_ACCOUNT_IP' | 'SUSPICIOUS_PAYOUT';
+export type FraudAlertType =
+  | "FOLLOWER_SPIKE"
+  | "HIGH_ENGAGEMENT"
+  | "MULTI_ACCOUNT_IP"
+  | "SUSPICIOUS_PAYOUT";
 
 export interface FraudAlert {
   id: string;
@@ -396,7 +430,7 @@ export interface FraudAlert {
   type: FraudAlertType;
   riskScore: number;
   description: string;
-  status: 'PENDING' | 'UNDER_REVIEW' | 'RESOLVED' | 'DISMISSED';
+  status: "PENDING" | "UNDER_REVIEW" | "RESOLVED" | "DISMISSED";
   metadata: {
     ipAddress?: string;
     delta?: string;
@@ -406,7 +440,7 @@ export interface FraudAlert {
   createdAt: string;
   updatedAt: string;
   adminNote?: string;
-  feedback?: 'ACCURATE' | 'FALSE_POSITIVE' | 'INCONCLUSIVE';
+  feedback?: "ACCURATE" | "FALSE_POSITIVE" | "INCONCLUSIVE";
 }
 
 export interface ChatMessage {
@@ -414,7 +448,7 @@ export interface ChatMessage {
   senderId: string;
   text: string;
   mediaUrl?: string;
-  mediaType?: 'IMAGE' | 'DOCUMENT';
+  mediaType?: "IMAGE" | "DOCUMENT";
   readBy: string[];
   createdAt: string;
 }

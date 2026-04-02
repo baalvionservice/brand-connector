@@ -4,14 +4,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Rocket, 
-  CheckCircle2, 
-  Instagram, 
-  Youtube, 
-  Music2, 
-  Plus, 
-  ArrowRight, 
+import {
+  Rocket,
+  CheckCircle2,
+  Instagram,
+  Youtube,
+  Music2,
+  Plus,
+  ArrowRight,
   ArrowLeft,
   Loader2,
   Video,
@@ -46,19 +46,19 @@ const STEPS = [
 ];
 
 export default function CreatorOnboardingPage() {
-  const { userProfile, loading: authLoading } = useAuth();
+  const { currentUser, loading: authLoading } = useAuth();
   const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
-  const creatorId = userProfile?.id ? `creator_${userProfile.id}` : null;
+  const creatorId = currentUser?.id ? `creator_${currentUser.id}` : null;
   const { data: creator, loading: creatorLoading } = useDoc<CreatorProfile>(
     creatorId ? `creators/${creatorId}` : null
   );
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Local state for forms
   const [payoutType, setPayoutType] = useState<'UPI' | 'BANK'>('UPI');
   const [samples, setSamples] = useState<string[]>([]);
@@ -71,7 +71,7 @@ export default function CreatorOnboardingPage() {
 
   const updateOnboarding = async (nextStep: number, isFinal = false) => {
     if (!creatorId) return;
-    
+
     setIsSaving(true);
     try {
       const updateData: Partial<CreatorProfile> = {
@@ -88,8 +88,8 @@ export default function CreatorOnboardingPage() {
         updateData.portfolioSamples = samples.length > 0 ? samples : ['https://picsum.photos/seed/sample1/400/400', 'https://picsum.photos/seed/sample2/400/400'];
       }
 
-      await updateDoc(doc(db, 'creators', creatorId), updateData);
-      
+      await updateDoc(doc(db!, 'creators', creatorId), updateData);
+
       if (isFinal) {
         // Sync onboarded state to cookies for middleware
         setAuthCookies({ onboarded: true });
@@ -139,8 +139,8 @@ export default function CreatorOnboardingPage() {
               <div key={s.id} className="flex flex-col items-center gap-2">
                 <div className={cn(
                   "h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all duration-300",
-                  currentStep === s.id ? "border-primary bg-primary/5 text-primary scale-110 shadow-md" : 
-                  currentStep > s.id ? "border-green-500 bg-green-50 text-green-500" : "border-slate-200 bg-white text-slate-400"
+                  currentStep === s.id ? "border-primary bg-primary/5 text-primary scale-110 shadow-md" :
+                    currentStep > s.id ? "border-green-500 bg-green-50 text-green-500" : "border-slate-200 bg-white text-slate-400"
                 )}>
                   {currentStep > s.id ? <CheckCircle2 className="h-5 w-5" /> : <s.icon className="h-5 w-5" />}
                 </div>
@@ -181,7 +181,7 @@ export default function CreatorOnboardingPage() {
                   <div className="space-y-4">
                     <h2 className="text-2xl font-bold">You're one step away from global brands</h2>
                     <p className="text-slate-500 leading-relaxed">
-                      Baalvion is designed to automate your career. By completing this setup, you allow our AI 
+                      Baalvion is designed to automate your career. By completing this setup, you allow our AI
                       to pitch you to the campaigns that matter most to your audience.
                     </p>
                   </div>
@@ -276,8 +276,8 @@ export default function CreatorOnboardingPage() {
                   <div className="grid grid-cols-2 gap-6">
                     {[1, 2].map((i) => (
                       <div key={i} className="aspect-square rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center bg-slate-50 group hover:border-primary transition-colors cursor-pointer relative overflow-hidden">
-                        {samples[i-1] ? (
-                          <img src={samples[i-1]} className="absolute inset-0 w-full h-full object-cover" />
+                        {samples[i - 1] ? (
+                          <img src={samples[i - 1]} className="absolute inset-0 w-full h-full object-cover" />
                         ) : (
                           <>
                             <div className="h-12 w-12 rounded-2xl bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform mb-4">
@@ -353,9 +353,9 @@ export default function CreatorOnboardingPage() {
           </CardContent>
 
           <CardFooter className="bg-slate-50/50 border-t p-8 flex justify-between items-center">
-            <Button 
-              variant="ghost" 
-              onClick={prevStep} 
+            <Button
+              variant="ghost"
+              onClick={prevStep}
               disabled={currentStep === 1 || isSaving}
               className="rounded-xl font-bold h-12 px-6"
             >
@@ -365,8 +365,8 @@ export default function CreatorOnboardingPage() {
             <div className="flex items-center gap-4">
               <span className="text-xs font-black text-slate-400 uppercase tracking-widest hidden sm:block">Step {currentStep} of {STEPS.length}</span>
               {currentStep < STEPS.length ? (
-                <Button 
-                  onClick={nextStep} 
+                <Button
+                  onClick={nextStep}
                   disabled={isSaving}
                   className="rounded-xl font-bold h-12 px-10 shadow-xl shadow-primary/20"
                 >
@@ -374,8 +374,8 @@ export default function CreatorOnboardingPage() {
                   Next Step <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
-                <Button 
-                  onClick={finishOnboarding} 
+                <Button
+                  onClick={finishOnboarding}
                   disabled={isSaving}
                   className="rounded-xl font-bold h-12 px-10 bg-green-600 hover:bg-green-700 text-white shadow-xl shadow-green-600/20"
                 >

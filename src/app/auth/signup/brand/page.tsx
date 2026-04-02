@@ -130,7 +130,7 @@ export default function BrandSignupPage() {
     setIsLoading(true);
     try {
       // 1. Create Firebase Auth User
-      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.password);
+      const userCredential = await createUserWithEmailAndPassword(auth!, values.email, values.password);
       const user = userCredential.user;
 
       await updateProfile(user, { displayName: values.fullName });
@@ -149,7 +149,7 @@ export default function BrandSignupPage() {
         updatedAt: new Date().toISOString()
       };
 
-      setDoc(doc(db, 'users', user.uid), userProfileData).catch(async (err) => {
+      setDoc(doc(db!, 'users', user.uid), userProfileData).catch(async (err) => {
         errorEmitter.emitPermissionError(new FirestorePermissionError({
           path: `/users/${user.uid}`,
           operation: 'create',
@@ -170,7 +170,7 @@ export default function BrandSignupPage() {
         updatedAt: new Date().toISOString()
       };
 
-      setDoc(doc(db, 'brands', brandData.id), brandData).catch(async (err) => {
+      setDoc(doc(db!, 'brands', brandData.id), brandData).catch(async (err) => {
         errorEmitter.emitPermissionError(new FirestorePermissionError({
           path: `/brands/${brandData.id}`,
           operation: 'create',

@@ -4,12 +4,12 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Rocket, 
-  CheckCircle2, 
-  CreditCard, 
-  Plus, 
-  ArrowRight, 
+import {
+  Rocket,
+  CheckCircle2,
+  CreditCard,
+  Plus,
+  ArrowRight,
   ArrowLeft,
   Loader2,
   Building2,
@@ -37,6 +37,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
+import { Badge } from '@/components/ui';
 
 const STEPS = [
   { id: 1, title: 'Guidelines', icon: Star },
@@ -46,12 +47,12 @@ const STEPS = [
 ];
 
 export default function BrandOnboardingPage() {
-  const { userProfile, loading: authLoading } = useAuth();
+  const { currentUser, loading: authLoading } = useAuth();
   const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
-  const brandId = userProfile?.id ? `brand_${userProfile.id}` : null;
+  const brandId = currentUser?.id ? `brand_${currentUser.id}` : null;
   const { data: brand, loading: brandLoading } = useDoc<BrandProfile>(
     brandId ? `brands/${brandId}` : null
   );
@@ -82,7 +83,7 @@ export default function BrandOnboardingPage() {
 
   const updateOnboarding = async (nextStep: number, isFinal = false) => {
     if (!brandId) return;
-    
+
     setIsSaving(true);
     try {
       const updateData: Partial<BrandProfile> = {
@@ -96,10 +97,10 @@ export default function BrandOnboardingPage() {
         updateData.billingMethod = { type: 'CARD', last4: '4242', brand: 'Visa' };
       }
 
-      await updateDoc(doc(db, 'brands', brandId), updateData);
-      
+      await updateDoc(doc(db!, 'brands', brandId), updateData);
+
       if (currentStep === 3 && campaignTitle) {
-        await addDoc(collection(db, 'campaigns'), {
+        await addDoc(collection(db!, 'campaigns'), {
           brandId: brandId,
           title: campaignTitle,
           budget: Number(campaignBudget),
@@ -195,8 +196,8 @@ export default function BrandOnboardingPage() {
               <div key={s.id} className="flex flex-col items-center gap-2">
                 <div className={cn(
                   "h-10 w-10 rounded-full flex items-center justify-center border-2 transition-all duration-300",
-                  currentStep === s.id ? "border-primary bg-primary/5 text-primary scale-110 shadow-md" : 
-                  currentStep > s.id ? "border-green-500 bg-green-50 text-green-500" : "border-slate-200 bg-white text-slate-400"
+                  currentStep === s.id ? "border-primary bg-primary/5 text-primary scale-110 shadow-md" :
+                    currentStep > s.id ? "border-green-500 bg-green-50 text-green-500" : "border-slate-200 bg-white text-slate-400"
                 )}>
                   {currentStep > s.id ? <CheckCircle2 className="h-5 w-5" /> : <s.icon className="h-5 w-5" />}
                 </div>
@@ -237,8 +238,8 @@ export default function BrandOnboardingPage() {
                     </div>
                     <div className="space-y-2">
                       <Label className="font-bold">Guidelines Summary</Label>
-                      <Textarea 
-                        placeholder="e.g. Minimalist, high-energy, focuses on sustainability, avoid dark backgrounds..." 
+                      <Textarea
+                        placeholder="e.g. Minimalist, high-energy, focuses on sustainability, avoid dark backgrounds..."
                         className="rounded-xl min-h-[120px] resize-none"
                         value={guidelines}
                         onChange={(e) => setGuidelines(e.target.value)}
@@ -305,8 +306,8 @@ export default function BrandOnboardingPage() {
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <Label className="font-bold">Campaign Title</Label>
-                      <Input 
-                        placeholder="e.g. Summer Collection Launch 2024" 
+                      <Input
+                        placeholder="e.g. Summer Collection Launch 2024"
                         className="rounded-xl h-12"
                         value={campaignTitle}
                         onChange={(e) => setCampaignTitle(e.target.value)}
@@ -316,9 +317,9 @@ export default function BrandOnboardingPage() {
                       <Label className="font-bold">Estimated Budget</Label>
                       <div className="relative">
                         <IndianRupee className="absolute left-3 top-3.5 h-5 w-5 text-slate-400" />
-                        <Input 
-                          type="number" 
-                          placeholder="50,000" 
+                        <Input
+                          type="number"
+                          placeholder="50,000"
                           className="pl-10 rounded-xl h-12"
                           value={campaignBudget}
                           onChange={(e) => setCampaignBudget(e.target.value)}
@@ -346,8 +347,8 @@ export default function BrandOnboardingPage() {
                     <div className="space-y-2">
                       <Label className="font-bold">Colleague Email</Label>
                       <div className="flex gap-2">
-                        <Input 
-                          placeholder="manager@brand.com" 
+                        <Input
+                          placeholder="manager@brand.com"
                           className="rounded-xl h-12"
                           value={teamEmail}
                           onChange={(e) => setTeamEmail(e.target.value)}
@@ -358,7 +359,7 @@ export default function BrandOnboardingPage() {
                     <div className="space-y-3 pt-4">
                       <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Added Members</p>
                       <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border">
-                        <span className="text-sm font-medium">{userProfile?.email} (You)</span>
+                        <span className="text-sm font-medium">{currentUser?.email} (You)</span>
                         <Badge className="bg-primary">Admin</Badge>
                       </div>
                     </div>
@@ -369,9 +370,9 @@ export default function BrandOnboardingPage() {
           </CardContent>
 
           <CardFooter className="bg-slate-50/50 border-t p-8 flex justify-between items-center">
-            <Button 
-              variant="ghost" 
-              onClick={prevStep} 
+            <Button
+              variant="ghost"
+              onClick={prevStep}
               disabled={currentStep === 1 || isSaving || showConfetti}
               className="rounded-xl font-bold h-12 px-6"
             >
@@ -381,8 +382,8 @@ export default function BrandOnboardingPage() {
             <div className="flex items-center gap-4">
               <span className="text-xs font-black text-slate-400 uppercase tracking-widest hidden sm:block">Step {currentStep} of {STEPS.length}</span>
               {currentStep < STEPS.length ? (
-                <Button 
-                  onClick={nextStep} 
+                <Button
+                  onClick={nextStep}
                   disabled={isSaving}
                   className="rounded-xl font-bold h-12 px-10 shadow-xl shadow-primary/20"
                 >
@@ -390,8 +391,8 @@ export default function BrandOnboardingPage() {
                   Next Step <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
-                <Button 
-                  onClick={finishOnboarding} 
+                <Button
+                  onClick={finishOnboarding}
                   disabled={isSaving || showConfetti}
                   className="rounded-xl font-bold h-12 px-10 bg-green-600 hover:bg-green-700 text-white shadow-xl shadow-green-600/20"
                 >
@@ -404,7 +405,7 @@ export default function BrandOnboardingPage() {
         </Card>
 
         {showConfetti && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className="text-center py-8"

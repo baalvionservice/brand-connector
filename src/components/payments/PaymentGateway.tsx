@@ -2,16 +2,16 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  CreditCard, 
-  ShieldCheck, 
-  Zap, 
-  CheckCircle2, 
-  Loader2, 
-  ArrowRight, 
-  Lock, 
-  Smartphone, 
-  Building2, 
+import {
+  CreditCard,
+  ShieldCheck,
+  Zap,
+  CheckCircle2,
+  Loader2,
+  ArrowRight,
+  Lock,
+  Smartphone,
+  Building2,
   IndianRupee,
   AlertCircle,
   ChevronRight,
@@ -58,7 +58,7 @@ export function PaymentGateway({ campaignId, brandId, budget, onSuccess, onCance
 
   const handlePaymentSubmit = async () => {
     setStep('verifying');
-    
+
     // Simulate 3D Secure Verification delay
     setTimeout(() => {
       setStep('processing');
@@ -69,10 +69,10 @@ export function PaymentGateway({ campaignId, brandId, budget, onSuccess, onCance
   const executeEscrowLock = async () => {
     try {
       // 1. Call Escrow Service to Lock Funds & Create Transaction
-      await lockFunds(db, campaignId, brandId, budget);
+      await lockFunds(db!, campaignId, brandId, budget);
 
       // 2. Update Campaign Status
-      const campaignRef = doc(db, 'campaigns', campaignId);
+      const campaignRef = doc(db!, 'campaigns', campaignId);
       await updateDoc(campaignRef, {
         status: CampaignStatus.ACTIVE,
         updatedAt: new Date().toISOString()
@@ -101,7 +101,7 @@ export function PaymentGateway({ campaignId, brandId, budget, onSuccess, onCance
   return (
     <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white max-w-4xl mx-auto ring-1 ring-slate-100">
       <div className="flex flex-col lg:flex-row h-full">
-        
+
         {/* Left: Summary Panel */}
         <div className="lg:w-2/5 bg-slate-50/50 p-8 lg:p-12 border-b lg:border-b-0 lg:border-r">
           <div className="space-y-8">
@@ -150,13 +150,13 @@ export function PaymentGateway({ campaignId, brandId, budget, onSuccess, onCance
         {/* Right: Interaction Panel */}
         <div className="lg:w-3/5 p-8 lg:p-12 relative min-h-[500px] flex flex-col">
           <AnimatePresence mode="wait">
-            
+
             {/* STEP: Method Selection */}
             {step === 'method' && (
-              <motion.div 
-                key="method" 
-                initial={{ opacity: 0, x: 20 }} 
-                animate={{ opacity: 1, x: 0 }} 
+              <motion.div
+                key="method"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-8 flex-1"
               >
@@ -173,8 +173,8 @@ export function PaymentGateway({ campaignId, brandId, budget, onSuccess, onCance
                   ].map((m) => (
                     <div key={m.id}>
                       <RadioGroupItem value={m.id} id={m.id} className="peer sr-only" />
-                      <Label 
-                        htmlFor={m.id} 
+                      <Label
+                        htmlFor={m.id}
                         className={cn(
                           "flex items-center gap-4 p-5 rounded-2xl border-2 border-slate-50 bg-white cursor-pointer transition-all hover:bg-slate-50 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5",
                           method === m.id && "border-primary bg-primary/5 shadow-md"
@@ -206,10 +206,10 @@ export function PaymentGateway({ campaignId, brandId, budget, onSuccess, onCance
 
             {/* STEP: Details (Card Form) */}
             {step === 'details' && (
-              <motion.div 
-                key="details" 
-                initial={{ opacity: 0, x: 20 }} 
-                animate={{ opacity: 1, x: 0 }} 
+              <motion.div
+                key="details"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-8 flex-1"
               >
@@ -251,10 +251,10 @@ export function PaymentGateway({ campaignId, brandId, budget, onSuccess, onCance
 
             {/* STEP: 3D Secure / Verification */}
             {step === 'verifying' && (
-              <motion.div 
-                key="verifying" 
-                initial={{ opacity: 0, scale: 0.95 }} 
-                animate={{ opacity: 1, scale: 1 }} 
+              <motion.div
+                key="verifying"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
                 className="flex-1 flex flex-col items-center justify-center text-center space-y-8"
               >
                 <div className="relative">
@@ -276,10 +276,10 @@ export function PaymentGateway({ campaignId, brandId, budget, onSuccess, onCance
 
             {/* STEP: Final Processing */}
             {step === 'processing' && (
-              <motion.div 
-                key="processing" 
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }} 
+              <motion.div
+                key="processing"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 className="flex-1 flex flex-col items-center justify-center text-center space-y-8"
               >
                 <Loader2 className="h-16 w-16 text-primary animate-spin" />
@@ -292,10 +292,10 @@ export function PaymentGateway({ campaignId, brandId, budget, onSuccess, onCance
 
             {/* STEP: Success */}
             {step === 'success' && (
-              <motion.div 
-                key="success" 
-                initial={{ opacity: 0, scale: 0.9 }} 
-                animate={{ opacity: 1, scale: 1 }} 
+              <motion.div
+                key="success"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
                 className="flex-1 flex flex-col items-center justify-center text-center space-y-8"
               >
                 <div className="h-24 w-24 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 shadow-inner">

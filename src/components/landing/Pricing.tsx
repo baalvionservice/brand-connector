@@ -91,8 +91,8 @@ export function Pricing() {
   // Hydration-safe query construction
   const plansQuery = useMemo(() => {
     if (!db || !isMounted) return null;
-    return collection(db, 'system_plans');
-  }, [db, isMounted]);
+    return collection(db!, 'system_plans');
+  }, [db!, isMounted]);
 
   const { data: livePlans, loading } = useCollection<any>(plansQuery);
   const [plans, setPlans] = useState<any[]>(DEFAULT_PRICING);

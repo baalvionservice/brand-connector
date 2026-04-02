@@ -11,7 +11,7 @@ export function useUser() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth!, (user) => {
       setUser(user);
       setLoading(false);
     });

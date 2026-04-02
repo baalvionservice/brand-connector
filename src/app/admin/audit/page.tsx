@@ -3,18 +3,18 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  History, 
-  Search, 
-  Filter, 
-  Download, 
-  ShieldAlert, 
-  ShieldCheck, 
-  User, 
-  Clock, 
-  ChevronDown, 
-  ChevronUp, 
-  FileText, 
+import {
+  History,
+  Search,
+  Filter,
+  Download,
+  ShieldAlert,
+  ShieldCheck,
+  User,
+  Clock,
+  ChevronDown,
+  ChevronUp,
+  FileText,
   AlertCircle,
   Zap,
   Loader2,
@@ -32,26 +32,26 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
@@ -61,7 +61,7 @@ import { cn } from '@/lib/utils';
 export default function AdminAuditLogPage() {
   const db = useFirestore();
   const { toast } = useToast();
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [adminFilter, setAdminFilter] = useState<string>('all');
@@ -69,14 +69,17 @@ export default function AdminAuditLogPage() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   // 1. Fetch Audit Logs
-  const { data: logs, loading } = useCollection<AuditLog>(
-    query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'))
-  );
+  const auditQuery = useMemo(() => {
+    if (!db) return null;
+    return query(collection(db, 'audit_logs'), orderBy('timestamp', 'desc'));
+  }, [db]);
+
+  const { data: logs, loading } = useCollection<AuditLog>(auditQuery);
 
   const filteredLogs = useMemo(() => {
     return logs.filter(log => {
-      const matchesSearch = log.adminName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           log.entityId.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = log.adminName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        log.entityId.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesType = typeFilter === 'all' || log.actionType === typeFilter;
       const matchesAdmin = adminFilter === 'all' || log.adminId === adminFilter;
       return matchesSearch && matchesType && matchesAdmin;
@@ -85,10 +88,10 @@ export default function AdminAuditLogPage() {
 
   const exportCSV = () => {
     const headers = "Timestamp,Admin,Action,Entity,EntityType,Critical\n";
-    const rows = filteredLogs.map(l => 
+    const rows = filteredLogs.map(l =>
       `${l.timestamp},${l.adminName},${l.actionType},${l.entityId},${l.entityType},${l.isCritical}`
     ).join("\n");
-    
+
     const blob = new Blob([headers + rows], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -132,14 +135,14 @@ export default function AdminAuditLogPage() {
         <div className="flex flex-wrap items-center gap-4 flex-1">
           <div className="relative w-full lg:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder="Search by Admin or ID..." 
+            <Input
+              placeholder="Search by Admin or ID..."
               className="pl-10 h-11 rounded-xl bg-slate-50 border-none focus-visible:ring-primary"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          
+
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-none font-bold text-xs min-w-[160px]">
               <SelectValue placeholder="Action Type" />
@@ -192,8 +195,8 @@ export default function AdminAuditLogPage() {
                 </TableRow>
               ) : filteredLogs.length > 0 ? (
                 filteredLogs.map((log, idx) => (
-                  <TableRow 
-                    key={log.id} 
+                  <TableRow
+                    key={log.id}
                     className={cn(
                       "group border-slate-50 hover:bg-slate-50/50 transition-colors h-20",
                       log.isCritical && "bg-red-50/20 hover:bg-red-50/40"
@@ -227,9 +230,9 @@ export default function AdminAuditLogPage() {
                       </div>
                     </TableCell>
                     <TableCell className="pr-8 text-right">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         className="rounded-xl font-bold h-9 px-4 bg-slate-50 text-slate-600 hover:text-primary"
                         onClick={() => { setSelectedLog(log); setIsDetailsOpen(true); }}
                       >

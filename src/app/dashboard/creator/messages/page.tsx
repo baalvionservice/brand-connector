@@ -2,14 +2,14 @@
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, 
-  Send, 
-  Paperclip, 
-  MoreVertical, 
-  Phone, 
-  Video, 
-  CheckCheck, 
+import {
+  Search,
+  Send,
+  Paperclip,
+  MoreVertical,
+  Phone,
+  Video,
+  CheckCheck,
   Image as ImageIcon,
   Smile,
   Clock,
@@ -20,14 +20,14 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFirestore, useCollection } from '@/firebase';
-import { 
-  collection, 
-  query, 
-  where, 
-  orderBy, 
-  addDoc, 
-  doc, 
-  updateDoc, 
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  addDoc,
+  doc,
+  updateDoc,
   limit
 } from 'firebase/firestore';
 import { useMessages } from '@/hooks/use-realtime-data';
@@ -51,9 +51,9 @@ const BRAND_DATA: Record<string, any> = {
 };
 
 export default function CreatorMessagesPage() {
-  const { userProfile } = useAuth();
+  const { currentUser } = useAuth();
   const db = useFirestore();
-  
+
   const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
   const [messageText, setMessageText] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -62,13 +62,13 @@ export default function CreatorMessagesPage() {
 
   // 1. Fetch Conversations
   const convQuery = useMemo(() => {
-    if (!userProfile?.id) return null;
+    if (!currentUser?.id || !db) return null;
     return query(
       collection(db, 'conversations'),
-      where('participantIds', 'array-contains', userProfile.id),
+      where('participantIds', 'array-contains', currentUser.id),
       orderBy('updatedAt', 'desc')
     );
-  }, [db, userProfile?.id]);
+  }, [db, currentUser?.id]);
 
   const { data: conversations, loading: convLoading } = useCollection<any>(convQuery);
 
@@ -82,17 +82,17 @@ export default function CreatorMessagesPage() {
     }
   }, [messages]);
 
-  const activeConversation = useMemo(() => 
-    conversations.find(c => c.id === selectedConvId), 
+  const activeConversation = useMemo(() =>
+    conversations.find(c => c.id === selectedConvId),
     [conversations, selectedConvId]
   );
 
-  const brandId = activeConversation?.participantIds?.find((id: string) => id !== userProfile?.id);
+  const brandId = activeConversation?.participantIds?.find((id: string) => id !== currentUser?.id);
   const activeBrand = brandId ? (BRAND_DATA[brandId] || { name: 'Baalvion Brand', logo: `https://picsum.photos/seed/${brandId}/100/100` }) : null;
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!messageText.trim() || !selectedConvId || !userProfile) return;
+    if (!messageText.trim() || !selectedConvId || !currentUser) return;
 
     const text = messageText;
     setMessageText('');
@@ -100,19 +100,19 @@ export default function CreatorMessagesPage() {
 
     const messageData = {
       conversationId: selectedConvId,
-      senderId: userProfile.id,
+      senderId: currentUser.id,
       text: text,
       createdAt: new Date().toISOString()
     };
 
     try {
       // Add message to subcollection
-      await addDoc(collection(db, 'conversations', selectedConvId, 'messages'), messageData);
-      
+      await addDoc(collection(db!, 'conversations', selectedConvId, 'messages'), messageData);
+
       // Update conversation metadata
-      await updateDoc(doc(db, 'conversations', selectedConvId), {
+      await updateDoc(doc(db!, 'conversations', selectedConvId), {
         lastMessage: text,
-        lastSenderId: userProfile.id,
+        lastSenderId: currentUser.id,
         updatedAt: new Date().toISOString()
       });
     } catch (err: any) {
@@ -129,16 +129,16 @@ export default function CreatorMessagesPage() {
   const selectConversation = (id: string) => {
     setSelectedConvId(id);
     setShowMobileList(false);
-    
+
     // In a real app, you'd mark as read here
-    updateDoc(doc(db, 'conversations', id), {
-      [`unreadCounts.${userProfile?.id}`]: 0
-    }).catch(() => {});
+    updateDoc(doc(db!, 'conversations', id), {
+      [`unreadCounts.${currentUser?.id}`]: 0
+    }).catch(() => { });
   };
 
   return (
     <div className="h-[calc(100vh-160px)] flex bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 overflow-hidden border">
-      
+
       {/* LEFT PANEL: Conversation List */}
       <aside className={cn(
         "w-full md:w-80 lg:w-96 border-r flex flex-col bg-slate-50/30",
@@ -153,8 +153,8 @@ export default function CreatorMessagesPage() {
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-            <Input 
-              placeholder="Search brands..." 
+            <Input
+              placeholder="Search brands..."
               className="pl-10 h-11 rounded-xl bg-slate-50 border-none focus-visible:ring-primary"
             />
           </div>
@@ -168,10 +168,10 @@ export default function CreatorMessagesPage() {
           ) : conversations.length > 0 ? (
             <div className="divide-y divide-slate-50">
               {conversations.map((conv) => {
-                const bId = conv.participantIds.find((id: string) => id !== userProfile?.id);
+                const bId = conv.participantIds.find((id: string) => id !== currentUser?.id);
                 const bInfo = BRAND_DATA[bId] || { name: 'Baalvion Brand', logo: `https://picsum.photos/seed/${bId}/100/100` };
                 const isSelected = selectedConvId === conv.id;
-                const unreadCount = conv.unreadCounts?.[userProfile?.id || ''] || 0;
+                const unreadCount = conv.unreadCounts?.[currentUser?.id || ''] || 0;
 
                 return (
                   <button
@@ -233,10 +233,10 @@ export default function CreatorMessagesPage() {
             {/* Thread Header */}
             <header className="h-20 border-b flex items-center justify-between px-6 shrink-0">
               <div className="flex items-center gap-4">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="md:hidden rounded-full" 
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden rounded-full"
                   onClick={() => setShowMobileList(true)}
                 >
                   <ChevronLeft className="h-5 w-5" />
@@ -284,7 +284,7 @@ export default function CreatorMessagesPage() {
                   </div>
                 ) : (
                   messages.map((msg, i) => {
-                    const isMe = msg.senderId === userProfile?.id;
+                    const isMe = msg.senderId === currentUser?.id;
                     return (
                       <motion.div
                         key={msg.id}
@@ -307,8 +307,8 @@ export default function CreatorMessagesPage() {
                         )}>
                           <div className={cn(
                             "px-5 py-3 rounded-2xl text-sm font-medium shadow-sm",
-                            isMe 
-                              ? "bg-primary text-white rounded-br-none" 
+                            isMe
+                              ? "bg-primary text-white rounded-br-none"
                               : "bg-white text-slate-700 border rounded-bl-none"
                           )}>
                             {msg.text}
@@ -334,23 +334,23 @@ export default function CreatorMessagesPage() {
             {/* Input Bar */}
             <footer className="p-6 bg-white border-t shrink-0">
               <form onSubmit={handleSendMessage} className="relative flex items-center gap-3">
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="icon" 
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
                   className="rounded-xl bg-slate-50 text-slate-400 hover:text-primary transition-colors"
                 >
                   <Paperclip className="h-5 w-5" />
                 </Button>
-                
+
                 <div className="flex-1 relative">
-                  <Input 
+                  <Input
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
-                    placeholder="Type your proposal or message..." 
+                    placeholder="Type your proposal or message..."
                     className="h-14 rounded-2xl bg-slate-50 border-none pl-6 pr-12 focus-visible:ring-primary text-md"
                   />
-                  <button 
+                  <button
                     type="button"
                     className="absolute right-4 top-4 text-slate-300 hover:text-primary transition-colors"
                   >
@@ -358,7 +358,7 @@ export default function CreatorMessagesPage() {
                   </button>
                 </div>
 
-                <Button 
+                <Button
                   disabled={!messageText.trim() || isSending}
                   className="h-14 w-14 rounded-2xl shadow-xl shadow-primary/20 shrink-0"
                 >

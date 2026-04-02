@@ -23,7 +23,7 @@ export function NotificationCard({
   isRead,
   className,
   onClick
-}) {
+}: NotificationCardProps) {
   return (
     <BaseCard 
       className={cn(

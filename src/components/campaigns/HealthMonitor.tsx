@@ -14,7 +14,8 @@ import {
   Target,
   Users,
   AlertTriangle,
-  Lightbulb
+  Lightbulb,
+  ArrowRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';

@@ -33,15 +33,12 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { Area, Tooltip, XAxis, YAxis } from 'recharts';
 
 // Lazy load heavy chart components
 const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false });
 const AreaChart = dynamic(() => import('recharts').then(mod => mod.AreaChart), { ssr: false });
-const Area = dynamic(() => import('recharts').then(mod => mod.Area), { ssr: false });
-const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
-const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
 const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
-const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false });
 
 // Mock Aggregated Data
 const AGGREGATED_TRENDS = [
@@ -150,7 +147,7 @@ export default function GlobalBrandAnalytics() {
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis 
+                    <XAxis
                       dataKey="month" 
                       axisLine={false} 
                       tickLine={false} 
@@ -166,7 +163,7 @@ export default function GlobalBrandAnalytics() {
                     <Tooltip 
                       contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)', padding: '12px'}}
                     />
-                    <Area 
+                    <Area
                       type="monotone" 
                       dataKey="spend" 
                       stroke="#6C3AE8" 

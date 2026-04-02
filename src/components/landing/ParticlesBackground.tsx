@@ -1,16 +1,14 @@
-
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
-import type { Container, Engine } from "@tsparticles/engine";
 
 export function ParticlesBackground() {
   const [init, setInit] = useState(false);
 
   useEffect(() => {
-    initParticlesEngine(async (engine: Engine) => {
+    initParticlesEngine(async (engine: any) => {
       await loadSlim(engine);
     }).then(() => {
       setInit(true);

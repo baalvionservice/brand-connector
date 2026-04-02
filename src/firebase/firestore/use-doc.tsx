@@ -14,7 +14,7 @@ export function useDoc<T>(path: string | null) {
   const [error, setError] = useState<Error | null>(null);
 
   const docRef = useMemo(() => {
-    if (!path) return null;
+    if (!path || !db) return null;
     return doc(db, path);
   }, [db, path]);
 

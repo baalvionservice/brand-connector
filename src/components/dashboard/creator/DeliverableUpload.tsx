@@ -83,7 +83,7 @@ export function DeliverableUpload({ campaignId, deliverableTypes, onAssetsChange
 
     setAssets(prev => [...prev, newAsset]);
 
-    const storageRef = ref(storage, `campaigns/${campaignId}/deliverables/${id}_${file.name}`);
+    const storageRef = ref(storage!, `campaigns/${campaignId}/deliverables/${id}_${file.name}`);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
     uploadTask.on('state_changed', 

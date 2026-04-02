@@ -15,10 +15,11 @@ import {
   Target, 
   Activity, 
   AlertCircle,
-  Info
+  Info,
+  ArrowUpRight
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Tooltip,
@@ -27,6 +28,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from '@/lib/utils';
+import { Button } from '../ui';
 
 export interface CreatorScoreData {
   authenticity: number; // 30%
