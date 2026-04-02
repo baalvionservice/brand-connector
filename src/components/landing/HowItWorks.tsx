@@ -63,7 +63,7 @@ const creatorSteps = [
 export function HowItWorks() {
   return (
     <section id="how-it-works" className="py-24 bg-white overflow-hidden">
-      <div className="container px-4 md:px-6">
+      <div className="container mx-auto px-4 md:px-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-headline font-bold tracking-tighter sm:text-5xl mb-4">How It Works</h2>
           <p className="text-muted-foreground text-lg max-w-[700px] mx-auto">

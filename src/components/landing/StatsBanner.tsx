@@ -45,7 +45,7 @@ export function StatsBanner() {
       <div className="absolute top-0 left-1/4 w-64 h-64 bg-primary/5 blur-[100px] rounded-full" />
       <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-primary/5 blur-[100px] rounded-full" />
 
-      <div className="container px-4 md:px-6 relative z-10">
+      <div className="container mx-auto px-4 md:px-6 relative z-10">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
           {stats.map((stat, index) => (
             <motion.div
@@ -59,7 +59,7 @@ export function StatsBanner() {
               <div className="bg-primary/10 p-3 rounded-2xl mb-2">
                 <stat.icon className="h-6 w-6 text-primary" />
               </div>
-              
+
               <div className="text-3xl md:text-4xl font-headline font-bold text-white tracking-tight">
                 {stat.prefix}
                 <CountUp
@@ -70,7 +70,7 @@ export function StatsBanner() {
                 />
                 {stat.suffix}
               </div>
-              
+
               <div className="flex flex-col">
                 <span className="text-sm font-semibold text-primary uppercase tracking-wider">
                   {stat.label}

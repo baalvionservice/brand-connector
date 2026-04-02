@@ -69,7 +69,7 @@ const CREATOR_FAQS = [
 export function FAQ() {
   return (
     <section id="faq" className="py-24 bg-white overflow-hidden">
-      <div className="container px-4 md:px-6">
+      <div className="container mx-auto px-4 md:px-6">
         <div className="flex flex-col items-center text-center mb-16">
           <Badge className="mb-4 bg-slate-100 text-slate-900 border-slate-200 hover:bg-slate-200 px-3 py-1">
             Support Center

@@ -2,16 +2,16 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { 
-  Rocket, 
-  ShieldCheck, 
-  Zap, 
-  ArrowRight, 
-  BarChart3, 
-  Star, 
-  Users, 
-  Cpu, 
-  UserCheck, 
+import {
+  Rocket,
+  ShieldCheck,
+  Zap,
+  ArrowRight,
+  BarChart3,
+  Star,
+  Users,
+  Cpu,
+  UserCheck,
   Globe,
   Twitter,
   Linkedin,
@@ -99,7 +99,7 @@ export default function LandingPage() {
           <ParticlesBackground />
           <div className="container px-4 md:px-6 relative z-10 mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8 }}
@@ -116,7 +116,7 @@ export default function LandingPage() {
                   </span>
                 </h1>
                 <p className="max-w-[600px] text-indigo-100/80 md:text-xl font-light leading-relaxed">
-                  The data-driven marketplace where performance meets creativity. 
+                  The data-driven marketplace where performance meets creativity.
                   Skip the guesswork and start building campaigns that actually convert.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -140,10 +140,10 @@ export default function LandingPage() {
               >
                 <div className="relative z-20 rounded-2xl border border-white/20 bg-white/5 p-4 backdrop-blur-md shadow-2xl">
                   <div className="aspect-[16/10] relative rounded-xl overflow-hidden border border-white/10">
-                    <Image 
-                      src="https://picsum.photos/seed/baalvion-dashboard/1000/625" 
-                      alt="Baalvion Dashboard UI showing creator performance and campaign analytics" 
-                      fill 
+                    <Image
+                      src="https://picsum.photos/seed/baalvion-dashboard/1000/625"
+                      alt="Baalvion Dashboard UI showing creator performance and campaign analytics"
+                      fill
                       className="object-cover"
                       priority
                     />
@@ -155,14 +155,15 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <StatsBanner />
-        <HowItWorks />
-        <MatchingDemo />
-        <ActiveCampaigns />
-        <CreatorShowcase />
+
+          <StatsBanner />
+          <HowItWorks />
+          <MatchingDemo />
+          <ActiveCampaigns />
+          <CreatorShowcase />
 
         <section id="features" className="w-full py-24 bg-slate-50">
-          <div className="container px-4 md:px-6 mx-auto">
+          <div className="container mx-auto px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center mb-16">
               <h2 className="text-3xl font-headline font-bold tracking-tighter md:text-5xl text-slate-900">Everything You Need to Scale</h2>
               <p className="max-w-[900px] text-muted-foreground mt-4 md:text-xl/relaxed">
@@ -171,7 +172,7 @@ export default function LandingPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {features.map((feature, i) => (
-                <motion.article 
+                <motion.article
                   key={i}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -204,7 +205,7 @@ export default function LandingPage() {
               {/* Decorative elements */}
               <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-white/10 rounded-full blur-3xl opacity-50" aria-hidden="true" />
               <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-96 h-96 bg-primary-foreground/10 rounded-full blur-3xl opacity-50" aria-hidden="true" />
-              
+
               <div className="relative z-10 max-w-3xl mx-auto space-y-8">
                 <h2 className="text-3xl font-headline font-bold tracking-tighter text-white md:text-5xl lg:text-6xl">
                   Ready to grow your brand or income?
@@ -281,9 +282,9 @@ export default function LandingPage() {
               <h4 className="font-headline font-bold text-white mb-6 uppercase tracking-wider text-xs">Stay Updated</h4>
               <p className="text-sm">Subscribe to our monthly newsletter for the latest creator trends and market insights.</p>
               <form className="flex flex-col gap-2">
-                <Input 
-                  type="email" 
-                  placeholder="Enter your email" 
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
                   className="bg-white/5 border-white/10 text-white placeholder:text-slate-500 rounded-xl"
                   aria-label="Email address for newsletter"
                 />
@@ -291,7 +292,7 @@ export default function LandingPage() {
               </form>
             </div>
           </div>
-          
+
           <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
             <p>© 2024 Baalvion Connect. All rights reserved. Built for the future of creator marketing.</p>
             <div className="flex gap-6">
