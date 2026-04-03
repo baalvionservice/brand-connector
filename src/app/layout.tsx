@@ -1,11 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import { Toaster as ShadcnToaster } from "@/components/ui/toaster";
-import { Toaster as HotToaster } from 'react-hot-toast';
 import { generateMetadata } from '@/lib/seo';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { FirebaseClientProvider } from '@/firebase';
-import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+import ClientLayout from '@/components/ClientLayout';
 
 export const metadata: Metadata = generateMetadata();
 
@@ -20,6 +17,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
@@ -46,23 +44,15 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased bg-background text-foreground min-h-screen">
-        <a 
-          href="#main-content" 
+        <a
+          href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-6 focus:py-3 focus:bg-primary focus:text-white focus:rounded-2xl focus:shadow-2xl focus:font-bold focus:ring-4 focus:ring-primary/20"
         >
           Skip to content
         </a>
-        <ErrorBoundary>
-          <FirebaseClientProvider>
-            <AuthProvider>
-              <div id="app-root">
-                {children}
-              </div>
-              <ShadcnToaster />
-              <HotToaster position="top-right" reverseOrder={false} />
-            </AuthProvider>
-          </FirebaseClientProvider>
-        </ErrorBoundary>
+        <ClientLayout>
+          {children}
+        </ClientLayout>
       </body>
     </html>
   );

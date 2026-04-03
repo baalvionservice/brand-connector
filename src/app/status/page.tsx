@@ -103,18 +103,7 @@ export default function PlatformStatusPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-20">
-      {/* Navbar */}
-      <header className="px-4 lg:px-8 h-16 flex items-center border-b bg-white sticky top-0 z-50">
-        <Link className="flex items-center" href="/">
-          <div className="bg-primary p-1.5 rounded-lg mr-2">
-            <Rocket className="h-5 w-5 text-white" />
-          </div>
-          <span className="font-headline font-bold text-lg text-slate-900 tracking-tight">Baalvion <span className="text-primary">Connect</span></span>
-        </Link>
-        <div className="ml-auto hidden sm:flex items-center gap-4">
-          <Link href="/dashboard" className="text-sm font-bold text-slate-500 hover:text-primary transition-colors">Return to Dashboard</Link>
-        </div>
-      </header>
+     
 
       <main className="container max-w-5xl mx-auto px-4 pt-12 space-y-12">
         {/* Global Status Banner */}

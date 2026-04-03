@@ -1,6 +1,7 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://baalvion-connect.vercel.app';
+const BASE_URL =
+  process.env.NEXT_PUBLIC_APP_URL || "https://connect.baalvion.com";
 
 interface SEOProps {
   title?: string;
@@ -14,14 +15,16 @@ interface SEOProps {
  * Reusable helper to generate consistent metadata across pages
  */
 export function generateMetadata({
-  title = 'Baalvion Connect | AI-Powered Brand & Creator Marketplace',
-  description = 'Connect with the world\'s top creators using our AI matching engine. Scale your brand with data-driven influencer marketing and secure escrow payments.',
-  path = '',
-  ogImage = '/og-image.jpg',
+  title = "Baalvion Connect | AI-Powered Brand & Creator Marketplace",
+  description = "Connect with the world's top creators using our AI matching engine. Scale your brand with data-driven influencer marketing and secure escrow payments.",
+  path = "",
+  ogImage = "/og-image.jpg",
   noIndex = false,
 }: SEOProps = {}): Metadata {
   const url = `${BASE_URL}${path}`;
-  const fullTitle = title.includes('Baalvion') ? title : `${title} | Baalvion Connect`;
+  const fullTitle = title.includes("Baalvion")
+    ? title
+    : `${title} | Baalvion Connect`;
 
   return {
     title: fullTitle,
@@ -36,37 +39,37 @@ export function generateMetadata({
       googleBot: {
         index: !noIndex,
         follow: !noIndex,
-        'max-video-preview': -1,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
       },
     },
     openGraph: {
       title: fullTitle,
       description,
       url,
-      siteName: 'Baalvion Connect',
+      siteName: "Baalvion Connect",
       images: [
         {
           url: ogImage,
           width: 1200,
           height: 630,
-          alt: 'Baalvion Connect Marketplace',
+          alt: "Baalvion Connect Marketplace",
         },
       ],
-      locale: 'en_US',
-      type: 'website',
+      locale: "en_US",
+      type: "website",
     },
     twitter: {
-      card: 'summary_large_image',
+      card: "summary_large_image",
       title: fullTitle,
       description,
       images: [ogImage],
-      creator: '@baalvion',
+      creator: "@baalvion",
     },
     icons: {
-      shortcut: '/favicon.ico',
-      apple: '/apple-touch-icon.png',
+      shortcut: "/favicon.ico",
+      apple: "/apple-touch-icon.png",
     },
   };
 }
