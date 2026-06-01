@@ -1,4 +1,8 @@
 <div align="center">
+  <img src=".github/preview.png" alt="Baalvion Connect" width="100%" />
+</div>
+
+<div align="center">
 
 # Baalvion Connect
 
